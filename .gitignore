@@ -37,3 +37,7 @@ secrets/*.yaml
 .DS_Store
 .vscode/
 .idea/
+
+# Home Assistant internal
+.HA_VERSION
+.ha_run.lock
