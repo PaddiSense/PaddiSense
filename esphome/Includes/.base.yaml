@@ -1,0 +1,134 @@
+# .base.yaml
+#
+# PURPOSE
+# - Common “base” package shared by all RiceBoards / ESPHome nodes.
+# - Handles identity, framework, core services (API/OTA/WiFi), time sync,
+#   and basic diagnostics/utility controls.
+#
+# VERSIONING
+# - Increment BASE_VERSION when you change anything in this file.
+# - Expose BASE_VERSION into Home Assistant (text_sensor) and log it at boot.
+#
+# RECOMMENDED VERSION RULES (simple + practical)
+# - PATCH: comments/docs or non-functional changes
+# - MINOR: new entities/features added (backwards compatible)
+# - MAJOR: breaking entity renames/removals or behavior changes
+#
+substitutions:
+  # Base package version (this file)
+  base_version: "1.1.0"
+
+  # Required substitutions expected from the device YAML:
+  # - device_name: short slug used as node name
+  # - friendly_name: human readable name used in HA
+  #
+  # Example in your device file:
+  # substitutions:
+  #   device_name: rb-012
+  #   friendly_name: "RiceBoard 012"
+
+# -----------------------------------------------------------------------------
+# DEVICE IDENTITY / LIFECYCLE
+# -----------------------------------------------------------------------------
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+
+  # Log the base version at boot so you can confirm what is actually running.
+  on_boot:
+    priority: -100
+    then:
+      - logger.log: "Boot: Base include initialising"
+      - lambda: |-
+          ESP_LOGI("rb_hw", "Base include version: %s", "${base_version}");
+
+# -----------------------------------------------------------------------------
+# MCU / FRAMEWORK
+# -----------------------------------------------------------------------------
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# -----------------------------------------------------------------------------
+# LOGGING
+# -----------------------------------------------------------------------------
+logger:
+  # Keep default unless you need to tune baud_rate or level.
+
+# -----------------------------------------------------------------------------
+# HOME ASSISTANT API
+# -----------------------------------------------------------------------------
+api:
+  encryption:
+    key: !secret esphome_encryption_key
+
+  # Disables “reboot if API is idle” behaviour.
+  # Useful for marginal WiFi or when HA restarts frequently.
+  reboot_timeout: 0s
+
+# -----------------------------------------------------------------------------
+# OTA UPDATES
+# -----------------------------------------------------------------------------
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# -----------------------------------------------------------------------------
+# OPTIONAL WEB SERVER (disable for troubleshooting RAM/socket pressure)
+# -----------------------------------------------------------------------------
+web_server:
+  port: 80
+
+# -----------------------------------------------------------------------------
+# WIFI
+# -----------------------------------------------------------------------------
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Prevents API socket starvation on some networks/firmware combinations.
+  power_save_mode: none
+
+  # Fallback AP for recovery (uses the same password here).
+  ap:
+    password: !secret wifi_password
+
+# -----------------------------------------------------------------------------
+# CAPTIVE PORTAL (pairs with fallback AP)
+# -----------------------------------------------------------------------------
+captive_portal:
+
+# -----------------------------------------------------------------------------
+# TIME SYNC (from Home Assistant)
+# -----------------------------------------------------------------------------
+time:
+  - platform: homeassistant
+    id: ha_time
+
+# -----------------------------------------------------------------------------
+# VERSION EXPORT TO HOME ASSISTANT
+# -----------------------------------------------------------------------------
+text_sensor:
+  - platform: template
+    name: "${friendly_name} Base Config Version"
+    id: "base_config_version"
+    icon: mdi:source-branch
+    lambda: |-
+      return {"${base_version}"};
+
+# -----------------------------------------------------------------------------
+# UTILITIES
+# -----------------------------------------------------------------------------
+button:
+  # “Ping Device” button: sends an HA event you can listen for in automations.
+  # Useful for testing API connectivity and debugging.
+  - platform: template
+    id: ping_device
+    name: "Ping Device"
+    on_press:
+      - homeassistant.event:
+          event: esphome.ping_response
+          data:
+            ping_id: ${device_name}_ping_received
+            message: "${friendly_name} Ping Received"

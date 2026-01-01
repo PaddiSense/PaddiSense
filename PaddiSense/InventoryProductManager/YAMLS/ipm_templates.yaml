@@ -1,32 +1,189 @@
 template:
   - sensor:
-      - name: ipm_products_count
-        unique_id: ipm_products_count
+      - name: "Inventory Quantity Update"
+        unique_id: inventory_quantity_update
+        icon: mdi:calculator-variant
         state: >
-          {% set products = state_attr('sensor.ipm_inventory_products', 'products') or [] %}
-          {{ products | length }}
-      - name: ipm_filtered_products_count
-        unique_id: ipm_filtered_products_count
+          {% set stock  = states('sensor.inventory_selected_product_stock') | float(0) %}
+          {% set change = states('input_number.inventory_quantity') | float(0) %}
+          {{ [0, (stock + change)] | max | round(2) }}
+        availability: >
+          {{ states('sensor.inventory_selected_product_stock') not in ['unknown','unavailable','none']
+             and states('input_number.inventory_quantity') not in ['unknown','unavailable','none'] }}
+        attributes:
+          unit: >
+            {{ state_attr('sensor.inventory_selected_product', 'unit')
+               or state_attr('sensor.inventory_selected_product_stock','unit')
+               or '' }}
+
+      # 1) Catalog – build a clean products list from sensor.inventory_products
+      - name: Inventory Catalog
+        unique_id: inventory_catalog
         state: >
-          {% set products = state_attr('sensor.ipm_inventory_products', 'products') or [] %}
-          {% set cat = states('input_select.ipm_category') %}
-          {% set sub = states('input_select.ipm_subcategory') %}
-          {% if cat not in ['All', '', none] %}
-            {% set products = products | selectattr('category', 'eq', cat) | list %}
+          {% set products = state_attr('sensor.inventory_products','products') %}
+          {% if not products %}
+            0
+          {% else %}
+            {{ products | length }}
           {% endif %}
-          {% if sub not in ['All', '', none] %}
-            {% set products = products | selectattr('subcategory', 'eq', sub) | list %}
+        attributes:
+          products: >
+            {% set products = state_attr('sensor.inventory_products','products') %}
+            {% if not products %}
+              {{ [] }}
+            {% else %}
+              {% set out = namespace(list=[]) %}
+              {% for p in products %}
+                {% set obj = {
+                  "id": p.id,
+                  "name": p.name,
+                  "category": p.category,
+                  "unit": p.unit,
+                  "stock_on_hand": p.stock_on_hand,
+                  "default_pack_size": p.default_pack_size if p.default_pack_size is defined else none,
+                  "container_size": (
+                    p.container_size
+                    if p.container_size is defined
+                    else (p.default_pack_size if p.default_pack_size is defined else none)
+                  ),
+                  "actives": p.actives if p.actives is defined else [],
+                  "storage_location": p.storage_location if p.storage_location is defined else "",
+                  "subcategory": p.subcategory if p.subcategory is defined else "",
+                  "chemical_group": p.chemical_group if p.chemical_group is defined else "None / Unknown",
+                  "application_unit": p.application_unit if p.application_unit is defined else "L/ha"
+                } %}
+                {% set out.list = out.list + [obj] %}
+              {% endfor %}
+              {{ out.list }}
+            {% endif %}
+
+      # 2) Filtered Products (Category + Subcategory + Search)
+      - name: "Inventory – Filtered Products"
+        unique_id: inventory_filtered_products
+        state: >
+          {% set products = state_attr('sensor.inventory_catalog', 'products') or [] %}
+          {% set category = states('input_select.inventory_category') %}
+          {% set subcat   = states('input_select.inventory_subcategory_filter') %}
+          {% set search   = states('input_text.inventory_active_search')|lower|trim %}
+
+          {% if not products %}
+            0
+          {% else %}
+            {# ---------- CATEGORY FILTER ---------- #}
+            {% if category in ['All', 'All Products', '', none] %}
+              {% set filtered = products %}
+            {% else %}
+              {% set filtered = products
+                  | selectattr('category', 'eq', category)
+                  | list %}
+            {% endif %}
+
+            {# ---------- SUBCATEGORY FILTER ---------- #}
+            {% if subcat not in ['All Categories', 'All Subcategories', '', 'ALL', none] %}
+              {% set filtered = filtered
+                  | selectattr('subcategory', 'eq', subcat)
+                  | list %}
+            {% endif %}
+
+            {# ---------- SEARCH FILTER (name + id) ---------- #}
+            {% if search != '' %}
+              {% set ns = namespace(list=[]) %}
+              {% for p in filtered %}
+                {% set name = (p['name'] if 'name' in p else '') | string | lower %}
+                {% set pid  = (p['id']   if 'id'   in p else '') | string | lower %}
+                {% if search in name or search in pid %}
+                  {% set ns.list = ns.list + [p] %}
+                {% endif %}
+              {% endfor %}
+              {% set filtered = ns.list %}
+            {% endif %}
+
+            {{ filtered | length }}
           {% endif %}
-          {{ products | length }}
+
         attributes:
           names: >
-            {% set products = state_attr('sensor.ipm_inventory_products', 'products') or [] %}
-            {% set cat = states('input_select.ipm_category') %}
-            {% set sub = states('input_select.ipm_subcategory') %}
-            {% if cat not in ['All', '', none] %}
-              {% set products = products | selectattr('category', 'eq', cat) | list %}
+            {% set products = state_attr('sensor.inventory_catalog', 'products') or [] %}
+            {% set category = states('input_select.inventory_category') %}
+            {% set subcat   = states('input_select.inventory_subcategory_filter') %}
+            {% set search   = states('input_text.inventory_active_search')|lower|trim %}
+
+            {% if not products %}
+              {{ [] }}
+            {% else %}
+              {# ---------- CATEGORY FILTER ---------- #}
+              {% if category in ['All', 'All Products', '', none] %}
+                {% set filtered = products %}
+              {% else %}
+                {% set filtered = products
+                    | selectattr('category', 'eq', category)
+                    | list %}
+              {% endif %}
+
+              {# ---------- SUBCATEGORY FILTER ---------- #}
+              {% if subcat not in ['All Categories', 'All Subcategories', '', 'ALL', none] %}
+                {% set filtered = filtered
+                    | selectattr('subcategory', 'eq', subcat)
+                    | list %}
+              {% endif %}
+
+              {# ---------- SEARCH FILTER (name + id) ---------- #}
+              {% if search != '' %}
+                {% set ns = namespace(list=[]) %}
+                {% for p in filtered %}
+                  {% set name = (p['name'] if 'name' in p else '') | string | lower %}
+                  {% set pid  = (p['id']   if 'id'   in p else '') | string | lower %}
+                  {% if search in name or search in pid %}
+                    {% set ns.list = ns.list + [p] %}
+                  {% endif %}
+                {% endfor %}
+                {% set filtered = ns.list %}
+              {% endif %}
+
+              {{ filtered | map(attribute='name') | list | sort }}
             {% endif %}
-            {% if sub not in ['All', '', none] %}
-              {% set products = products | selectattr('subcategory', 'eq', sub) | list %}
+
+      # 3) Selected Product Stock
+      - name: "Inventory – Selected Product Stock"
+        unique_id: inventory_selected_product_stock
+        state: >
+          {% set products = state_attr('sensor.inventory_catalog', 'products') or [] %}
+          {% set category = states('input_select.inventory_category') %}
+          {% set selected = states('input_select.inventory_product') %}
+
+          {% set matches = products
+               | selectattr('name', 'eq', selected)
+               | selectattr('category', 'eq', category)
+               | list %}
+
+          {% if matches | length == 0 %}
+            {% set matches = products
+                 | selectattr('name', 'eq', selected)
+                 | list %}
+          {% endif %}
+
+          {% set product = matches[0] if matches | length > 0 else none %}
+
+          {% if product %}
+            {{ product.stock_on_hand | float(0) }}
+          {% else %}
+            0
+          {% endif %}
+
+      # 4) Subcategory Choices
+      - name: "Inventory – Subcategory Choices"
+        unique_id: inventory_subcategory_choices
+        state: "ok"
+        attributes:
+          options: >
+            {% set products = state_attr('sensor.inventory_catalog', 'products') or [] %}
+            {% set category = states('input_select.inventory_category') %}
+            
+            {# If category is All/empty, don’t filter #}
+            {% if category in ['All', 'All Products', '', none] %}
+              {% set filtered = products %}
+            {% else %}
+              {% set filtered = products | selectattr('category', 'eq', category) | list %}
             {% endif %}
-            {{ products | map(attribute='name') | list | sort }}
+
+            {{ filtered | map(attribute='subcategory') | list | unique | sort }}

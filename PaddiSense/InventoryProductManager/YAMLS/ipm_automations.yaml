@@ -1,0 +1,100 @@
+automation:
+
+  # 1) PRODUCT LIST – uses Inventory – Filtered Products (category + subcategory + search)
+  - id: inventory_update_product_list
+    alias: Inventory – Update Product List
+    mode: restart
+
+    trigger:
+      # Category or search text changes
+      - platform: state
+        entity_id:
+          - input_select.inventory_category
+          - input_select.inventory_subcategory_filter
+          - input_text.inventory_active_search
+
+      # Filtered products changed (names list)
+      - platform: state
+        entity_id:
+          - sensor.inventory_filtered_products
+
+      # HA startup
+      - platform: homeassistant
+        event: start
+
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.inventory_product
+        data:
+          options: >-
+            {% set names = state_attr('sensor.inventory_filtered_products', 'names') or [] %}
+            {{ ['Select Product'] + (names | unique | list) }}
+
+
+  # 2) RESET search & product when CATEGORY changes
+  - id: inventory_reset_search_and_product_on_category_change
+    alias: "Inventory – Reset Search & Product on Category Change"
+    mode: single
+
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.inventory_category
+
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.inventory_active_search
+        data:
+          value: ""
+
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.inventory_product
+        data:
+          option: "Select Product"
+
+
+  # 3) SUBCATEGORY LIST – uses Inventory – Subcategory Choices sensor
+  - id: inventory_update_subcategory_filter_options
+    alias: Inventory – Update Subcategory Filter Options
+    mode: restart
+
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.inventory_subcategory_choices
+      - platform: homeassistant
+        event: start
+
+    action:
+      - variables:
+          subs: "{{ state_attr('sensor.inventory_subcategory_choices', 'options') or [] }}"
+
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.inventory_subcategory_filter
+        data:
+          options: >
+            {% if subs %}
+              {{ ['All Categories'] + subs }}
+            {% else %}
+              {{ ['All Categories'] }}
+            {% endif %}
+
+  - id: inventory_reset_product_on_subcategory_change
+    alias: "Inventory – Reset Product on Subcategory Change"
+    mode: single
+
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.inventory_subcategory_filter
+
+    action:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.inventory_product
+        data:
+          option: "Select Product"

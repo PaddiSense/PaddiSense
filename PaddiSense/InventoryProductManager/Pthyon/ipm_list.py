@@ -1,235 +1,157 @@
 #!/usr/bin/env python3
 """
-Inventory Product Manager backend (ipm_).
+inventory_list.py
 
-Supports:
-  - read: emit JSON for HA sensor
-  - update: stock movement (add/use)
-  - upsert: create/update product with location-aware ID
+Reads /config/RRAPL/JSON Files/inventory.json (used by inventory_update.py)
+and outputs a flat JSON of products for Home Assistant:
+
+{
+  "count": <int>,
+  "products": [
+    {
+      "id": "MAGISTER",
+      "name": "Magister",
+      "category": "Chemical",
+      "unit": "L",
+      "stock_on_hand": 0,
+      "actives": [
+        {
+          "name": "fenazaquin",
+          "concentration": 200.0,
+          "concentration_unit": "g/L"
+        }
+      ],
+      "active_names": ["fenazaquin"],
+      "storage_location": "Chem Shed 1",
+      "subcategory": "Herbicide",
+      "chemical_group": "3A",
+      "application_unit": "L/ha",
+      "default_pack_size": 20.0,
+      "container_size": 20.0
+    },
+    ...
+  ]
+}
 """
-
-from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_PATH = BASE_DIR / "JSON" / "ipm_inventory_products.json"
+INVENTORY_PATH = Path("/config/RRAPL/JSON Files/inventory.json")
 
-CATEGORY_PREFIX = {
-    "chemical": "CHEM",
-    "chemicals": "CHEM",
-    "seed": "SEED",
-    "seeds": "SEED",
-    "fertiliser": "FERT",
-    "fertilizer": "FERT",
-    "fertilisers": "FERT",
-    "lubricant": "LUBE",
-    "lubricants": "LUBE",
+CATEGORY_LABELS = {
+    "chemicals": "Chemical",
+    "fertiliser": "Fertiliser",
+    "seed": "Seed",
 }
 
 
-def load_data() -> Dict:
-    if DATA_PATH.exists():
-        try:
-            return json.loads(DATA_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {"products": [], "transactions": []}
+def load_inventory():
+    if not INVENTORY_PATH.exists():
+        return {
+            "chemicals": {},
+            "fertiliser": {},
+            "seed": {},
+            "transactions": [],
+        }
+
+    try:
+        with INVENTORY_PATH.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {
+            "chemicals": {},
+            "fertiliser": {},
+            "seed": {},
+            "transactions": [],
+        }
+
+    data.setdefault("chemicals", {})
+    data.setdefault("fertiliser", {})
+    data.setdefault("seed", {})
+    data.setdefault("transactions", [])
+    return data
 
 
-def save_data(data: Dict) -> None:
-    DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    DATA_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
-
-
-def slugify(text: str) -> str:
+def normalise_actives(actives_src):
+    """
+    Ensure we always return a list of dicts:
+    { "name": ..., "concentration": <float>, "concentration_unit": <str> }
+    PLUS a parallel list of just the names for easy display.
+    """
     out = []
-    for ch in (text or ""):
-        if ch.isalnum():
-            out.append(ch.upper())
-        elif ch in (" ", "-", "_"):
-            out.append("_")
-    slug = "".join(out)
-    while "__" in slug:
-        slug = slug.replace("__", "_")
-    return slug.strip("_") or "ITEM"
+    names = []
+
+    for a in actives_src or []:
+        if isinstance(a, dict):
+            name = (a.get("name") or "").strip()
+            if not name:
+                continue
+            conc = a.get("concentration", 0)
+            unit = a.get("concentration_unit", "None / Unknown")
+        else:
+            # If it's a plain string, keep name but default conc/unit
+            name = str(a).strip()
+            if not name:
+                continue
+            conc = 0
+            unit = "None / Unknown"
+
+        try:
+            conc_val = float(conc)
+        except Exception:
+            conc_val = 0.0
+
+        out.append(
+            {
+                "name": name,
+                "concentration": conc_val,
+                "concentration_unit": unit,
+            }
+        )
+        names.append(name)
+
+    return out, names
 
 
-def normalize_category(cat: str) -> str:
-    return (cat or "").strip().lower()
+def main():
+    data = load_inventory()
+    products_out = []
 
+    for key, cat_dict in (
+        ("chemicals", data.get("chemicals", {})),
+        ("fertiliser", data.get("fertiliser", {})),
+        ("seed", data.get("seed", {})),
+    ):
+        label = CATEGORY_LABELS.get(key, key.title())
+        for pid, p in (cat_dict or {}).items():
+            actives_list, active_names = normalise_actives(p.get("actives") or [])
 
-def generate_product_id(category: str, name: str, location: str, existing_ids: List[str]) -> str:
-    prefix = CATEGORY_PREFIX.get(normalize_category(category), "IPM")
-    base = f"{prefix}_{slugify(name)}"
-    loc = slugify(location) if location else "LOC"
-    date_part = datetime.now().strftime("%Y%m%d")
-    candidate = f"{base}_{loc}_{date_part}"
-    idx = 1
-    pid = candidate
-    while pid in existing_ids:
-        idx += 1
-        pid = f"{candidate}_{idx}"
-    return pid
+            products_out.append(
+                {
+                    "id": p.get("id", pid),
+                    "name": p.get("name", pid),
+                    "category": label,
+                    "unit": p.get("unit", ""),
+                    "stock_on_hand": p.get("stock_on_hand", 0),
+                    "actives": actives_list,              # full dicts
+                    "active_names": active_names,         # just names (back-compat)
+                    "storage_location": p.get("storage_location", ""),
+                    "subcategory": p.get("subcategory", ""),
+                    "chemical_group": p.get("chemical_group", "None / Unknown"),
+                    "application_unit": p.get("application_unit", "L/ha"),
+                    "default_pack_size": p.get("default_pack_size"),
+                    "container_size": p.get("container_size"),
+                }
+            )
 
-
-def find_product(data: Dict, product_id: str, name: str, location: str) -> Dict | None:
-    name = (name or "").strip().lower()
-    location = (location or "").strip().lower()
-    for prod in data.get("products", []):
-        if product_id and prod.get("id") == product_id:
-            return prod
-        if prod.get("name", "").strip().lower() == name and prod.get("location", "").strip().lower() == location:
-            return prod
-    return None
-
-
-def add_transaction(data: Dict, *, product_id: str, name: str, category: str, location: str, action: str, qty: float, note: str):
-    tx = {
-        "ts": datetime.utcnow().isoformat(timespec="seconds") + "Z",
-        "id": product_id,
-        "name": name,
-        "category": category,
-        "location": location,
-        "action": action,
-        "quantity": qty,
-        "note": note or "",
+    out = {
+        "count": len(products_out),
+        "products": products_out,
     }
-    data.setdefault("transactions", []).append(tx)
-
-
-def handle_upsert(args: List[str]) -> int:
-    if len(args) < 7:
-        print("usage: ipm_inventory.py upsert <category> <subcategory> <location> <name> <active_constituent> <application_unit> <container_size> [note]", file=sys.stderr)
-        return 1
-    _, category, subcategory, location, name, active_constituent, application_unit, container_size, *rest = args
-    note = rest[0] if rest else ""
-
-    data = load_data()
-    existing_ids = [p.get("id") for p in data.get("products", []) if p.get("id")]
-    product = find_product(data, "", name, location)
-
-    if product is None:
-        product_id = generate_product_id(category, name, location, existing_ids)
-        product = {"id": product_id}
-        data.setdefault("products", []).append(product)
-    else:
-        product_id = product.get("id")
-
-    product.update(
-        {
-            "id": product_id,
-            "name": name,
-            "category": category,
-            "subcategory": subcategory,
-            "location": location,
-            "active_constituent": active_constituent,
-            "application_unit": application_unit,
-            "container_size": float(container_size) if container_size else 0.0,
-            "stock_on_hand": float(product.get("stock_on_hand", 0.0)),
-            "note": note,
-        }
-    )
-
-    add_transaction(
-        data,
-        product_id=product_id,
-        name=name,
-        category=category,
-        location=location,
-        action="upsert",
-        qty=0.0,
-        note=note,
-    )
-    save_data(data)
-    return 0
-
-
-def handle_update(args: List[str]) -> int:
-    if len(args) < 7:
-        print("usage: ipm_inventory.py update <category> <subcategory> <location> <name> <action> <quantity> [note]", file=sys.stderr)
-        return 1
-    _, category, subcategory, location, name, action, quantity, *rest = args
-    note = rest[0] if rest else ""
-    qty = float(quantity)
-
-    data = load_data()
-    product = find_product(data, "", name, location)
-    if product is None:
-        existing_ids = [p.get("id") for p in data.get("products", []) if p.get("id")]
-        product_id = generate_product_id(category, name, location, existing_ids)
-        product = {
-          "id": product_id,
-          "name": name,
-          "category": category,
-          "subcategory": subcategory,
-          "location": location,
-          "active_constituent": "",
-          "application_unit": "",
-          "container_size": 0.0,
-          "stock_on_hand": 0.0,
-          "note": "",
-        }
-        data.setdefault("products", []).append(product)
-    else:
-        product_id = product.get("id")
-
-    current = float(product.get("stock_on_hand", 0.0))
-    action_flag = (action or "").lower()
-    if action_flag == "use":
-        new_stock = current - abs(qty)
-        change = -abs(qty)
-    else:
-        new_stock = current + abs(qty)
-        change = abs(qty)
-    if new_stock < 0:
-        new_stock = 0.0
-
-    product["stock_on_hand"] = new_stock
-
-    add_transaction(
-        data,
-        product_id=product_id,
-        name=product.get("name", name),
-        category=category,
-        location=location,
-        action=action_flag or "add",
-        qty=change,
-        note=note,
-    )
-    save_data(data)
-    return 0
-
-
-def handle_read() -> int:
-    data = load_data()
-    products = data.get("products", [])
-    payload = {
-        "total_products": len(products),
-        "products": products,
-        "source": str(DATA_PATH),
-    }
-    print(json.dumps(payload))
-    return 0
-
-
-def main(argv: List[str]) -> int:
-    if len(argv) <= 1:
-        return handle_read()
-    cmd = argv[1]
-    if cmd == "read":
-        return handle_read()
-    if cmd == "update":
-        return handle_update(argv[1:])
-    if cmd == "upsert":
-        return handle_upsert(argv[1:])
-    print("commands: read | update | upsert", file=sys.stderr)
-    return 1
+    json.dump(out, sys.stdout, ensure_ascii=False)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv))
+    main()

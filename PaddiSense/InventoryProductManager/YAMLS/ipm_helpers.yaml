@@ -1,69 +1,387 @@
+##########################################
+# Inventory core helpers + logic
+##########################################
+
 input_select:
-  ipm_category:
-    name: Category
+  # --- Global / core selectors ---
+  inventory_new_mode:
+    name: Product Editor – Mode
+    options:
+      - Add new
+      - Edit existing
+
+
+
+  inventory_subcategory_filter:
+    name: Inventory – Subcategory Filter
+    options:
+      - All Categories
+
+
+  inventory_category:
+    name: Inventory Category
     options:
       - All
       - Chemical
-      - Seed
       - Fertiliser
-      - Lubricants
-  ipm_subcategory:
-    name: Subcategory
+      - Seed
+      - Lubricant
+      
+
+  inventory_overview_category:
+    name: Inventory Overview Category
     options:
       - All
-      - Herbicide
-      - Fungicide
-      - Insecticide
-      - Adjuvant
-      - Seed Treatment
+      - Chemical
       - Fertiliser
-      - Fuel
-      - Oils
-      - Grease
-      - Other
-  ipm_action:
+      - Seed
+      - Lubricant
+      
+
+  
+  inventory_product:
+    name: Inventory Product
+    options:
+      - Select Product
+
+
+  inventory_action:
     name: Action
     options:
-      - Add
-      - Use
-  ipm_location:
-    name: Storage Location
+      - Use       # subtract from stock
+      - Top up    # add to stock
+    icon: mdi:swap-vertical
+
+  # --- New/Edit product core properties ---
+
+  inventory_new_category:
+    name: New Product – Category
     options:
+      - Chemical
+      - Fertiliser
+      - Seed
+      - Lubricant
+      - please update
+
+  inventory_new_storage_location:
+    name: New Product – Storage Location
+    options:
+      - Chem Shed
+      - Seed Shed
       - Silo 1
       - Silo 2
       - Silo 3
-      - Chem Shed
-      - Fuel Shed
-      - Workshop
+      - Silo 4
+      - Silo 5
+      - Silo 6
+      - Silo 7
+      - Silo 8
+      - Silo 9
+      - Silo 10
+      - Silo 11
+      - Silo 12
+      - Silo 13
+      - Oil Shed
+      - please update
+
+  inventory_new_subcategory:
+    name: New Product – Subcategory
+    options:
+      - Adjuvant
+      - Biological
+      - Fungicide
+      - Herbicide
+      - Insecticide
+      - Pesticide
+      - Rodenticide
+      - Seed Treatment
+      - Fertiliser
+      - Wheat
+      - Barley
+      - Canola
+      - Rice
       - Other
+      - please update
 
-input_text:
-  ipm_product_name:
-    name: Product Name
-    max: 80
-  ipm_active_constituent:
-    name: Active Constituent
-    max: 200
-  ipm_application_unit:
-    name: Application Unit
-    max: 20
-  ipm_custom_location:
-    name: Custom Location
-    max: 60
-  ipm_note:
-    name: Note
-    max: 120
+  # Chemical group (e.g. 1, 2, 3, 3A, 9, etc.)
+  inventory_new_chemical_group:
+    name: New Product – Chemical Group
+    options:
+      - 1 4A
+      - 1A
+      - 1B
+      - 2
+      - 2C
+      - 3
+      - 3A
+      - 4
+      - 4A
+      - 4C
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 11
+      - 12
+      - 13
+      - 14
+      - 15
+      - 22
+      - M3
+      - None / Unknown
+      - please update
 
+  # Product units (how stock is held)
+  inventory_new_product_unit:
+    name: New Product – Product Unit
+    options:
+      - L
+      - kg
+      - t
+      - please update
+
+  # Container size (standard drums / bags)
+  inventory_new_container_size:
+    name: New Product – Container Size
+    options:
+      - 1
+      - 5
+      - 10
+      - 20
+      - 110
+      - 1000
+      - bulk
+      - please update
+
+  # Active concentration unit (for the constituent)
+
+  # already have:
+  inventory_new_active_unit:
+    name: New Product – Active concentration unit (1)
+    options:
+      - g/L
+      - g/kg
+      - g/t
+      - mg/L
+      - "%"
+      - None / Unknown
+      - please update
+
+  # extra units 2–6
+  inventory_new_active_unit_2:
+    name: New Product – Active concentration unit (2)
+    options:
+      - g/L
+      - g/kg
+      - g/t
+      - mg/L
+      - "%"
+      - None / Unknown
+      - please update
+
+  inventory_new_active_unit_3:
+    name: New Product – Active concentration unit (3)
+    options:
+      - g/L
+      - g/kg
+      - g/t
+      - mg/L
+      - "%"
+      - None / Unknown
+      - please update
+
+  inventory_new_active_unit_4:
+    name: New Product – Active concentration unit (4)
+    options:
+      - g/L
+      - g/kg
+      - g/t
+      - mg/L
+      - "%"
+      - None / Unknown
+      - please update
+
+  inventory_new_active_unit_5:
+    name: New Product – Active concentration unit (5)
+    options:
+      - g/L
+      - g/kg
+      - g/t
+      - mg/L
+      - "%"
+      - None / Unknown
+      - please update
+
+  inventory_new_active_unit_6:
+    name: New Product – Active concentration unit (6)
+    options:
+      - g/L
+      - g/kg
+      - g/t
+      - mg/L
+      - "%"
+      - None / Unknown
+      - please update
+
+
+  # Application unit (how you apply in the paddock)
+  inventory_new_application_unit:
+    name: New Product – Application unit
+    options:
+      - g/ha
+      - kg/ha
+      - t/ha
+      - mL/ha
+      - L/ha
+      - mL/100L
+      - L/100L
+      - g/100L
+      - please update
+##----------------------------------------------##
 input_number:
-  ipm_container_size:
-    name: Container Size
-    min: 0
-    max: 100000
-    step: 0.1
-    mode: box
-  ipm_quantity:
+  # Movement quantity
+  inventory_quantity:
     name: Quantity
-    min: -100000
-    max: 100000
+    min: -50000
+    max: 500000
+    step: 1
+    mode: box
+  
+  inventory_quantity_update:
+    name: Quantity
+    min: -50000
+    max: 500000
+    step: 1
+    mode: box
+
+
+  # New/Edit product numeric props
+  inventory_new_initial_stock:
+    name: New Product – Initial stock
+    min: 0
+    max: 500000
     step: 0.1
     mode: box
+
+
+  inventory_new_min_stock:
+    name: New Product – Minimum stock
+    min: 0
+    max: 500000
+    step: 0.1
+    mode: box
+
+
+  # already have:
+  inventory_new_active_concentration:
+    name: New Product – Active concentration (1)
+    min: 0
+    max: 1000
+    step: 0.1
+    mode: box
+
+  # extra concentrations 2–6
+  inventory_new_active_concentration_2:
+    name: New Product – Active concentration (2)
+    min: 0
+    max: 1000
+    step: 0.1
+    mode: box
+
+  inventory_new_active_concentration_3:
+    name: New Product – Active concentration (3)
+    min: 0
+    max: 1000
+    step: 0.1
+    mode: box
+
+  inventory_new_active_concentration_4:
+    name: New Product – Active concentration (4)
+    min: 0
+    max: 1000
+    step: 0.1
+    mode: box
+
+  inventory_new_active_concentration_5:
+    name: New Product – Active concentration (5)
+    min: 0
+    max: 1000
+    step: 0.1
+    mode: box
+
+  inventory_new_active_concentration_6:
+    name: New Product – Active concentration (6)
+    min: 0
+    max: 1000
+    step: 0.1
+    mode: box
+
+    ###############################################################
+input_text:
+  inventory_note:
+    name: Note
+    max: 100
+
+  inventory_active_search:
+    name: Active/name search
+    max: 50
+
+  # Core product identifiers
+  inventory_new_id:
+    name: New Product – ID
+    max: 40
+
+  inventory_new_name:
+    name: New Product – Name
+    max: 80
+
+  # Active constituent name(s). One or more, comma-separated if needed.
+  inventory_new_actives:
+    name: New Product – Active constituent(s)
+    max: 200
+  inventory_new_active_1:
+    name: New Product – Active 1
+    max: 200
+
+  inventory_new_active_2:
+    name: New Product – Active 2
+    max: 200
+
+  inventory_new_active_3:
+    name: New Product – Active 3
+    max: 200
+  inventory_new_active_4:
+    name: New Product – Active 4
+    max: 200
+
+  inventory_new_active_5:
+    name: New Product – Active 5
+    max: 200
+
+  inventory_new_active_6:
+    name: New Product – Active 6
+    max: 200
+
+##########################################################
+input_boolean:
+
+  inventory_new_show_active_2:
+    name: Show Active 2
+    icon: mdi:plus-box-multiple
+
+  inventory_new_show_active_3:
+    name: Show Active 3
+    icon: mdi:plus-box-multiple
+
+  inventory_new_show_active_4:
+    name: Show Active 4
+    icon: mdi:plus-box-multiple
+
+  inventory_new_show_active_5:
+    name: Show Active 5
+    icon: mdi:plus-box-multiple
+
+  inventory_new_show_active_6:
+    name: Show Active 6
+    icon: mdi:plus-box-multiple

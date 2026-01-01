@@ -1,76 +1,853 @@
+
+
 script:
-  ipm_commit_stock:
-    alias: ipm_ Commit Stock Movement
-    mode: single
+  ##########################################
+  # Commit stock change
+  ##########################################
+  inventory_commit:
+    alias: Inventory – Commit Signed Change
+    mode: restart
     sequence:
       - variables:
-          category: "{{ states('input_select.ipm_category') }}"
-          subcategory: "{{ states('input_select.ipm_subcategory') }}"
-          location_sel: "{{ states('input_select.ipm_location') }}"
-          location_custom: "{{ states('input_text.ipm_custom_location') | trim }}"
-          location: >
-            {% if location_sel == 'Other' %}
-              {{ location_custom }}
-            {% else %}
-              {{ location_sel }}
+          delta: "{{ states('input_number.inventory_quantity') | float(0) }}"
+          category: "{{ states('input_select.inventory_category') }}"
+          sel_name: "{{ states('input_select.inventory_product') }}"
+          note: "HA UI Commit"
+
+          # Canonical product object from catalog
+          product_obj: >
+            {% set products = state_attr('sensor.inventory_catalog', 'products') or [] %}
+            {% set matches = products
+                | selectattr('name', 'eq', sel_name)
+                | selectattr('category', 'eq', category)
+                | list %}
+            {% if matches | length == 0 %}
+              {% set matches = products
+                  | selectattr('name', 'eq', sel_name)
+                  | list %}
             {% endif %}
-          product_name: "{{ states('input_text.ipm_product_name') }}"
-          action: "{{ states('input_select.ipm_action') | lower }}"
-          quantity: "{{ states('input_number.ipm_quantity') }}"
-          note: "{{ states('input_text.ipm_note') }}"
+            {{ matches[0] if matches | length > 0 else None }}
+
+          product_id: >
+            {% if product_obj is not none and product_obj.id is defined %}
+              {{ product_obj.id }}
+            {% else %}
+              {{ sel_name }}
+            {% endif %}
+
+          action: >
+            {% if delta < 0 %}
+              use
+            {% else %}
+              topup
+            {% endif %}
+
+          qty_abs: "{{ (delta | float(0)) | abs }}"
+
+      # Skip if zero or no valid product
       - condition: template
-        value_template: "{{ product_name | trim != '' and category not in ['', 'All', none] and quantity | float != 0 }}"
-      - service: shell_command.ipm_update_stock
+        value_template: >
+          {{ delta != 0
+            and states('input_select.inventory_product') not in ['Select Product', '', 'unknown'] }}
+
+      # Call the backend to apply the change
+      - service: shell_command.inventory_update
         data:
           category: "{{ category }}"
-          subcategory: "{{ subcategory }}"
-          location: "{{ location }}"
-          name: "{{ product_name }}"
+          product: "{{ product_id }}"
           action: "{{ action }}"
-          quantity: "{{ quantity }}"
+          quantity: "{{ qty_abs }}"
           note: "{{ note }}"
-      - delay: "00:00:01"
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.ipm_inventory_products
+
+      # Reset quantity ready for next change
       - service: input_number.set_value
         data:
-          entity_id: input_number.ipm_quantity
+          entity_id: input_number.inventory_quantity
           value: 0
 
-  ipm_upsert_product:
-    alias: ipm_ Add/Edit Product
-    mode: single
-    sequence:
-      - variables:
-          category: "{{ states('input_select.ipm_category') }}"
-          subcategory: "{{ states('input_select.ipm_subcategory') }}"
-          location_sel: "{{ states('input_select.ipm_location') }}"
-          location_custom: "{{ states('input_text.ipm_custom_location') | trim }}"
-          location: >
-            {% if location_sel == 'Other' %}
-              {{ location_custom }}
-            {% else %}
-              {{ location_sel }}
-            {% endif %}
-          name: "{{ states('input_text.ipm_product_name') }}"
-          active_constituent: "{{ states('input_text.ipm_active_constituent') }}"
-          application_unit: "{{ states('input_text.ipm_application_unit') }}"
-          container_size: "{{ states('input_number.ipm_container_size') }}"
-          note: "{{ states('input_text.ipm_note') }}"
-      - condition: template
-        value_template: "{{ name | trim != '' and category not in ['', 'All', none] }}"
-      - service: shell_command.ipm_upsert_product
-        data:
-          category: "{{ category }}"
-          subcategory: "{{ subcategory }}"
-          location: "{{ location }}"
-          name: "{{ name }}"
-          active_constituent: "{{ active_constituent }}"
-          application_unit: "{{ application_unit }}"
-          container_size: "{{ container_size }}"
-          note: "{{ note }}"
+      # Give Python a moment to write JSON, then refresh sensors
       - delay: "00:00:01"
       - service: homeassistant.update_entity
         target:
-          entity_id: sensor.ipm_inventory_products
+          entity_id:
+            - sensor.inventory_products
+            - sensor.inventory_catalog
+      - delay: "00:00:03"
+      # 🔄 Clear filters & product selection after a movement
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.inventory_subcategory_filter
+          option: "All Categories"
+
+      - service: input_text.set_value
+        data:
+          entity_id: input_text.inventory_active_search
+          value: ""
+
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.inventory_product
+          option: "Select Product"
+
+
+
+
+
+
+  ##########################################
+  # "Delete" product = zero its stock
+  ##########################################
+  inventory_zero_product:
+    alias: Inventory – Zero Product Stock
+    mode: single
+    sequence:
+      - variables:
+          cat: "{{ states('input_select.inventory_category') }}"
+          sel_name: "{{ states('input_select.inventory_product') }}"
+          products: "{{ state_attr('sensor.inventory_catalog', 'products') or [] }}"
+          product_obj: >
+            {% set plist = products | selectattr('name', 'eq', sel_name) | list %}
+            {{ plist[0] if plist | length > 0 else None }}
+          product_id: >
+            {% if product_obj is not none %}
+              {{ product_obj.id }}
+            {% else %}
+              {{ sel_name }}
+            {% endif %}
+          current: >
+            {% if product_obj is not none %}
+              {{ product_obj.stock_on_hand | float(0) }}
+            {% else %}
+              0
+            {% endif %}
+
+      # Only act if there is stock to zero
+      - condition: template
+        value_template: "{{ current | float(0) > 0 }}"
+
+      # Send NEGATIVE quantity = "use all"
+      - service: shell_command.inventory_zero_product
+        data:
+          category: "{{ cat }}"
+          product: "{{ product_id }}"
+          quantity: "{{ -1 * (current | float(0)) }}"
+
+      # Refresh sensors so UI updates immediately
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id:
+            - sensor.inventory_products
+            - sensor.inventory_catalog
+
+
+
+  ##########################################
+  # Prepare product form (Add / Edit)
+  ##########################################
+  inventory_prepare_product_form:
+    alias: Inventory – Prepare Product Form (Add/Edit)
+    mode: single
+    sequence:
+      - variables:
+          mode: "{{ states('input_select.inventory_new_mode') }}"
+          cat: "{{ states('input_select.inventory_category') }}"
+          sel_name: "{{ states('input_select.inventory_product') }}"
+
+          # Use the rich catalog sensor – this includes `actives`
+          prods: "{{ state_attr('sensor.inventory_catalog', 'products') or [] }}"
+
+          product_obj: >
+            {% if mode == 'Edit existing' %}
+              {% set matches = prods
+                   | selectattr('name', 'eq', sel_name)
+                   | selectattr('category', 'eq', cat)
+                   | list %}
+              {{ matches[0] if matches|length > 0 else None }}
+            {% else %}
+              None
+            {% endif %}
+
+
+      - choose:
+          # -------- ADD NEW MODE --------
+          - conditions:
+              - condition: state
+                entity_id: input_select.inventory_new_mode
+                state: "Add new"
+            sequence:
+              # Use main inventory_category as default
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_category
+                  option: >
+                    {% if cat in ['Chemical','Fertiliser','Seed'] %}
+                      {{ cat }}
+                    {% else %}
+                      Chemical
+                    {% endif %}
+
+              # Clear all fields
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_id
+                  value: ""
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_name
+                  value: ""
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_product_unit
+                  option: "L"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_container_size
+                  option: "20"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_min_stock
+                  value: 0
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_initial_stock
+                  value: 0
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_storage_location
+                  option: "Chem Shed"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_subcategory
+                  option: "Other"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_chemical_group
+                  option: "None / Unknown"
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_actives
+                  value: ""
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration
+                  value: 0
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit
+                  option: "None / Unknown"
+    ##############################################################################              
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_application_unit
+                  option: "L/ha"
+
+              # Clear actives (names, concs, units) and hide all extra actives
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_1
+                  value: ""
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_2
+                  value: ""
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_3
+                  value: ""
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_4
+                  value: ""
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_5
+                  value: ""
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_6
+                  value: ""
+
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration
+                  value: 0
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_2
+                  value: 0
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_3
+                  value: 0
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_4
+                  value: 0
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_5
+                  value: 0
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_6
+                  value: 0
+
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit
+                  option: "None / Unknown"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_2
+                  option: "None / Unknown"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_3
+                  option: "None / Unknown"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_4
+                  option: "None / Unknown"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_5
+                  option: "None / Unknown"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_6
+                  option: "None / Unknown"
+
+              - service: input_boolean.turn_off
+                target:
+                  entity_id:
+                    - input_boolean.inventory_new_show_active_2
+                    - input_boolean.inventory_new_show_active_3
+                    - input_boolean.inventory_new_show_active_4
+                    - input_boolean.inventory_new_show_active_5
+                    - input_boolean.inventory_new_show_active_6
+
+
+
+          # -------- EDIT EXISTING MODE --------
+          - conditions:
+              - condition: state
+                entity_id: input_select.inventory_new_mode
+                state: "Edit existing"
+            sequence:
+              - condition: template
+                value_template: "{{ product_obj is not none }}"
+
+              # Category
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_category
+                  option: >
+                    {% set pc = product_obj.category | default('Chemical') %}
+                    {% if pc in ['Chemical','Fertiliser','Seed'] %}
+                      {{ pc }}
+                    {% else %}
+                      Chemical
+                    {% endif %}
+
+              # ID + Name
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_id
+                  value: "{{ product_obj.id }}"
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_name
+                  value: "{{ product_obj.name }}"
+
+              # Product unit
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_product_unit
+                  option: >
+                    {% set u = product_obj.unit | default('L') %}
+                    {% set valid = ['L','kg','t'] %}
+                    {{ u if u in valid else 'L' }}
+
+              # Container size from default_pack_size or container_size
+              - variables:
+                  _pack_size: >
+                    {% if product_obj.container_size is defined %}
+                      {{ product_obj.container_size }}
+                    {% else %}
+                      {{ product_obj.default_pack_size | default(20) }}
+                    {% endif %}
+                  _pack_str: "{{ (_pack_size | int(20)) | string }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_container_size
+                  option: >
+                    {% set valid = ['1','5','10','20','110','1000'] %}
+                    {% if _pack_str in valid %}
+                      {{ _pack_str }}
+                    {% else %}
+                      20
+                    {% endif %}
+
+              # Min stock + (display) initial stock = current stock
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_min_stock
+                  value: "{{ product_obj.min_stock | default(0) }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_initial_stock
+                  value: "{{ product_obj.stock_on_hand | default(0) }}"
+
+              # Storage location
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_storage_location
+                  option: >
+                    {% set sl = product_obj.storage_location | default('Chem Shed') %}
+                    {% set valid = [
+                      'Chem Shed','Seed Shed',
+                      'Silo 1','Silo 2','Silo 3','Silo 4','Silo 5','Silo 6',
+                      'Silo 7','Silo 8','Silo 9','Silo 10','Silo 11','Silo 12','Silo 13'
+                    ] %}
+                    {{ sl if sl in valid else 'Chem Shed' }}
+
+              # Subcategory
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_subcategory
+                  option: >
+                    {% set sc = product_obj.subcategory | default('Other') %}
+                    {% set valid = [
+                      'Herbicide','Fungicide','Insecticide','Pesticide','Adjuvant',
+                      'Seed Treatment','PGR','Biological','Rodenticide','Fertiliser',
+                      'Wheat','Barley','Canola','Rice','Other'
+                    ] %}
+                    {{ sc if sc in valid else 'Other' }}
+
+              # Chemical group
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_chemical_group
+                  option: >
+                    {% set cg = product_obj.chemical_group | default('None / Unknown') %}
+                    {% set valid = [
+                      '1','1A','1B','2','2C','3','3A','4','4A','4C','5','6','7','8','9',
+                      '11','12','13','14','15','22','M3','None / Unknown'
+                    ] %}
+                    {{ cg if cg in valid else 'None / Unknown' }}
+
+              # Active(s)
+     
+                            # Active(s) -> fill up to 6 lines from product_obj.actives list
+                            # Active(s) -> fill up to 6 lines from product_obj.actives list
+              - variables:
+                  _acts: >
+                    {% set acts = product_obj.actives | default([], true) %}
+                    {% if acts is iterable and acts is not string %}
+                      {{ acts }}
+                    {% else %}
+                      {{ [] }}
+                    {% endif %}
+
+                  _a1: "{{ _acts[0] if _acts|length > 0 else dict(name='', concentration=0, concentration_unit='None / Unknown') }}"
+                  _a2: "{{ _acts[1] if _acts|length > 1 else dict(name='', concentration=0, concentration_unit='None / Unknown') }}"
+                  _a3: "{{ _acts[2] if _acts|length > 2 else dict(name='', concentration=0, concentration_unit='None / Unknown') }}"
+                  _a4: "{{ _acts[3] if _acts|length > 3 else dict(name='', concentration=0, concentration_unit='None / Unknown') }}"
+                  _a5: "{{ _acts[4] if _acts|length > 4 else dict(name='', concentration=0, concentration_unit='None / Unknown') }}"
+                  _a6: "{{ _acts[5] if _acts|length > 5 else dict(name='', concentration=0, concentration_unit='None / Unknown') }}"
+
+              # Active 1
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_1
+                  value: "{{ _a1.name | default('') }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration
+                  value: "{{ _a1.concentration | default(0) }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit
+                  option: >
+                    {% set u = _a1.concentration_unit | default('None / Unknown') %}
+                    {% set valid = ['g/L','g/kg','g/t','mg/L','%','None / Unknown'] %}
+                    {{ u if u in valid else 'None / Unknown' }}
+
+              # Active 2
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_2
+                  value: "{{ _a2.name | default('') }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_2
+                  value: "{{ _a2.concentration | default(0) }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_2
+                  option: >
+                    {% set u = _a2.concentration_unit | default('None / Unknown') %}
+                    {% set valid = ['g/L','g/kg','g/t','mg/L','%','None / Unknown'] %}
+                    {{ u if u in valid else 'None / Unknown' }}
+
+              # Active 3
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_3
+                  value: "{{ _a3.name | default('') }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_3
+                  value: "{{ _a3.concentration | default(0) }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_3
+                  option: >
+                    {% set u = _a3.concentration_unit | default('None / Unknown') %}
+                    {% set valid = ['g/L','g/kg','g/t','mg/L','%','None / Unknown'] %}
+                    {{ u if u in valid else 'None / Unknown' }}
+
+              # Active 4
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_4
+                  value: "{{ _a4.name | default('') }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_4
+                  value: "{{ _a4.concentration | default(0) }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_4
+                  option: >
+                    {% set u = _a4.concentration_unit | default('None / Unknown') %}
+                    {% set valid = ['g/L','g/kg','g/t','mg/L','%','None / Unknown'] %}
+                    {{ u if u in valid else 'None / Unknown' }}
+
+              # Active 5
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_5
+                  value: "{{ _a5.name | default('') }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_5
+                  value: "{{ _a5.concentration | default(0) }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_5
+                  option: >
+                    {% set u = _a5.concentration_unit | default('None / Unknown') %}
+                    {% set valid = ['g/L','g/kg','g/t','mg/L','%','None / Unknown'] %}
+                    {{ u if u in valid else 'None / Unknown' }}
+
+              # Active 6
+              - service: input_text.set_value
+                data:
+                  entity_id: input_text.inventory_new_active_6
+                  value: "{{ _a6.name | default('') }}"
+              - service: input_number.set_value
+                data:
+                  entity_id: input_number.inventory_new_active_concentration_6
+                  value: "{{ _a6.concentration | default(0) }}"
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_active_unit_6
+                  option: >
+                    {% set u = _a6.concentration_unit | default('None / Unknown') %}
+                    {% set valid = ['g/L','g/kg','g/t','mg/L','%','None / Unknown'] %}
+                    {{ u if u in valid else 'None / Unknown' }}
+
+              # Toggle visibility based on which actives are non-empty
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ _a2.name | default('') | trim != '' }}"
+                    sequence:
+                      - service: input_boolean.turn_on
+                        target:
+                          entity_id: input_boolean.inventory_new_show_active_2
+                default:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.inventory_new_show_active_2
+
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ _a3.name | default('') | trim != '' }}"
+                    sequence:
+                      - service: input_boolean.turn_on
+                        target:
+                          entity_id: input_boolean.inventory_new_show_active_3
+                default:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.inventory_new_show_active_3
+
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ _a4.name | default('') | trim != '' }}"
+                    sequence:
+                      - service: input_boolean.turn_on
+                        target:
+                          entity_id: input_boolean.inventory_new_show_active_4
+                default:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.inventory_new_show_active_4
+
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ _a5.name | default('') | trim != '' }}"
+                    sequence:
+                      - service: input_boolean.turn_on
+                        target:
+                          entity_id: input_boolean.inventory_new_show_active_5
+                default:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.inventory_new_show_active_5
+
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ _a6.name | default('') | trim != '' }}"
+                    sequence:
+                      - service: input_boolean.turn_on
+                        target:
+                          entity_id: input_boolean.inventory_new_show_active_6
+                default:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.inventory_new_show_active_6
+
+
+
+
+              # Application unit
+              - service: input_select.select_option
+                data:
+                  entity_id: input_select.inventory_new_application_unit
+                  option: >
+                    {% set ap = product_obj.application_unit | default('L/ha') %}
+                    {% set valid = [
+                      'g/ha','kg/ha','t/ha','mL/ha','L/ha',
+                      'mL/100L','L/100L','g/100L'
+                    ] %}
+                    {{ ap if ap in valid else 'L/ha' }}
+
+   ##########################################
+  # Save Product (Add/Edit -> Python upsert)
+  ##########################################
+  inventory_save_product:
+    alias: Inventory – Save Product (Add/Edit)
+    mode: single
+    sequence:
+      - variables:
+          mode: "{{ states('input_select.inventory_new_mode') }}"
+          cat: "{{ states('input_select.inventory_new_category') }}"
+          pid: >
+            {% set raw = states('input_text.inventory_new_id') | trim %}
+            {% set mode_val = states('input_select.inventory_new_mode') %}
+            {# EDIT: never auto-generate, just use what’s in the box #}
+            {% if mode_val == 'Edit existing' %}
+              {{ raw }}
+            {# ADD NEW: auto-generate if blank #}
+            {% else %}
+              {% if raw != '' %}
+                {{ raw }}
+              {% else %}
+                {% set products = state_attr('sensor.inventory_products', 'products') or [] %}
+                {% set cat = states('input_select.inventory_new_category') %}
+
+                {% if cat == 'Chemical' %}
+                  {% set prefix = 'CHEM' %}
+                  {% set cat_products = products | selectattr('category','eq','Chemical') | list %}
+                  {% set idx = (cat_products | length) + 1 %}
+                {% elif cat == 'Fertiliser' %}
+                  {% set prefix = 'FERT' %}
+                  {% set cat_products = products | selectattr('category','eq','Fertiliser') | list %}
+                  {% set idx = (cat_products | length) + 1 %}
+                {% elif cat == 'Seed' %}
+                  {% set sub = states('input_select.inventory_new_subcategory') %}
+                  {% set prefix = (sub | default('SEED')) | upper %}
+                  {% set cat_products = products
+                       | selectattr('category','eq','Seed')
+                       | selectattr('subcategory','eq', sub)
+                       | list %}
+                  {% set idx = (cat_products | length) + 1 %}
+                {% else %}
+                  {% set prefix = 'PROD' %}
+                  {% set cat_products = products | list %}
+                  {% set idx = (cat_products | length) + 1 %}
+                {% endif %}
+                {{ prefix ~ '_' ~ idx }}
+              {% endif %}
+            {% endif %}
+          name: "{{ states('input_text.inventory_new_name') }}"
+          product_unit: "{{ states('input_select.inventory_new_product_unit') }}"
+          container_size: "{{ states('input_select.inventory_new_container_size') }}"
+          min_stock: "{{ states('input_number.inventory_new_min_stock') }}"
+          initial_stock: "{{ states('input_number.inventory_new_initial_stock') }}"
+          storage: "{{ states('input_select.inventory_new_storage_location') }}"
+          subcat: "{{ states('input_select.inventory_new_subcategory') }}"
+          chem_group: "{{ states('input_select.inventory_new_chemical_group') }}"
+          application_unit: "{{ states('input_select.inventory_new_application_unit') }}"
+
+          # --- Active 1–6: name, conc, unit as separate triples ---
+          a1_name: "{{ states('input_text.inventory_new_active_1') | trim }}"
+          a1_conc: "{{ states('input_number.inventory_new_active_concentration') | float(0) }}"
+          a1_unit: "{{ states('input_select.inventory_new_active_unit') }}"
+
+          a2_name: "{{ states('input_text.inventory_new_active_2') | trim }}"
+          a2_conc: "{{ states('input_number.inventory_new_active_concentration_2') | float(0) }}"
+          a2_unit: "{{ states('input_select.inventory_new_active_unit_2') }}"
+
+          a3_name: "{{ states('input_text.inventory_new_active_3') | trim }}"
+          a3_conc: "{{ states('input_number.inventory_new_active_concentration_3') | float(0) }}"
+          a3_unit: "{{ states('input_select.inventory_new_active_unit_3') }}"
+
+          a4_name: "{{ states('input_text.inventory_new_active_4') | trim }}"
+          a4_conc: "{{ states('input_number.inventory_new_active_concentration_4') | float(0) }}"
+          a4_unit: "{{ states('input_select.inventory_new_active_unit_4') }}"
+
+          a5_name: "{{ states('input_text.inventory_new_active_5') | trim }}"
+          a5_conc: "{{ states('input_number.inventory_new_active_concentration_5') | float(0) }}"
+          a5_unit: "{{ states('input_select.inventory_new_active_unit_5') }}"
+
+          a6_name: "{{ states('input_text.inventory_new_active_6') | trim }}"
+          a6_conc: "{{ states('input_number.inventory_new_active_concentration_6') | float(0) }}"
+          a6_unit: "{{ states('input_select.inventory_new_active_unit_6') }}"
+
+      # Need at least a name
+      - condition: template
+        value_template: "{{ name | trim != '' }}"
+
+      # 🔴 ACTUAL UPSERT -> calls Python via shell_command
+      - service: shell_command.inventory_upsert_product
+        data:
+          mode: >
+            {% if mode == 'Edit existing' %}
+              edit
+            {% else %}
+              add
+            {% endif %}
+          category: "{{ cat }}"
+          id: "{{ pid }}"
+          name: "{{ name }}"
+          product_unit: "{{ product_unit }}"
+          container_size: "{{ container_size }}"
+          min_stock: "{{ min_stock }}"
+          initial_stock: "{{ initial_stock }}"
+          storage_location: "{{ storage }}"
+          subcategory: "{{ subcat }}"
+          chemical_group: "{{ chem_group }}"
+          application_unit: "{{ application_unit }}"
+
+          active1_name: "{{ a1_name }}"
+          active1_conc: "{{ a1_conc }}"
+          active1_unit: "{{ a1_unit }}"
+
+          active2_name: "{{ a2_name }}"
+          active2_conc: "{{ a2_conc }}"
+          active2_unit: "{{ a2_unit }}"
+
+          active3_name: "{{ a3_name }}"
+          active3_conc: "{{ a3_conc }}"
+          active3_unit: "{{ a3_unit }}"
+
+          active4_name: "{{ a4_name }}"
+          active4_conc: "{{ a4_conc }}"
+          active4_unit: "{{ a4_unit }}"
+
+          active5_name: "{{ a5_name }}"
+          active5_conc: "{{ a5_conc }}"
+          active5_unit: "{{ a5_unit }}"
+
+          active6_name: "{{ a6_name }}"
+          active6_conc: "{{ a6_conc }}"
+          active6_unit: "{{ a6_unit }}"
+
+      # Refresh sensors so UI updates immediately
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id:
+            - sensor.inventory_products
+            - sensor.inventory_catalog
+
+      # -------------------------------
+      # CLEAR FORM AFTER SAVE
+      # -------------------------------
+      - delay: "00:00:01"
+
+      # Reset mode back to Add new (optional but recommended)
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.inventory_new_mode
+          option: "Add new"
+
+      # Clear all text fields
+      - service: input_text.set_value
+        data:
+          entity_id:
+            - input_text.inventory_new_id
+            - input_text.inventory_new_name
+            - input_text.inventory_new_active_1
+            - input_text.inventory_new_active_2
+            - input_text.inventory_new_active_3
+            - input_text.inventory_new_active_4
+            - input_text.inventory_new_active_5
+            - input_text.inventory_new_active_6
+          value: ""
+
+      # Clear numeric fields
+      - service: input_number.set_value
+        data:
+          entity_id:
+            - input_number.inventory_new_min_stock
+            - input_number.inventory_new_initial_stock
+            - input_number.inventory_new_active_concentration
+            - input_number.inventory_new_active_concentration_2
+            - input_number.inventory_new_active_concentration_3
+            - input_number.inventory_new_active_concentration_4
+            - input_number.inventory_new_active_concentration_5
+            - input_number.inventory_new_active_concentration_6
+          value: 0
+
+      # Reset selects to sentinel "please update" so user must choose
+      - service: input_select.select_option
+        data:
+          entity_id: input_select.inventory_new_category
+          option: "please update"
+
+      - service: input_select.select_option
+        data:
+          entity_id:
+            - input_select.inventory_new_subcategory
+            - input_select.inventory_new_storage_location
+            - input_select.inventory_new_product_unit
+            - input_select.inventory_new_container_size
+            - input_select.inventory_new_application_unit
+            - input_select.inventory_new_chemical_group
+            - input_select.inventory_new_active_unit
+            - input_select.inventory_new_active_unit_2
+            - input_select.inventory_new_active_unit_3
+            - input_select.inventory_new_active_unit_4
+            - input_select.inventory_new_active_unit_5
+            - input_select.inventory_new_active_unit_6
+          option: "please update"
+
+      # Hide extra actives
+      - service: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.inventory_new_show_active_2
+            - input_boolean.inventory_new_show_active_3
+            - input_boolean.inventory_new_show_active_4
+            - input_boolean.inventory_new_show_active_5
+            - input_boolean.inventory_new_show_active_6
