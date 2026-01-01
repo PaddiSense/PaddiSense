@@ -1,8 +1,14 @@
-lovelace:
-  dashboards:
-    ipm_inventory:
-      mode: yaml
-      title: "Inventory Manager"
-      icon: mdi:clipboard-list
-      show_in_sidebar: true
-      filename: /config/PaddiSense/YAML/ipm_inventory_parts/ipm_dashboard_view.yaml
+title: Inventory Manager
+views:
+  - title: Inventory
+    path: inventory
+    icon: mdi:warehouse
+    cards:
+      - type: entities
+        title: Inventory Summary
+        entities:
+          - sensor.ipm_inventory_products
+          - sensor.ipm_filtered_products_count
+      - type: markdown
+        content: |
+          Use the Inventory package helpers to add/edit products and commit stock movements.
