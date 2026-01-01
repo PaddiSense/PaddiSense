@@ -1,2 +1,12 @@
 # Inventory Product Manager package (ipm_)
 !include_dir_merge_named /config/PaddiSense/YAML/ipm_inventory_parts
+
+# Dashboard
+lovelace:
+  dashboards:
+    inventory_product_manager:
+      mode: yaml
+      title: Inventory
+      icon: mdi:test-tube
+      show_in_sidebar: true
+      filename: /config/PaddiSense/YAML/ipm_inventory_parts/ipm_dashboard.yaml
