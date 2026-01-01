@@ -9,6 +9,9 @@ home-assistant.log*
 cloud/
 tts/
 
+# PaddiSense runtime data (DO NOT COMMIT)
+PaddiSense/data/
+
 ########################################
 # HACS - installed custom components
 ########################################
