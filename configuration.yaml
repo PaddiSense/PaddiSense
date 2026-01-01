@@ -9,3 +9,24 @@ frontend:
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+shell_command: !include /config/PaddiSense/ShellCommands/shell_command.yaml
+
+homeassistant:
+  packages: !include_dir_named /config/PaddiSense/YAML
+
+
+
+
+##########################
+# This setting will kepp all data in the database for 1 year then be deleted
+recorder:
+  purge_keep_days: 365
+  auto_purge: true
+  commit_interval: 30
+############################
+
+#################################################
+# Steps to sync with Github
+#     >> git add PaddiSense
+#     >> git commit -m "Add PaddiSense folder"
+#     >> git push
