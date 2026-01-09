@@ -21,7 +21,7 @@ import json
 import sys
 from pathlib import Path
 
-INVENTORY_PATH = Path("/config/RRAPL/JSON Files/inventory.json")
+INVENTORY_PATH = Path("/config/RRAPL/JSON Files/ipm_products.json")
 
 
 def load_inventory():

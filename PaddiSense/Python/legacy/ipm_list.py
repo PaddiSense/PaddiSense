@@ -38,12 +38,13 @@ import json
 import sys
 from pathlib import Path
 
-INVENTORY_PATH = Path("/config/RRAPL/JSON Files/inventory.json")
+INVENTORY_PATH = Path("/config/RRAPL/JSON Files/ipm_products.json")
 
 CATEGORY_LABELS = {
     "chemicals": "Chemical",
     "fertiliser": "Fertiliser",
     "seed": "Seed",
+    "lubricants": "Lubricants"
 }
 
 
@@ -53,6 +54,7 @@ def load_inventory():
             "chemicals": {},
             "fertiliser": {},
             "seed": {},
+            "lubricant": {},
             "transactions": [],
         }
 
@@ -64,12 +66,14 @@ def load_inventory():
             "chemicals": {},
             "fertiliser": {},
             "seed": {},
+            "lubricant": {},
             "transactions": [],
         }
 
     data.setdefault("chemicals", {})
     data.setdefault("fertiliser", {})
     data.setdefault("seed", {})
+    data.setdefault("lubricant", {})
     data.setdefault("transactions", [])
     return data
 

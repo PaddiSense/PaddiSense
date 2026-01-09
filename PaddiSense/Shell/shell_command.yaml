@@ -1,73 +1,30 @@
-# Shell commands are now defined within each package under PaddiSense/YAML/… to avoid duplication.
-# Keep this file present for the global include; add non-package shell_command entries here if needed.
 
-#######################################################################
+# --------------------------------------------
+# IPM Inventory backend (data lives in /config/PaddiSense/data/)
+# Code lives in /config/PaddiSense/Python/
+# --------------------------------------------
 
-
-## INVENTORY MANAGER ##########
-
-inventory_update: >-
-  python3 /config/RRAPL/Scripts/inventory_update.py
-  --category "{{ category }}"
-  --product "{{ product }}"
-  --action "{{ action }}"
-  --quantity "{{ quantity }}"
+# Move stock by delta at a location (negative = use, positive = topup)
+ipm_move_stock: >-
+  python3 /config/PaddiSense/Python/ipm_inventory.py move_stock
+  --id "{{ id }}"
+  --location "{{ location }}"
+  --delta "{{ delta }}"
   --note "{{ note }}"
 
-inventory_add_product: >-
-  python3 /config/RRAPL/Scripts/inventory_update.py add_product
-  "{{ category }}"
-  "{{ name }}"
-  "{{ unit }}"
-  "{{ pack_size }}"
-  "{{ min_stock }}"
-  "{{ initial_stock }}"
-  "{{ active_1_name }}"
-  "{{ active_1_conc }}"
-  "{{ active_1_unit }}"
-  "{{ product_id }}"
-  "{{ storage_location }}"
 
-inventory_zero_product: >-
-  python3 /config/RRAPL/Scripts/inventory_update.py
+ipm_upsert_product: >-
+  python3 /config/PaddiSense/Python/ipm_inventory.py upsert_product
+  --mode "{{ mode }}"
   --category "{{ category }}"
-  --product "{{ product }}"
-  --action "use"
-  --quantity "{{ quantity }}"
-  --note "Zeroed via delete product UI"
+  --id "{{ id }}"
+  --name "{{ name }}"
+  --subcategory "{{ subcategory }}"
+  --unit "{{ unit }}"
+  --container_size "{{ container_size }}"
+  --min_stock "{{ min_stock }}"
+  --initial_stock "{{ initial_stock }}"
+  --storage_location "{{ storage_location }}"
+  --chemical_group "{{ chemical_group }}"
+  --application_unit "{{ application_unit }}"
 
-inventory_upsert_product: >-
-  python3 /config/RRAPL/Scripts/inventory_update.py upsert_product
-  "{{ mode }}"
-  "{{ category }}"
-  "{{ id }}"
-  "{{ name }}"
-  "{{ product_unit }}"
-  "{{ container_size }}"
-  "{{ min_stock }}"
-  "{{ initial_stock }}"
-  "{{ storage_location }}"
-  "{{ subcategory }}"
-  "{{ chemical_group }}"
-  "{{ application_unit }}"
-  "{{ active1_name }}"
-  "{{ active1_conc }}"
-  "{{ active1_unit }}"
-  "{{ active2_name }}"
-  "{{ active2_conc }}"
-  "{{ active2_unit }}"
-  "{{ active3_name }}"
-  "{{ active3_conc }}"
-  "{{ active3_unit }}"
-  "{{ active4_name }}"
-  "{{ active4_conc }}"
-  "{{ active4_unit }}"
-  "{{ active5_name }}"
-  "{{ active5_conc }}"
-  "{{ active5_unit }}"
-  "{{ active6_name }}"
-  "{{ active6_conc }}"
-  "{{ active6_unit }}"
-
-#################  EOS ####################
-# Safety System #

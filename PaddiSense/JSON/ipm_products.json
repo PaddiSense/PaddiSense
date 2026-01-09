@@ -1,13 +1,14 @@
 {
-  "chemicals": {
+  "version": 2,
+  "products": {
     "ACHIEVE": {
       "id": "ACHIEVE",
       "name": "Achieve",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "kg",
-      "default_pack_size": 20.0,
-      "min_stock": 0.0,
-      "stock_on_hand": 0,
+      "application_unit": "L/ha",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Tralkoxydim",
@@ -15,20 +16,31 @@
           "concentration_unit": "g/kg"
         }
       ],
-      "storage_location": "Chem Shed",
-      "subcategory": "Herbicide",
-      "container_size": 20.0,
-      "chemical_group": "None / Unknown",
-      "application_unit": "L/ha"
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 0.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        },
+        "Unknown": {
+          "on_hand": 30.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "ADIGOR": {
       "id": "ADIGOR",
       "name": "Adigor",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 39.5,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Canola Oil",
@@ -36,17 +48,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 39.5,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "ADOPT_SPRAY_OIL": {
-      "id": "ADOPT_SPRAY_OIL",
+    "ADOPTSPRAYOIL": {
+      "id": "ADOPTSPRAYOIL",
       "name": "Adopt Spray Oil",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 53.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Paraffinic Oil",
@@ -54,17 +74,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 53.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "AGIXA": {
       "id": "AGIXA",
       "name": "Agixa",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "L",
-      "default_pack_size": 20.0,
-      "min_stock": 0.0,
-      "stock_on_hand": 63.0,
+      "application_unit": "L/ha",
+      "chemical_group": "1",
       "actives": [
         {
           "name": "Cyhalofop-Butyl +  (Group 1, 4)",
@@ -77,20 +105,31 @@
           "concentration_unit": "g/L"
         }
       ],
-      "storage_location": "Chem Shed",
-      "subcategory": "Herbicide",
-      "container_size": 20.0,
-      "application_unit": "L/ha",
-      "chemical_group": "1"
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 63.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        },
+        "Unknown": {
+          "on_hand": 10.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "AMISTAR_TOP": {
-      "id": "AMISTAR_TOP",
+    "AMISTARTOP": {
+      "id": "AMISTARTOP",
       "name": "Amistar Top",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Azoxystrobin + Difenoconazole (Group 3, 11)",
@@ -98,17 +137,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "ASTOUND": {
       "id": "ASTOUND",
       "name": "Astound",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 13.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Alpha-Cypermethrin (Group 3A)",
@@ -116,17 +163,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 13.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "AURA": {
       "id": "AURA",
       "name": "Aura",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 10.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Profoxydim (Group 1)",
@@ -134,17 +189,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 10.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "AVADEX_XTRA": {
-      "id": "AVADEX_XTRA",
+    "AVADEXXTRA": {
+      "id": "AVADEXXTRA",
       "name": "Avadex Xtra",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 60.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Triallate (Group 15)",
@@ -152,17 +215,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 60.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "AXIAL_XTRA": {
-      "id": "AXIAL_XTRA",
+    "AXIALXTRA": {
+      "id": "AXIALXTRA",
       "name": "Axial Xtra",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Pinoxaden + Cloquintocet-Mexyl (Group 1)",
@@ -170,17 +241,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "BANVEL_200": {
-      "id": "BANVEL_200",
+    "BANVEL200": {
+      "id": "BANVEL200",
       "name": "Banvel 200",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Dicamba (Group 4)",
@@ -188,17 +267,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "BASAGRAN_M60": {
-      "id": "BASAGRAN_M60",
+    "BASAGRANM60": {
+      "id": "BASAGRANM60",
       "name": "Basagran M60",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 20.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bentazone + MCPA (Group 6, 4)",
@@ -206,17 +293,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 20.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "BIOAG_CUZIN": {
-      "id": "BIOAG_CUZIN",
+    "BIOAGCUZIN": {
+      "id": "BIOAGCUZIN",
       "name": "Bioag Cuzin",
       "category": "Chemical",
+      "subcategory": "Fertiliser",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Sulphur + Copper + Zinc Fertiliser",
@@ -224,17 +319,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fertiliser"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "BOXER_GOLD": {
-      "id": "BOXER_GOLD",
+    "BOXERGOLD": {
+      "id": "BOXERGOLD",
       "name": "Boxer Gold",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Prosulfocarb + S-Metolachlor (Group 15)",
@@ -242,17 +345,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "BROADSTRIKE": {
       "id": "BROADSTRIKE",
       "name": "Broadstrike",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Flumesulam (Group 2)",
@@ -260,17 +371,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "CALLISTO": {
       "id": "CALLISTO",
       "name": "Callisto",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Mesotrione (Group 27)",
@@ -278,17 +397,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "CANDO_SPRAY_ADJUVANT": {
-      "id": "CANDO_SPRAY_ADJUVANT",
+    "CANDOSPRAYADJUVANT": {
+      "id": "CANDOSPRAYADJUVANT",
       "name": "Cando Spray Adjuvant",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Canola Oil",
@@ -296,17 +423,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "CAVALIER": {
       "id": "CAVALIER",
       "name": "Cavalier",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Oxyfluorfen (Group 14)",
@@ -314,17 +449,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "CHLORSULFURON_750_WG": {
-      "id": "CHLORSULFURON_750_WG",
+    "CHLORSULFURON750WG": {
+      "id": "CHLORSULFURON750WG",
       "name": "Chlorsulfuron 750 Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Chlorsulfuron (Group 2)",
@@ -332,17 +475,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "CLOPYRALID_300_SL": {
-      "id": "CLOPYRALID_300_SL",
+    "CLOPYRALID300SL": {
+      "id": "CLOPYRALID300SL",
       "name": "Clopyralid 300 Sl",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Clopyralid (Group 4)",
@@ -350,17 +501,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "COGITO": {
       "id": "COGITO",
       "name": "Cogito",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 10.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Propiconazole + Tebuconazole (Group 3)",
@@ -368,17 +527,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 10.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "COSMOS": {
       "id": "COSMOS",
       "name": "Cosmos",
       "category": "Chemical",
+      "subcategory": "Seed Treatment",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 1.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Fipronil Seed Treatment (Group 2C)",
@@ -386,17 +553,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Seed Treatment"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 1.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "CRUCIAL": {
       "id": "CRUCIAL",
       "name": "Crucial",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 100.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "600g Glyphosate (Group 9)",
@@ -404,17 +579,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 100.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "CYCOCEL_750A": {
-      "id": "CYCOCEL_750A",
+    "CYCOCEL750A": {
+      "id": "CYCOCEL750A",
       "name": "Cycocel 750A",
       "category": "Chemical",
+      "subcategory": "PGR",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Chlormequat",
@@ -422,17 +605,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "PGR"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DELTAWET_1000": {
-      "id": "DELTAWET_1000",
+    "DELTAWET1000": {
+      "id": "DELTAWET1000",
       "name": "Deltawet 1000",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Alchohole Alkoxylate",
@@ -440,17 +631,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DICTATE_M60": {
-      "id": "DICTATE_M60",
+    "DICTATEM60": {
+      "id": "DICTATEM60",
       "name": "Dictate M60",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bentazone + MCPA (Group 6, 4)",
@@ -458,17 +657,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DIGEST_IT": {
-      "id": "DIGEST_IT",
+    "DIGESTIT": {
+      "id": "DIGESTIT",
       "name": "Digest It",
       "category": "Chemical",
+      "subcategory": "Biological",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Microbial Solution",
@@ -476,17 +683,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Biological"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DINGO_500": {
-      "id": "DINGO_500",
+    "DINGO500": {
+      "id": "DINGO500",
       "name": "Dingo 500",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 19.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Chlorpyrifos (Group 1B)",
@@ -494,17 +709,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 19.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DIPEL_DF": {
-      "id": "DIPEL_DF",
+    "DIPELDF": {
+      "id": "DIPELDF",
       "name": "Dipel Df",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 4.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bacillus thuringiensis Biological (Group 11)",
@@ -512,17 +735,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 4.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DIRECTOR_480EC": {
-      "id": "DIRECTOR_480EC",
+    "DIRECTOR480EC": {
+      "id": "DIRECTOR480EC",
       "name": "Director 480Ec",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Clomazone (Group 13)",
@@ -530,17 +761,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "DOMINEX_DUO": {
-      "id": "DOMINEX_DUO",
+    "DOMINEXDUO": {
+      "id": "DOMINEXDUO",
       "name": "Dominex Duo",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 19.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Alpha-Cypermethrin (Group 3A)",
@@ -548,17 +787,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 19.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "DROPZONE": {
       "id": "DROPZONE",
       "name": "Dropzone",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 98.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "2,4 D (Group 4)",
@@ -566,17 +813,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 98.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "ECLIPSE_100_SC": {
-      "id": "ECLIPSE_100_SC",
+    "ECLIPSE100SC": {
+      "id": "ECLIPSE100SC",
       "name": "Eclipse 100 Sc",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 1.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Metosulam (Group 2)",
@@ -584,17 +839,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 1.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "ELANTRA_XTREME": {
-      "id": "ELANTRA_XTREME",
+    "ELANTRAXTREME": {
+      "id": "ELANTRAXTREME",
       "name": "Elantra Xtreme",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Quizalofop-P-Ethyl (Group 1)",
@@ -602,17 +865,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "EMERGE": {
       "id": "EMERGE",
       "name": "Emerge",
       "category": "Chemical",
+      "subcategory": "Seed Treatment",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 30.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Imidacloprid (Group 4A)",
@@ -620,17 +891,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Seed Treatment"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 30.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "EPOXY_750_WG": {
-      "id": "EPOXY_750_WG",
+    "EPOXY750WG": {
+      "id": "EPOXY750WG",
       "name": "Epoxy 750 Wg",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 2.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Epoxiconazole (Group 3)",
@@ -638,17 +917,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 2.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "FACTOR_WG": {
-      "id": "FACTOR_WG",
+    "FACTORWG": {
+      "id": "FACTORWG",
       "name": "Factor Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Butroxydim (Group 1)",
@@ -656,17 +943,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "FASTAC_DUO": {
-      "id": "FASTAC_DUO",
+    "FASTACDUO": {
+      "id": "FASTACDUO",
       "name": "Fastac Duo",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 2.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Alpha-Cypermethrin (Group 3A)",
@@ -674,17 +969,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 2.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "FDS_CONDITIONER": {
-      "id": "FDS_CONDITIONER",
+    "FDSCONDITIONER": {
+      "id": "FDSCONDITIONER",
       "name": "Fds Conditioner",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Conditioner",
@@ -692,17 +995,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "FENITROTHION_1000": {
-      "id": "FENITROTHION_1000",
+    "FENITROTHION1000": {
+      "id": "FENITROTHION1000",
       "name": "Fenitrothion 1000",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 20.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Fenitrothion (Group 1B)",
@@ -710,17 +1021,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 20.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "FITNESS": {
       "id": "FITNESS",
       "name": "Fitness",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 60.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Propiconazole (Group 3)",
@@ -728,17 +1047,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 60.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "FLX_700": {
-      "id": "FLX_700",
+    "FLX700": {
+      "id": "FLX700",
       "name": "Flx 700",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Soyal Phospholipids + Propionic Acid",
@@ -746,17 +1073,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "GARLON_600": {
-      "id": "GARLON_600",
+    "GARLON600": {
+      "id": "GARLON600",
       "name": "Garlon 600",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Triclopyr (Group 4)",
@@ -764,17 +1099,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "GLYPHO_450": {
-      "id": "GLYPHO_450",
+    "GLYPHO450": {
+      "id": "GLYPHO450",
       "name": "Glypho 450",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Glyphosate (Group 9)",
@@ -782,17 +1125,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "HALOXYFOP_520": {
-      "id": "HALOXYFOP_520",
+    "HALOXYFOP520": {
+      "id": "HALOXYFOP520",
       "name": "Haloxyfop 520",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Haloxyfop (Group 1)",
@@ -800,17 +1151,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "HASTEN": {
       "id": "HASTEN",
       "name": "Hasten",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 950.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Canola Oil + Non-ionic Surfactants",
@@ -818,17 +1177,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 950.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "HUSSAR_OD": {
-      "id": "HUSSAR_OD",
+    "HUSSAROD": {
+      "id": "HUSSAROD",
       "name": "Hussar Od",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Iodosulfuron-Methyl Sodium (Group 2)",
@@ -836,17 +1203,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "INTAKE_HILOAD_GOLD": {
-      "id": "INTAKE_HILOAD_GOLD",
+    "INTAKEHILOADGOLD": {
+      "id": "INTAKEHILOADGOLD",
       "name": "Intake Hiload Gold",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 30.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Flutriafol (Group 3)",
@@ -854,17 +1229,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 30.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "JOCKEY_STAYER": {
-      "id": "JOCKEY_STAYER",
+    "JOCKEYSTAYER": {
+      "id": "JOCKEYSTAYER",
       "name": "Jockey Stayer",
       "category": "Chemical",
+      "subcategory": "Seed Treatment",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Fluquinconazole (Group 3)",
@@ -872,17 +1255,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Seed Treatment"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "KAMBA_500": {
-      "id": "KAMBA_500",
+    "KAMBA500": {
+      "id": "KAMBA500",
       "name": "Kamba 500",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 18.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Dicamba (Group 4)",
@@ -890,17 +1281,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 18.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "KENAPIL_NF_360": {
-      "id": "KENAPIL_NF_360",
+    "KENAPILNF360": {
+      "id": "KENAPILNF360",
       "name": "Kenapil Nf 360",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 160.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Propanil (Group 5)",
@@ -908,17 +1307,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 160.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "KENDAX_600_WG": {
-      "id": "KENDAX_600_WG",
+    "KENDAX600WG": {
+      "id": "KENDAX600WG",
       "name": "Kendax 600 Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 1.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bensulfuron Methyl (Group 2)",
@@ -926,17 +1333,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 1.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LAGUNA_430": {
-      "id": "LAGUNA_430",
+    "LAGUNA430": {
+      "id": "LAGUNA430",
       "name": "Laguna 430",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 5.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Tebuconazole (Group 3)",
@@ -944,17 +1359,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 5.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LE_MAT": {
-      "id": "LE_MAT",
+    "LEMAT": {
+      "id": "LEMAT",
       "name": "Le Mat",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 20.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Omethoate (Group 1B)",
@@ -962,17 +1385,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 20.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LEGACY_MA": {
-      "id": "LEGACY_MA",
+    "LEGACYMA": {
+      "id": "LEGACYMA",
       "name": "Legacy Ma",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 19.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Diflufenican + MCPA (Group 12, 4)",
@@ -980,17 +1411,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 19.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LI_700": {
-      "id": "LI_700",
+    "LI700": {
+      "id": "LI700",
       "name": "Li 700",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Soyal Phospholipids + Propionic Acid",
@@ -998,17 +1437,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "LIBERATE": {
       "id": "LIBERATE",
       "name": "Liberate",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Soyal Phospholipids",
@@ -1016,17 +1463,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LOGRAN_750_WG": {
-      "id": "LOGRAN_750_WG",
+    "LOGRAN750WG": {
+      "id": "LOGRAN750WG",
       "name": "Logran 750 Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Triasulfuron (Group 2)",
@@ -1034,17 +1489,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "LONDAX": {
       "id": "LONDAX",
       "name": "Londax",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 1.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bensulfuron (Group 2)",
@@ -1052,17 +1515,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 1.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "LUMEN": {
       "id": "LUMEN",
       "name": "Lumen",
       "category": "Chemical",
+      "subcategory": "Biological",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Enzymes",
@@ -1070,17 +1541,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Biological"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LV_MCPA_570": {
-      "id": "LV_MCPA_570",
+    "LVMCPA570": {
+      "id": "LVMCPA570",
       "name": "Lv Mcpa 570",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 50.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "MCPA (Group 4)",
@@ -1088,17 +1567,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 50.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "LVE_AGRITONE": {
-      "id": "LVE_AGRITONE",
+    "LVEAGRITONE": {
+      "id": "LVEAGRITONE",
       "name": "Lve Agritone",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "MCPA (Group 4)",
@@ -1106,17 +1593,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "METSULFURON_600_WG": {
-      "id": "METSULFURON_600_WG",
+    "METSULFURON600WG": {
+      "id": "METSULFURON600WG",
       "name": "Metsulfuron 600 Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Metsulfuron Methyl (Group 2)",
@@ -1124,17 +1619,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "MOUSE_OFF_ECONBAIT": {
-      "id": "MOUSE_OFF_ECONBAIT",
+    "MOUSEOFFECONBAIT": {
+      "id": "MOUSEOFFECONBAIT",
       "name": "Mouse Off Econbait",
       "category": "Chemical",
+      "subcategory": "Rodenticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 1.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Zinc Phosphide",
@@ -1142,17 +1645,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Rodenticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 1.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "MSO_SPRAY_ADJUVANT": {
-      "id": "MSO_SPRAY_ADJUVANT",
+    "MSOSPRAYADJUVANT": {
+      "id": "MSOSPRAYADJUVANT",
       "name": "Mso Spray Adjuvant",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 18.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Vegetable Oil",
@@ -1160,17 +1671,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 18.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "OPUS_125": {
-      "id": "OPUS_125",
+    "OPUS125": {
+      "id": "OPUS125",
       "name": "Opus 125",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 4.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Epoxiconazole (Group 3)",
@@ -1178,17 +1697,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 4.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "OVERWATCH": {
       "id": "OVERWATCH",
       "name": "Overwatch",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bixlozone (Group 13)",
@@ -1196,17 +1723,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "OXYFLUORFEN_240_EC": {
-      "id": "OXYFLUORFEN_240_EC",
+    "OXYFLUORFEN240EC": {
+      "id": "OXYFLUORFEN240EC",
       "name": "Oxyfluorfen 240 Ec",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Oxyfluorfen (Group 14)",
@@ -1214,17 +1749,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "P_PICKEL_T": {
-      "id": "P_PICKEL_T",
+    "PPICKELT": {
+      "id": "PPICKELT",
       "name": "P Pickel T",
       "category": "Chemical",
+      "subcategory": "Seed Treatment",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 10.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Thiram + Thiabendazole (Group 1, M3)",
@@ -1232,17 +1775,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Seed Treatment"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 10.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PANZER_450": {
-      "id": "PANZER_450",
+    "PANZER450": {
+      "id": "PANZER450",
       "name": "Panzer 450",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 700.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Glyphosate (Group 9)",
@@ -1250,17 +1801,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 700.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PARAQUAT_250": {
-      "id": "PARAQUAT_250",
+    "PARAQUAT250": {
+      "id": "PARAQUAT250",
       "name": "Paraquat 250",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 700.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Paraquat (Group 22)",
@@ -1268,17 +1827,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 700.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PARAQUAT_360": {
-      "id": "PARAQUAT_360",
+    "PARAQUAT360": {
+      "id": "PARAQUAT360",
       "name": "Paraquat 360",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Paraquat (Group 22)",
@@ -1286,17 +1853,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PENDIMETHALIN_440_EC": {
-      "id": "PENDIMETHALIN_440_EC",
+    "PENDIMETHALIN440EC": {
+      "id": "PENDIMETHALIN440EC",
       "name": "Pendimethalin 440 Ec",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 62.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Pendimethalin (Group 3)",
@@ -1304,17 +1879,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 62.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PERFORMA_500": {
-      "id": "PERFORMA_500",
+    "PERFORMA500": {
+      "id": "PERFORMA500",
       "name": "Performa 500",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 19.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Dicamba (Group 4)",
@@ -1322,17 +1905,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 19.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PLUTO_800": {
-      "id": "PLUTO_800",
+    "PLUTO800": {
+      "id": "PLUTO800",
       "name": "Pluto 800",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 15.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Thiobencarb (Group 15)",
@@ -1340,17 +1931,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 15.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "POLO_570_LVE": {
-      "id": "POLO_570_LVE",
+    "POLO570LVE": {
+      "id": "POLO570LVE",
       "name": "Polo 570 Lve",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "MCPA (Group 4)",
@@ -1358,17 +1957,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PREMIS_200_F": {
-      "id": "PREMIS_200_F",
+    "PREMIS200F": {
+      "id": "PREMIS200F",
       "name": "Premis 200 F",
       "category": "Chemical",
+      "subcategory": "Seed Treatment",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 5.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Triticonazole (Group 3)",
@@ -1376,17 +1983,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Seed Treatment"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 5.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PROPI_250": {
-      "id": "PROPI_250",
+    "PROPI250": {
+      "id": "PROPI250",
       "name": "Propi 250",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 2.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Propiconazole (Group 3)",
@@ -1394,17 +2009,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 2.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "PROSARO_420_SC": {
-      "id": "PROSARO_420_SC",
+    "PROSARO420SC": {
+      "id": "PROSARO420SC",
       "name": "Prosaro 420 Sc",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 18.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Prothioconazole + Tebuconazole (Group 3)",
@@ -1412,17 +2035,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 18.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "RADIAL": {
       "id": "RADIAL",
       "name": "Radial",
       "category": "Chemical",
+      "subcategory": "Fungicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 15.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Azoxystrobin + Epoxiconazole (Group 3, 11)",
@@ -1430,17 +2061,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fungicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 15.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "REGENT_200_SC": {
-      "id": "REGENT_200_SC",
+    "REGENT200SC": {
+      "id": "REGENT200SC",
       "name": "Regent 200 Sc",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Fipronil (Group 2C)",
@@ -1448,17 +2087,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "RES": {
       "id": "RES",
       "name": "Res",
       "category": "Chemical",
+      "subcategory": "Biological",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 55.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Liquid Fertiliser Enzyme Additive",
@@ -1466,17 +2113,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Biological"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 55.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "SAKURA_850_WG": {
-      "id": "SAKURA_850_WG",
+    "SAKURA850WG": {
+      "id": "SAKURA850WG",
       "name": "Sakura 850 Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 3.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Pyroxasulfone (Group 15)",
@@ -1484,17 +2139,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 3.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "SIMANEX_900_WG": {
-      "id": "SIMANEX_900_WG",
+    "SIMANEX900WG": {
+      "id": "SIMANEX900WG",
       "name": "Simanex 900 Wg",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Simazine (Group 5)",
@@ -1502,17 +2165,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "SLEDGE": {
       "id": "SLEDGE",
       "name": "Sledge",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Pyraflufen-Ethyl (Group 14)",
@@ -1520,17 +2191,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "SPRAYGRO": {
       "id": "SPRAYGRO",
       "name": "Spraygro",
       "category": "Chemical",
+      "subcategory": "Fertiliser",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Zinc",
@@ -1538,17 +2217,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Fertiliser"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "STATUS": {
       "id": "STATUS",
       "name": "Status",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Clethodim (Group 1)",
@@ -1556,17 +2243,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "STORM_WAX_BLOCK": {
-      "id": "STORM_WAX_BLOCK",
+    "STORMWAXBLOCK": {
+      "id": "STORMWAXBLOCK",
       "name": "Storm Wax Block",
       "category": "Chemical",
+      "subcategory": "Rodenticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Flocoumafen",
@@ -1574,17 +2269,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Rodenticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "SUPERCHARGE": {
       "id": "SUPERCHARGE",
       "name": "Supercharge",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 15.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Paraffin Oil",
@@ -1592,17 +2295,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 15.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "TAIPAN": {
       "id": "TAIPAN",
       "name": "Taipan",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 75.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Benzofenap (Group 27)",
@@ -1610,17 +2321,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 75.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "TALINOR": {
       "id": "TALINOR",
       "name": "Talinor",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bromoxynil + Bicyclopyrone + Cloquintocet-Mexyl (Group 6, 27)",
@@ -1628,17 +2347,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TALSTAR_250_EC": {
-      "id": "TALSTAR_250_EC",
+    "TALSTAR250EC": {
+      "id": "TALSTAR250EC",
       "name": "Talstar 250 Ec",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 4.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Bifenthrin (Group 3A)",
@@ -1646,17 +2373,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 4.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TERRAD_OR": {
-      "id": "TERRAD_OR",
+    "TERRADOR": {
+      "id": "TERRADOR",
       "name": "Terrad Or",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 3.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Tiafenacil (Group 14)",
@@ -1664,17 +2399,31 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 3.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        },
+        "Chem Shed": {
+          "on_hand": 3.0,
+          "container_size": 5.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "TRANSFORM": {
       "id": "TRANSFORM",
       "name": "Transform",
       "category": "Chemical",
+      "subcategory": "Insecticide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Isoclast (Group 4C)",
@@ -1682,17 +2431,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Insecticide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TRIALLATE_GOLD_500": {
-      "id": "TRIALLATE_GOLD_500",
+    "TRIALLATEGOLD500": {
+      "id": "TRIALLATEGOLD500",
       "name": "Triallate Gold 500",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Triallate (Group 15)",
@@ -1700,17 +2457,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TRICLOPYR_600EC": {
-      "id": "TRICLOPYR_600EC",
+    "TRICLOPYR600EC": {
+      "id": "TRICLOPYR600EC",
       "name": "Triclopyr 600Ec",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Triclopyr (Group 4)",
@@ -1718,17 +2483,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TRIFLURALIN_480": {
-      "id": "TRIFLURALIN_480",
+    "TRIFLURALIN480": {
+      "id": "TRIFLURALIN480",
       "name": "Trifluralin 480",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 180.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Trifluralin (Group 4)",
@@ -1736,17 +2509,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 180.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TWIN_ZINC": {
-      "id": "TWIN_ZINC",
+    "TWINZINC": {
+      "id": "TWINZINC",
       "name": "Twin Zinc",
       "category": "Chemical",
+      "subcategory": "Seed Treatment",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Zinc Seed Treatment",
@@ -1754,17 +2535,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Seed Treatment"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "UBENIQ": {
       "id": "UBENIQ",
       "name": "Ubeniq",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 1.0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Florpyrauxifen-Benzyl (Group 4)",
@@ -1772,17 +2561,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 1.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "VEGI_DYE_RED": {
-      "id": "VEGI_DYE_RED",
+    "VEGIDYERED": {
+      "id": "VEGIDYERED",
       "name": "Vegi Dye Red",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Spray Marker",
@@ -1790,17 +2587,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "VORAXOR": {
       "id": "VORAXOR",
       "name": "Voraxor",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Saflufencail + Trifludimoxazin (Group 14)",
@@ -1808,17 +2613,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "WARRANT_250": {
-      "id": "WARRANT_250",
+    "WARRANT250": {
+      "id": "WARRANT250",
       "name": "Warrant 250",
       "category": "Chemical",
+      "subcategory": "Herbicide",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Imazapyr (Group 2)",
@@ -1826,17 +2639,25 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Herbicide"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "WETTER_TX": {
-      "id": "WETTER_TX",
+    "WETTERTX": {
+      "id": "WETTERTX",
       "name": "Wetter Tx",
       "category": "Chemical",
+      "subcategory": "Adjuvant",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 0,
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Octyl Phenol Ethoxylate",
@@ -1844,106 +2665,117 @@
           "concentration_unit": ""
         }
       ],
-      "storage_location": "",
-      "subcategory": "Adjuvant"
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 0.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "FERT_01": {
-      "id": "FERT_01",
+    "FERT01": {
+      "id": "FERT01",
       "name": "Minerlised Comost",
       "category": "Chemical",
-      "unit": "kg",
-      "default_pack_size": 20.0,
-      "container_size": 20.0,
-      "min_stock": 0.0,
-      "stock_on_hand": 40.0,
-      "actives": [],
-      "storage_location": "Seed Shed",
       "subcategory": "Biological",
+      "unit": "kg",
       "application_unit": "kg/ha",
-      "chemical_group": "None / Unknown"
-    },
-    "Achieve": {
-      "id": "Achieve",
-      "name": "Achieve",
-      "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 30.0,
-      "actives": []
+      "chemical_group": "None / Unknown",
+      "actives": [],
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Seed Shed": {
+          "on_hand": 40.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "TEST": {
       "id": "TEST",
       "name": "TEST",
+      "category": "",
+      "subcategory": "",
       "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 10.0,
-      "actives": []
-    },
-    "Agixa": {
-      "id": "Agixa",
-      "name": "Agixa",
-      "unit": "",
-      "default_pack_size": 0,
-      "min_stock": 0,
-      "stock_on_hand": 10.0,
-      "actives": []
+      "application_unit": "",
+      "chemical_group": "None / Unknown",
+      "actives": [],
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Unknown": {
+          "on_hand": 10.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "AMICIDE700": {
       "id": "AMICIDE700",
       "name": "Amicide 700",
       "category": "Chemical",
-      "unit": "L",
-      "default_pack_size": 20.0,
-      "container_size": 20.0,
-      "min_stock": 0.0,
-      "storage_location": "Chem Shed",
       "subcategory": "Herbicide",
-      "chemical_group": "4",
+      "unit": "L",
       "application_unit": "L/ha",
-      "stock_on_hand": 105.0,
+      "chemical_group": "4",
       "actives": [
         {
           "name": "2,4 D",
           "concentration": 700.0,
           "concentration_unit": "g/L"
         }
-      ]
+      ],
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 105.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "CHEM108": {
       "id": "CHEM108",
       "name": "Amicide 700",
       "category": "Chemical",
-      "unit": "L",
-      "default_pack_size": 20.0,
-      "container_size": 20.0,
-      "min_stock": 0.0,
-      "storage_location": "Chem Shed",
       "subcategory": "Herbicide",
-      "chemical_group": "4",
+      "unit": "L",
       "application_unit": "L/ha",
-      "stock_on_hand": 0.0,
+      "chemical_group": "4",
       "actives": [
         {
           "name": "2-4,D",
           "concentration": 700.0,
           "concentration_unit": "g/L"
         }
-      ]
+      ],
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 0.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "FERT1": {
       "id": "FERT1",
       "name": "Precept",
       "category": "Chemical",
-      "unit": "L",
-      "default_pack_size": 20.0,
-      "container_size": 20.0,
-      "min_stock": 0.0,
-      "storage_location": "Chem Shed",
       "subcategory": "Herbicide",
-      "chemical_group": "4",
+      "unit": "L",
       "application_unit": "L/ha",
-      "stock_on_hand": 32.0,
+      "chemical_group": "4",
       "actives": [
         {
           "name": "MPCA",
@@ -1955,21 +2787,32 @@
           "concentration": 25.0,
           "concentration_unit": "g/L"
         }
-      ]
+      ],
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 32.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        },
+        "Silo 10": {
+          "on_hand": 13930.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "CHEM110": {
       "id": "CHEM110",
       "name": "Kamba M",
       "category": "Chemical",
-      "unit": "L",
-      "default_pack_size": 5.0,
-      "container_size": 5.0,
-      "min_stock": 0.0,
-      "storage_location": "Chem Shed",
       "subcategory": "Herbicide",
-      "chemical_group": "4",
+      "unit": "L",
       "application_unit": "L/ha",
-      "stock_on_hand": 5.0,
+      "chemical_group": "4",
       "actives": [
         {
           "name": "Dicamba",
@@ -1981,76 +2824,98 @@
           "concentration": 340.0,
           "concentration_unit": "g/L"
         }
-      ]
+      ],
+      "default_container_size": 5.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 5.0,
+          "container_size": 5.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
     "CHEM111": {
       "id": "CHEM111",
       "name": "AMS",
       "category": "Chemical",
-      "unit": "kg",
-      "default_pack_size": 20.0,
-      "container_size": 20.0,
-      "min_stock": 0.0,
-      "storage_location": "Chem Shed",
       "subcategory": "Adjuvant",
-      "chemical_group": "None / Unknown",
+      "unit": "kg",
       "application_unit": "g/100L",
-      "stock_on_hand": 125.0,
+      "chemical_group": "None / Unknown",
       "actives": [
         {
           "name": "Ammonium sulphate",
           "concentration": 980.0,
           "concentration_unit": "g/kg"
         }
-      ]
+      ],
+      "default_container_size": 20.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Chem Shed": {
+          "on_hand": 125.0,
+          "container_size": 20.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "TERRADOR": {
-      "id": "TERRADOR",
-      "name": "Terrad Or",
-      "category": "Chemical",
+    "FERT2": {
+      "id": "FERT2",
+      "name": "Urea",
+      "category": "Fertiliser",
+      "subcategory": "Fertiliser",
       "unit": "kg",
-      "default_pack_size": 5.0,
-      "container_size": 5.0,
-      "min_stock": 0.0,
-      "storage_location": "Chem Shed",
-      "subcategory": "Herbicide",
+      "application_unit": "kg/ha",
       "chemical_group": "None / Unknown",
-      "application_unit": "g/ha",
-      "stock_on_hand": 3.0,
       "actives": [
         {
-          "name": "Tiafenacil (Group 14)",
-          "concentration": 0.0,
-          "concentration_unit": "None / Unknown"
+          "name": "Nitrogen",
+          "concentration": 46.0,
+          "concentration_unit": "%"
         }
-      ]
-    }
-  },
-  "seed": {
-    "Planet_01": {
-      "id": "SEED_01",
+      ],
+      "default_container_size": 1000.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Seed Shed": {
+          "on_hand": 0.0,
+          "container_size": 1000.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
+    },
+    "SEED01": {
+      "id": "SEED01",
       "name": "Planet",
       "category": "Seed",
-      "unit": "t",
-      "default_pack_size": 0,
-      "container_size": 0,
-      "min_stock": 0.0,
-      "stock_on_hand": 28200.0,
-      "actives": [],
-      "storage_location": "Silo 11",
       "subcategory": "Wheat",
+      "unit": "t",
       "application_unit": "kg/ha",
-      "chemical_group": "None / Unknown"
+      "chemical_group": "None / Unknown",
+      "actives": [],
+      "default_container_size": 0.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Silo 11": {
+          "on_hand": 28200.0,
+          "container_size": 0.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
+        }
+      }
     },
-    "BARLEY_02": {
-      "id": "BARLEY_02",
+    "BARLEY02": {
+      "id": "BARLEY02",
       "name": "test barley 2",
       "category": "Seed",
+      "subcategory": "Barley",
       "unit": "kg",
-      "default_pack_size": 1000.0,
-      "container_size": 1000.0,
-      "min_stock": 0.0,
-      "stock_on_hand": 28200.0,
+      "application_unit": "kg/ha",
+      "chemical_group": "M3",
       "actives": [
         {
           "name": "bar act 1 (10.0 %); bar act 2 (2.0 %); bar act 3 (3.0 g/L); unknown; unknown; unknown",
@@ -2058,54 +2923,16 @@
           "concentration_unit": "%"
         }
       ],
-      "storage_location": "Silo 8",
-      "subcategory": "Barley",
-      "application_unit": "kg/ha",
-      "chemical_group": "M3"
-    }
-  },
-  "fertiliser": {
-    "FERT1": {
-      "id": "FERT1",
-      "name": "Urea",
-      "category": "Fertiliser",
-      "unit": "kg",
-      "default_pack_size": 0.0,
-      "container_size": 0.0,
-      "min_stock": 0.0,
-      "storage_location": "Silo 10",
-      "subcategory": "Fertiliser",
-      "chemical_group": "None / Unknown",
-      "application_unit": "kg/ha",
-      "stock_on_hand": 13930.0,
-      "actives": [
-        {
-          "name": "Nitrogen",
-          "concentration": 46.0,
-          "concentration_unit": "%"
+      "default_container_size": 1000.0,
+      "min_stock_default": 0.0,
+      "locations": {
+        "Silo 8": {
+          "on_hand": 28200.0,
+          "container_size": 1000.0,
+          "min_stock": 0.0,
+          "last_added_ts": ""
         }
-      ]
-    },
-    "FERT2": {
-      "id": "FERT2",
-      "name": "Urea",
-      "category": "Fertiliser",
-      "unit": "kg",
-      "default_pack_size": 1000.0,
-      "container_size": 1000.0,
-      "min_stock": 0.0,
-      "storage_location": "Seed Shed",
-      "subcategory": "Fertiliser",
-      "chemical_group": "None / Unknown",
-      "application_unit": "kg/ha",
-      "stock_on_hand": 0.0,
-      "actives": [
-        {
-          "name": "Nitrogen",
-          "concentration": 46.0,
-          "concentration_unit": "%"
-        }
-      ]
+      }
     }
   },
   "transactions": [

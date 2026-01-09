@@ -1,61 +1,60 @@
 ##########################################
-# Inventory core helpers + logic
+# IPM Inventory helpers (v2)
 ##########################################
 
 input_select:
-  # --- Global / core selectors ---
-  inventory_new_mode:
-    name: Product Editor – Mode
+  # Primary filters
+  ipm_category:
+    name: IPM Category
+    options:
+      - All
+      - Chemical
+      - Fertiliser
+      - Seed
+      - Lubricant
+
+  ipm_subcategory_filter:
+    name: IPM – Subcategory Filter
+    options:
+      - All Categories
+
+  # The canonical selector for any stock actions
+  ipm_product_key:
+    name: IPM Product (ID|Location)
+    options:
+      - Select Product
+
+  # Optional manual fallback; used only if product_key has no "|"
+  ipm_location:
+    name: IPM Location
+    options:
+      - Select Location
+      - Chem Shed
+      - Seed Shed
+      - Silo 1
+      - Silo 2
+      - Silo 3
+      - Silo 4
+      - Silo 5
+      - Silo 6
+      - Silo 7
+      - Silo 8
+      - Silo 9
+      - Silo 10
+      - Silo 11
+      - Silo 12
+      - Silo 13
+      - Oil Shed
+
+  # Product editor
+  ipm_new_mode:
+    name: IPM Product Editor – Mode
     options:
       - Add new
       - Edit existing
 
-
-
-  inventory_subcategory_filter:
-    name: Inventory – Subcategory Filter
-    options:
-      - All Categories
-
-
-  inventory_category:
-    name: Inventory Category
-    options:
-      - All
-      - Chemical
-      - Fertiliser
-      - Seed
-      - Lubricant
-      
-
-  inventory_overview_category:
-    name: Inventory Overview Category
-    options:
-      - All
-      - Chemical
-      - Fertiliser
-      - Seed
-      - Lubricant
-      
-
-  
-  inventory_product:
-    name: Inventory Product
-    options:
-      - Select Product
-
-
-  inventory_action:
-    name: Action
-    options:
-      - Use       # subtract from stock
-      - Top up    # add to stock
-    icon: mdi:swap-vertical
-
-  # --- New/Edit product core properties ---
-
-  inventory_new_category:
-    name: New Product – Category
+  ipm_new_category:
+    name: IPM New Product – Category
     options:
       - Chemical
       - Fertiliser
@@ -63,8 +62,8 @@ input_select:
       - Lubricant
       - please update
 
-  inventory_new_storage_location:
-    name: New Product – Storage Location
+  ipm_new_storage_location:
+    name: IPM New Product – Storage Location
     options:
       - Chem Shed
       - Seed Shed
@@ -84,8 +83,8 @@ input_select:
       - Oil Shed
       - please update
 
-  inventory_new_subcategory:
-    name: New Product – Subcategory
+  ipm_new_subcategory:
+    name: IPM New Product – Subcategory
     options:
       - Adjuvant
       - Biological
@@ -103,11 +102,10 @@ input_select:
       - Other
       - please update
 
-  # Chemical group (e.g. 1, 2, 3, 3A, 9, etc.)
-  inventory_new_chemical_group:
-    name: New Product – Chemical Group
+  ipm_new_chemical_group:
+    name: IPM New Product – Chemical Group
     options:
-      - 1 4A
+      - 1
       - 1A
       - 1B
       - 2
@@ -132,18 +130,16 @@ input_select:
       - None / Unknown
       - please update
 
-  # Product units (how stock is held)
-  inventory_new_product_unit:
-    name: New Product – Product Unit
+  ipm_new_product_unit:
+    name: IPM New Product – Product Unit
     options:
       - L
       - kg
       - t
       - please update
 
-  # Container size (standard drums / bags)
-  inventory_new_container_size:
-    name: New Product – Container Size
+  ipm_new_container_size:
+    name: IPM New Product – Container Size
     options:
       - 1
       - 5
@@ -154,80 +150,8 @@ input_select:
       - bulk
       - please update
 
-  # Active concentration unit (for the constituent)
-
-  # already have:
-  inventory_new_active_unit:
-    name: New Product – Active concentration unit (1)
-    options:
-      - g/L
-      - g/kg
-      - g/t
-      - mg/L
-      - "%"
-      - None / Unknown
-      - please update
-
-  # extra units 2–6
-  inventory_new_active_unit_2:
-    name: New Product – Active concentration unit (2)
-    options:
-      - g/L
-      - g/kg
-      - g/t
-      - mg/L
-      - "%"
-      - None / Unknown
-      - please update
-
-  inventory_new_active_unit_3:
-    name: New Product – Active concentration unit (3)
-    options:
-      - g/L
-      - g/kg
-      - g/t
-      - mg/L
-      - "%"
-      - None / Unknown
-      - please update
-
-  inventory_new_active_unit_4:
-    name: New Product – Active concentration unit (4)
-    options:
-      - g/L
-      - g/kg
-      - g/t
-      - mg/L
-      - "%"
-      - None / Unknown
-      - please update
-
-  inventory_new_active_unit_5:
-    name: New Product – Active concentration unit (5)
-    options:
-      - g/L
-      - g/kg
-      - g/t
-      - mg/L
-      - "%"
-      - None / Unknown
-      - please update
-
-  inventory_new_active_unit_6:
-    name: New Product – Active concentration unit (6)
-    options:
-      - g/L
-      - g/kg
-      - g/t
-      - mg/L
-      - "%"
-      - None / Unknown
-      - please update
-
-
-  # Application unit (how you apply in the paddock)
-  inventory_new_application_unit:
-    name: New Product – Application unit
+  ipm_new_application_unit:
+    name: IPM New Product – Application unit
     options:
       - g/ha
       - kg/ha
@@ -238,150 +162,129 @@ input_select:
       - L/100L
       - g/100L
       - please update
-##----------------------------------------------##
+
+  ipm_new_active_unit:
+    name: IPM New Product – Active unit (1)
+    options: [g/L, g/kg, g/t, mg/L, "%", None / Unknown, please update]
+  ipm_new_active_unit_2:
+    name: IPM New Product – Active unit (2)
+    options: [g/L, g/kg, g/t, mg/L, "%", None / Unknown, please update]
+  ipm_new_active_unit_3:
+    name: IPM New Product – Active unit (3)
+    options: [g/L, g/kg, g/t, mg/L, "%", None / Unknown, please update]
+  ipm_new_active_unit_4:
+    name: IPM New Product – Active unit (4)
+    options: [g/L, g/kg, g/t, mg/L, "%", None / Unknown, please update]
+  ipm_new_active_unit_5:
+    name: IPM New Product – Active unit (5)
+    options: [g/L, g/kg, g/t, mg/L, "%", None / Unknown, please update]
+  ipm_new_active_unit_6:
+    name: IPM New Product – Active unit (6)
+    options: [g/L, g/kg, g/t, mg/L, "%", None / Unknown, please update]
+
 input_number:
-  # Movement quantity
-  inventory_quantity:
-    name: Quantity
-    min: -50000
-    max: 500000
-    step: 1
-    mode: box
-  
-  inventory_quantity_update:
-    name: Quantity
+  ipm_quantity:
+    name: IPM Quantity
     min: -50000
     max: 500000
     step: 1
     mode: box
 
-
-  # New/Edit product numeric props
-  inventory_new_initial_stock:
-    name: New Product – Initial stock
+  ipm_new_initial_stock:
+    name: IPM New Product – Initial stock
     min: 0
     max: 500000
     step: 0.1
     mode: box
 
-
-  inventory_new_min_stock:
-    name: New Product – Minimum stock
+  ipm_new_min_stock:
+    name: IPM New Product – Minimum stock
     min: 0
     max: 500000
     step: 0.1
     mode: box
 
-
-  # already have:
-  inventory_new_active_concentration:
-    name: New Product – Active concentration (1)
+  ipm_new_active_concentration:
+    name: IPM Active concentration (1)
     min: 0
-    max: 1000
+    max: 5000
+    step: 0.1
+    mode: box
+  ipm_new_active_concentration_2:
+    name: IPM Active concentration (2)
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+  ipm_new_active_concentration_3:
+    name: IPM Active concentration (3)
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+  ipm_new_active_concentration_4:
+    name: IPM Active concentration (4)
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+  ipm_new_active_concentration_5:
+    name: IPM Active concentration (5)
+    min: 0
+    max: 5000
+    step: 0.1
+    mode: box
+  ipm_new_active_concentration_6:
+    name: IPM Active concentration (6)
+    min: 0
+    max: 5000
     step: 0.1
     mode: box
 
-  # extra concentrations 2–6
-  inventory_new_active_concentration_2:
-    name: New Product – Active concentration (2)
-    min: 0
-    max: 1000
-    step: 0.1
-    mode: box
-
-  inventory_new_active_concentration_3:
-    name: New Product – Active concentration (3)
-    min: 0
-    max: 1000
-    step: 0.1
-    mode: box
-
-  inventory_new_active_concentration_4:
-    name: New Product – Active concentration (4)
-    min: 0
-    max: 1000
-    step: 0.1
-    mode: box
-
-  inventory_new_active_concentration_5:
-    name: New Product – Active concentration (5)
-    min: 0
-    max: 1000
-    step: 0.1
-    mode: box
-
-  inventory_new_active_concentration_6:
-    name: New Product – Active concentration (6)
-    min: 0
-    max: 1000
-    step: 0.1
-    mode: box
-
-    ###############################################################
 input_text:
-  inventory_note:
-    name: Note
+  ipm_note:
+    name: IPM Note
     max: 100
 
-  inventory_active_search:
-    name: Active/name search
+  ipm_active_search:
+    name: IPM Search
     max: 50
 
-  # Core product identifiers
-  inventory_new_id:
-    name: New Product – ID
+  ipm_new_id:
+    name: IPM New Product – ID
     max: 40
 
-  inventory_new_name:
-    name: New Product – Name
+  ipm_new_name:
+    name: IPM New Product – Name
     max: 80
 
-  # Active constituent name(s). One or more, comma-separated if needed.
-  inventory_new_actives:
-    name: New Product – Active constituent(s)
+  ipm_new_active_1:
+    name: IPM Active 1
     max: 200
-  inventory_new_active_1:
-    name: New Product – Active 1
+  ipm_new_active_2:
+    name: IPM Active 2
     max: 200
-
-  inventory_new_active_2:
-    name: New Product – Active 2
+  ipm_new_active_3:
+    name: IPM Active 3
     max: 200
-
-  inventory_new_active_3:
-    name: New Product – Active 3
+  ipm_new_active_4:
+    name: IPM Active 4
     max: 200
-  inventory_new_active_4:
-    name: New Product – Active 4
+  ipm_new_active_5:
+    name: IPM Active 5
     max: 200
-
-  inventory_new_active_5:
-    name: New Product – Active 5
+  ipm_new_active_6:
+    name: IPM Active 6
     max: 200
 
-  inventory_new_active_6:
-    name: New Product – Active 6
-    max: 200
-
-##########################################################
 input_boolean:
-
-  inventory_new_show_active_2:
+  ipm_new_show_active_2:
     name: Show Active 2
-    icon: mdi:plus-box-multiple
-
-  inventory_new_show_active_3:
+  ipm_new_show_active_3:
     name: Show Active 3
-    icon: mdi:plus-box-multiple
-
-  inventory_new_show_active_4:
+  ipm_new_show_active_4:
     name: Show Active 4
-    icon: mdi:plus-box-multiple
-
-  inventory_new_show_active_5:
+  ipm_new_show_active_5:
     name: Show Active 5
-    icon: mdi:plus-box-multiple
-
-  inventory_new_show_active_6:
+  ipm_new_show_active_6:
     name: Show Active 6
-    icon: mdi:plus-box-multiple
