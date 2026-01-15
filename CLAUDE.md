@@ -8,9 +8,33 @@ This is a Home Assistant configuration repository for a farm/agricultural operat
 
 - **IPM** (Inventory Product Manager) - Track chemicals, fertilisers, seeds, lubricants
 - **ASM** (Asset Service Manager) - Track assets, parts, and service events
+- **Weather** - Weather station integration with Delta T, ETo, Degree Days
 - **WSS** (Work Safety System) - Coming soon
 - **PWM** (Precision Water Management) - Coming soon
 - **HFM** (Hey Farmer) - Coming soon
+
+## Current System Baseline (16 January 2026)
+
+### IPM Inventory
+- **Total Products:** 11
+- **Categories in use:** Chemical (3), Fertiliser (2), Seed (4), Lubricant (2)
+- **Active Constituents tracked:** Glyphosate, Nitrogen, Act1, Act 2
+- **Products with stock:** 9 (2 products have zero stock: Peter Seed, New Seed)
+- **Transactions logged:** 16
+
+### ASM Assets & Parts
+- **Total Assets:** 2 (Case Magnum 280, Case Puma 140)
+- **Total Parts:** 3 (Tyre 8960, little tyre, Big tyre rear)
+- **Low Stock Alerts:** 1 (little tyre at 0 stock)
+- **Service Events:** 3 recorded
+- **Transactions logged:** 19
+
+### Weather Station
+- **Data Source:** Ecowitt Gateway (ecowittgateway_1)
+- **Location:** Latitude -35.5575, Elevation 180m
+- **Calculated Sensors:** Delta T, Evapotranspiration (ETo), Degree Days, Cumulative Degree Days
+- **Statistics Sensors:** Min/Max Temperature, Min/Max Humidity, Avg Wind Speed
+- **Utility Meter:** Daily Solar Radiation (MJ/m2/day)
 
 ## Directory Structure
 
@@ -26,13 +50,19 @@ This is a Home Assistant configuration repository for a farm/agricultural operat
 │   │   └── dashboards/
 │   │       └── inventory.yaml  # Dashboard views
 │   │
-│   └── asm/                    # Asset Service Manager
-│       ├── package.yaml        # All HA config
-│       ├── python/
-│       │   ├── asm_backend.py  # Write operations (assets, parts, services)
-│       │   └── asm_sensor.py   # Read-only JSON output for HA sensor
+│   ├── asm/                    # Asset Service Manager
+│   │   ├── package.yaml        # All HA config
+│   │   ├── python/
+│   │   │   ├── asm_backend.py  # Write operations (assets, parts, services)
+│   │   │   └── asm_sensor.py   # Read-only JSON output for HA sensor
+│   │   └── dashboards/
+│   │       └── views.yaml      # Dashboard views (Assets, Parts, Report, Service)
+│   │
+│   └── weather/                # Weather Station Integration
+│       ├── package.yaml        # Template sensors, statistics, automations
+│       ├── python/             # (empty - no backend needed)
 │       └── dashboards/
-│           └── views.yaml      # Dashboard views (Assets, Parts, Report, Service)
+│           └── weatherview.yaml
 │
 └── local_data/                 # Runtime data - NOT in git
     ├── ipm/
@@ -59,12 +89,22 @@ Each module (ipm, wss, etc.) should be:
 6. Sensor refreshes to reflect changes
 
 ### Key Entities
-- `sensor.ipm_products` - Main data source (JSON attributes)
+- `sensor.ipm_products` - Main data source (JSON attributes including `active_names`)
 - `input_select.ipm_product` - Product selection by NAME (user-friendly)
 - `input_select.ipm_location` - Location selection (for multi-location products)
+- `input_select.ipm_category` - Filter by category
+- `input_select.ipm_subcategory` - Filter by subcategory
+- `input_select.ipm_active_filter` - Filter by active constituent name
 - `input_number.ipm_quantity` - Stock change amount
 - `script.ipm_save_movement` - Commit stock changes
 - `script.ipm_add_product` / `script.ipm_save_product` - Product management
+
+### Dashboard Views (inventory.yaml)
+1. **Stock Movement** - Select product/location, adjust stock with +/- buttons
+2. **Product Editor** - Add new or edit existing products (including active constituents)
+3. **Stock Overview** - Filterable report view showing all products with:
+   - Category, Subcategory, Active Constituent, and Search filters
+   - Stock cards displaying: name, category, total stock, stock bar, active constituents (name, concentration, group), locations
 
 ### Category Structure
 ```
@@ -76,6 +116,18 @@ Lubricant   → Engine Oil, Hydraulic Oil, Grease, Gear Oil, Transmission Fluid,
 
 ### Storage Locations
 Chem Shed, Seed Shed, Oil Shed, Silo 1-13
+
+### Active Constituents (Chemicals/Fertilisers)
+Products in the Chemical and Fertiliser categories can have up to 6 active constituents. Each active has:
+- `name` - Name of the active ingredient (dropdown with ~100 common actives)
+- `concentration` - Numeric concentration value
+- `unit` - Concentration unit (g/L, g/kg, ml/L, %)
+- `group` - Chemical group (stored per active, not per product)
+
+**Data field:** `active_constituents` (array in product JSON)
+
+### Chemical Groups
+Available groups: None, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 22, M (multi-site)
 
 ## ASM System Architecture
 
@@ -107,12 +159,44 @@ Filter, Belt, Oil, Grease, Battery, Tyre, Hose
 ### Service Types
 250 Hr Service, 500 Hr Service, 1000 Hr Service, Annual Service, Repair, Inspection, Other
 
+### Dashboard Views (views.yaml)
+1. **Assets** - View/add/edit assets with custom attributes
+2. **Parts** - View/add/edit parts, assign to assets or mark universal
+3. **Service** - Record service events with parts consumption
+4. **Report** - Service history and parts usage reports
+
 ### Key Features
 - Parts can be assigned to specific assets or marked as "universal" (all assets)
-- Flexible custom attributes (5 slots) for both assets and parts
+- Flexible custom attributes (15 slots) for both assets and parts
 - Single stock count per part (simpler than IPM's multi-location)
 - Service events consume parts and auto-deduct from stock
 - Transaction logging for audit trail
+
+## Weather System Architecture
+
+### Data Source
+Uses Ecowitt Gateway integration sensors:
+- `sensor.ecowittgateway_1_outdoor_temperature`
+- `sensor.ecowittgateway_1_humidity`
+- `sensor.ecowittgateway_1_wind_speed`
+- `sensor.ecowittgateway_1_solar_radiation`
+
+### Calculated Sensors
+- **Delta T** - Spray condition indicator (dry bulb - wet bulb temperature)
+- **Evapotranspiration (ETo)** - Penman-Monteith equation for reference grass crop (mm/day)
+- **Degree Days** - Daily thermal accumulation above 10°C base temperature
+- **Filtered Solar Radiation** - Cleaned solar data converted to MJ for calculations
+
+### Statistics Sensors (24-hour rolling)
+- Min/Max Temperature, Min/Max Humidity, Avg Wind Speed
+
+### Helpers
+- `input_number.weather_station_1_cdd` - Cumulative Degree Days running total
+- `utility_meter.weather_station_1_solar_radiation_mj_m2_day` - Daily solar accumulator
+
+### Automation
+- Daily CDD automation adds degree day value to cumulative total at 23:59:30
+- Reset script available: `script.reset_weather_station_1_cdd`
 
 ## Git Workflow
 
