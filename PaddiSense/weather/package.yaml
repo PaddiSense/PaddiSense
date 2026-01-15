@@ -1,0 +1,213 @@
+template:
+  - sensor:
+      - name: "Weather Station 1 Delta T"
+        state: >-
+          {# Set the variables, t is temperature and rh is relative humidity #}
+          {% set t = states('sensor.ecowittgateway_1_outdoor_temperature') | float() if has_value('sensor.ecowittgateway_1_outdoor_temperature') else 0 %}
+          {% set rh = states('sensor.ecowittgateway_1_humidity') | float() if has_value('sensor.ecowittgateway_1_humidity') else 0 %}
+          {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
+          {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
+          {% set c = atan(rh - 1.676331) %}
+          {% set d = atan( t + rh) %}
+
+          {# Delta T calculation, subtract dry bulb temperature (air temp) from wet bulb temperature and round to 2 decimal places #}
+          {{ t - (a + b - c + d - 4.686035) | round(2) }}
+        unit_of_measurement: "°C"
+        
+  - sensor:
+      - name: "Weather Station 1 Evapotranspiration"
+        state: >-
+          {# This template uses the Penman-Monteith equation for calculating evapotranspiration for a reference grass crop. #}
+
+          {# Create Max, Min and Average sensors using statistics helper as required for temperature, 
+          humidity and wind speed (for WS divide by 3.6 if km/h). Create a utility meter helper for 
+          solar radiation, resetting daily. units must be MJ/m2/day, convert if necessary #}
+
+          {% set maxT = (states('sensor.weather_station_1_max_temperature') if has_value('sensor.weather_station_1_max_temperature') else 0) | float(0) %}
+          {% set minT = (states('sensor.weather_station_1_min_temperature') if has_value('sensor.weather_station_1_min_temperature') else 0) | float(0) %}
+          {% set maxRH = (states('sensor.weather_station_1_max_humidity') if has_value('sensor.weather_station_1_max_humidity') else 0) | float(0) %}
+          {% set minRH = (states('sensor.weather_station_1_min_humidity') if has_value('sensor.weather_station_1_min_humidity') else 0) | float(0) %}
+          {% set avgWS = (states('sensor.weather_station_1_avg_wind_speed') if has_value('sensor.weather_station_1_avg_wind_speed') else 0) | float(0) / 3.6 %}
+          {% set SolRad = (states('sensor.weather_station_1_solar_radiation_mj_m2_day') if has_value('sensor.weather_station_1_solar_radiation_mj_m2_day') else 0) | float(0) | round(1) %}
+
+          {# Req. constants #}
+          {% set e = 2.718281828459045 %}
+          {% set pi = 3.141592653589793 %}
+          {% set Day = (now() - now().replace(month=1, day=1)).days + 1 | int %}
+
+          {# Equated variables needed for final calculation #}
+          {% set avgT = (maxT + minT) / 2 %}
+          {% set PsyCon = 0.0665043028282533 %}
+          {% set MnSVP = ((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) + (0.6108 * e ** ((17.27 * minT) / (minT + 237.3)))) / 2 %}
+          {% set SSVPC = (4098 * (0.6108 * e ** ((17.27 * avgT) / (avgT + 237.3)))) / ((avgT + 237.3) ** 2) %}
+          {% set ActVP = (((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) * (minRH / 100)) + ((0.6108 * e ** ((17.27 * minT) / (minT + 237.3))) * (maxRH / 100))) / 2 %}
+          {% set VPD = MnSVP - ActVP %}
+
+          {# Net Radiation calculations, replace latitude and elevation variables with correct values #}
+          {% set alpha = 0.23 %}
+          {% set sigma = 0.000000004903 %}
+          {% set latitude = -35.5575 %}
+          {% set elevation = 180 %}
+
+          {# Extraterrestrial radiation for daily periods #}
+          {% set Gsc = 0.0820 %}
+          {% set dr = 1 + 0.033 * cos((2 * pi / 365) * Day) %}
+          {% set delta = 0.409 * sin((2 * pi / 365) * Day - 1.39) %}
+          {% set omega_s = acos(-tan(latitude * pi / 180) * tan(delta)) %}
+          {% set Ra = (24 * 60 / pi) * Gsc * dr * (omega_s * sin(latitude * pi / 180) * sin(delta) + cos(latitude * pi / 180) * cos(delta) * sin(omega_s)) %}
+
+          {# Clear-sky solar radiation #}
+          {% set Rso = (0.75 + 2e-5 * elevation) * Ra %}
+
+          {# Converting min and max temperatures to Kelvin #}
+          {% set TmaxK = maxT + 273.16 %}
+          {% set TminK = minT + 273.16 %}
+
+          {# Net shortwave radiation #}
+          {% set Rns = (1 - alpha) * SolRad %}
+
+          {# Net longwave radiation #}
+          {% set Rnl = sigma * ((TmaxK**4 + TminK**4) / 2) * (0.34 - 0.14 * (ActVP**0.5)) * (1.35 * (SolRad / Rso) - 0.35) %}
+
+          {# Net radiation #}
+          {% set NetRad = Rns - Rnl %}
+
+          {# Uncomment for debugging in Developer Tools -> Template Editor #}
+          {#{% set ETo = (0.408 * (NetRad - 0) * SSVPC / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) + ((900 / (avgT + 273)) * avgWS * VPD * PsyCon / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) %}
+
+          MaxT: {{ maxT }}
+          MinT: {{ minT }}
+          MaxRH: {{ maxRH }}
+          MinRH: {{ minRH }}
+          AvgWS: {{ avgWS }}
+          SolRad: {{ SolRad }}
+
+          SSVPC: {{ SSVPC | round(3) }}
+          ActVP: {{ ActVP | round(3) }}
+          MnSVP: {{ MnSVP | round(3) }}
+          VPD: {{ VPD | round(3) }}
+          PsyCon: {{ PsyCon | round(3) }}
+          AvgT: {{ avgT | round(3) }}
+
+          Rns: {{ Rns }}
+          Rnl: {{ Rnl }}
+          NetRad: {{ NetRad }}
+
+          ETo: #} {{ (0.408 * (NetRad - 0) * SSVPC / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) + ((900 / (avgT + 273)) * avgWS * VPD * PsyCon / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) }}
+        unit_of_measurement: "mm" 
+
+  - sensor:
+      - name: "Weather Station 1 Filtered Solar Radiation"
+        state: >-
+          {# This template filters the values of the solar radiation sensor from the weather station so that it only outputs the actual value, or 0 if the sensor is
+          'unknown' or 'unavailable'. Implemented so that the solar radiation utility meter helper doesn't throw errors in the logs #}
+
+          {% set input = 'sensor.ecowittgateway_1_solar_radiation' %}
+          {% set val = states(input) | float (0) %}
+          {{ val * 300 / 1000000 if has_value(input) and 0 < val < 2000 else 0 }}
+        unit_of_measurement: "MJ"
+        device_class: energy
+        state_class: total
+
+  - triggers:
+      - trigger: time
+        at: "23:59:00"
+    sensor:
+      - name: "Weather Station 1 Degree Day"
+        unique_id: weather_station_1_degree_day
+        state_class: measurement
+        unit_of_measurement: "°C-d"
+        icon: mdi:chart-line
+        availability: >-
+          {{ is_number(states('sensor.weather_station_1_max_temperature'))
+              and is_number(states('sensor.weather_station_1_min_temperature')) }}
+        state: >-
+          {% set maxT = states('sensor.weather_station_1_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_1_min_temperature') | float(0) %}
+
+          {{ ((( maxT + minT) / 2 ) - 10) | round(2) }}
+        attributes:
+          max_temperature: "{{ states('sensor.weather_station_1_max_temperature') }}"
+          min_temperature: "{{ states('sensor.weather_station_1_min_temperature') }}"
+
+input_number:
+  weather_station_1_cdd:
+    name: Weather Station 1 Cumulative Degree Days
+    min: -1000000
+    max: 1000000
+    initial: 0
+    step: 0.1
+    unit_of_measurement: "°C-d"
+    icon: mdi:chart-multiple
+    mode: box
+
+automation:
+  id: "weather_station_1_cdd_automation"
+  alias: Weather Station 1 Cumulative Degree Days Automation
+  mode: single
+  description: Adds todays Degree Day value to running total
+  triggers:
+    - trigger: time
+      at: "23:59:30"
+  conditions: []
+  actions:
+    - variables:
+        today: "{{ states('sensor.weather_station_1_degree_day') | float(0) }}"
+        total: "{{ states('input_number.weather_station_1_cdd') | float(0) }}"
+    - action: input_number.set_value
+      target:
+        entity_id: input_number.weather_station_1_cdd
+      data:
+        value: "{{ ( total + today ) | round(2) }}"
+
+script:
+  reset_weather_station_1_cdd:
+    alias: Reset Weather Station 1 Cumulative Degree Days
+    mode: single
+    sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.weather_station_1_cdd
+        data:
+          value: 0
+
+sensor:
+  - platform: statistics
+    name: Weather Station 1 Min Temperature
+    entity_id: sensor.ecowittgateway_1_outdoor_temperature
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+  - platform: statistics
+    name: Weather Station 1 Max Temperature
+    entity_id: sensor.ecowittgateway_1_outdoor_temperature
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+  - platform: statistics
+    name: Weather Station 1 Min Humidity
+    entity_id: sensor.ecowittgateway_1_humidity
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+  - platform: statistics
+    name: Weather Station 1 Max Humidity
+    entity_id: sensor.ecowittgateway_1_humidity
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+  - platform: statistics
+    name: Weather Station 1 Avg Wind Speed
+    entity_id: sensor.ecowittgateway_1_wind_speed
+    state_characteristic: mean
+    max_age:
+      hours: 24
+
+utility_meter:
+  weather_station_1_solar_radiation_mj_m2_day:
+    name: Weather Station 1 Solar Radiation (MJ/m2/day)
+    source: sensor.weather_station_1_filtered_solar_radiation
+    cycle: daily
+    delta_values: true
+    periodically_resetting: true
+    always_available: true
