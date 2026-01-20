@@ -131,6 +131,25 @@ shell_command:
   ipm_backup_list: >-
     python3 /config/PaddiSense/ipm/python/ipm_backend.py backup_list
 
+  # ----- Category Management Commands (Phase 4) -----
+  ipm_add_category: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py add_category
+    --name "{{ name }}"
+
+  ipm_remove_category: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py remove_category
+    --name "{{ name }}"
+
+  ipm_add_subcategory: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py add_subcategory
+    --category "{{ category }}"
+    --name "{{ name }}"
+
+  ipm_remove_subcategory: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py remove_subcategory
+    --category "{{ category }}"
+    --name "{{ name }}"
+
 #=============================================================================
 # INPUT HELPERS - User interface controls
 #=============================================================================
@@ -145,6 +164,7 @@ input_select:
       - Fertiliser
       - Seed
       - Lubricant
+      - Hay
 
   ipm_subcategory:
     name: IPM Subcategory Filter
@@ -187,6 +207,8 @@ input_select:
       - Silo 11
       - Silo 12
       - Silo 13
+      - Paddock 1
+      - Paddock 2
 
   # ----- Product Editor -----
   ipm_editor_mode:
@@ -204,6 +226,7 @@ input_select:
       - Fertiliser
       - Seed
       - Lubricant
+      - Hay
 
   ipm_edit_subcategory:
     name: IPM Edit Subcategory
@@ -215,9 +238,10 @@ input_select:
     name: IPM Edit Unit
     icon: mdi:scale
     options:
+      - None
       - L
       - kg
-      - t
+      - ea
 
   ipm_edit_container:
     name: IPM Edit Container Size
@@ -230,6 +254,7 @@ input_select:
       - "110"
       - "200"
       - "1000"
+      - "400"
       - bulk
 
   ipm_edit_location:
@@ -252,6 +277,8 @@ input_select:
       - Silo 11
       - Silo 12
       - Silo 13
+      - Paddock 1
+      - Paddock 2
 
   ipm_edit_app_unit:
     name: IPM Edit Application Unit
@@ -326,6 +353,7 @@ input_select:
     icon: mdi:flask
     options:
       - None
+      - "N/A"
       - "1"
       - "2"
       - "3"
@@ -342,12 +370,14 @@ input_select:
       - "15"
       - "22"
       - "M"
+      
 
   ipm_active_2_group:
     name: IPM Active 2 Group
     icon: mdi:flask
     options:
       - None
+      - "N/A"
       - "1"
       - "2"
       - "3"
@@ -364,12 +394,14 @@ input_select:
       - "15"
       - "22"
       - "M"
+      
 
   ipm_active_3_group:
     name: IPM Active 3 Group
     icon: mdi:flask
     options:
       - None
+      - "N/A"
       - "1"
       - "2"
       - "3"
@@ -386,12 +418,14 @@ input_select:
       - "15"
       - "22"
       - "M"
+      
 
   ipm_active_4_group:
     name: IPM Active 4 Group
     icon: mdi:flask
     options:
       - None
+      - "N/A"
       - "1"
       - "2"
       - "3"
@@ -414,6 +448,7 @@ input_select:
     icon: mdi:flask
     options:
       - None
+      - "N/A"
       - "1"
       - "2"
       - "3"
@@ -436,6 +471,7 @@ input_select:
     icon: mdi:flask
     options:
       - None
+      - "N/A"
       - "1"
       - "2"
       - "3"

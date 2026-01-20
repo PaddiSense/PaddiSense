@@ -8,7 +8,10 @@ It provides:
   - Product list with stock totals
   - Unique product names for selection dropdowns
   - Location lists per product (for multi-location products)
-  - Category/subcategory relationships
+  - Category/subcategory relationships (from config)
+  - Chemical groups (from config)
+  - Active constituents (from config)
+  - Units by type (from config)
 
 Output format:
 {
@@ -16,12 +19,17 @@ Output format:
   "products": { "PRODUCT_ID": { ... } },
   "product_names": ["Glyphosate 450", "Urea", ...],
   "product_locations": { "PRODUCT_ID": ["Silo 1", "Silo 3"], ... },
-  "categories": ["Chemical", "Fertiliser", "Seed", "Lubricant"],
+  "categories": ["Chemical", "Fertiliser", ...],
   "category_subcategories": { "Chemical": [...], ... },
-  "locations": ["Chem Shed", "Seed Shed", ...]
+  "locations": ["Chem Shed", "Seed Shed", ...],
+  "chemical_groups": ["None", "1", "2", ...],
+  "actives": [{"name": "...", "common_groups": [...]}, ...],
+  "active_names": ["Glyphosate", "2,4-D", ...],
+  "units": {"product": [...], "container": [...], ...}
 }
 
 Data source: /config/local_data/ipm/inventory.json
+Config source: /config/local_data/ipm/config.json (v2.0.0)
 """
 
 import json
@@ -35,6 +43,47 @@ BACKUP_DIR = DATA_DIR / "backups"
 # Version file location (in module directory)
 VERSION_FILE = Path("/config/PaddiSense/ipm/VERSION")
 
+# Current config version
+CONFIG_VERSION = "2.0.0"
+
+# Default values (used if config doesn't exist or is pre-v2.0.0)
+DEFAULT_CATEGORIES = {
+    "Chemical": [
+        "Adjuvant", "Fungicide", "Herbicide", "Insecticide",
+        "Pesticide", "Rodenticide", "Seed Treatment",
+    ],
+    "Fertiliser": [
+        "Nitrogen", "Phosphorus", "Potassium", "NPK Blend",
+        "Trace Elements", "Organic",
+    ],
+    "Seed": [
+        "Wheat", "Barley", "Canola", "Rice", "Oats", "Pasture", "Other",
+    ],
+    "Hay": [
+        "Barley", "Wheat", "Clover", "Lucerne", "Vetch", "Other",
+    ],
+    "Lubricant": [
+        "Engine Oil", "Hydraulic Oil", "Grease", "Gear Oil",
+        "Transmission Fluid", "Coolant",
+    ],
+}
+
+DEFAULT_LOCATIONS = [
+    "Chem Shed", "Seed Shed", "Oil Shed",
+]
+
+DEFAULT_CHEMICAL_GROUPS = [
+    "None", "N/A", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "11", "12", "13", "14", "15", "22", "M"
+]
+
+DEFAULT_UNITS = {
+    "product": ["None", "L", "kg", "ea", "t", "mL"],
+    "container": ["1", "5", "10", "20", "110", "200", "400", "1000", "bulk"],
+    "application": ["L/ha", "mL/ha", "kg/ha", "g/ha", "t/ha", "mL/100L", "g/100L"],
+    "concentration": ["g/L", "g/kg", "mL/L", "%"],
+}
+
 
 def get_version() -> str:
     """Read module version from VERSION file."""
@@ -45,110 +94,46 @@ def get_version() -> str:
         pass
     return "unknown"
 
-# Category to subcategory mapping (must match ipm_backend.py)
-CATEGORY_SUBCATEGORIES = {
-    "Chemical": [
-        "Adjuvant",
-        "Fungicide",
-        "Herbicide",
-        "Insecticide",
-        "Pesticide",
-        "Rodenticide",
-        "Seed Treatment",
-    ],
-    "Fertiliser": [
-        "Nitrogen",
-        "Phosphorus",
-        "Potassium",
-        "NPK Blend",
-        "Trace Elements",
-        "Organic",
-    ],
-    "Seed": [
-        "Wheat",
-        "Barley",
-        "Canola",
-        "Rice",
-        "Oats",
-        "Pasture",
-        "Other",
-    ],
-    "Lubricant": [
-        "Engine Oil",
-        "Hydraulic Oil",
-        "Grease",
-        "Gear Oil",
-        "Transmission Fluid",
-        "Coolant",
-    ],
-}
-
-# Default storage locations (used if config doesn't exist)
-DEFAULT_LOCATIONS = [
-    "Chem Shed",
-    "Seed Shed",
-    "Oil Shed",
-    "Silo 1",
-    "Silo 2",
-    "Silo 3",
-    "Silo 4",
-    "Silo 5",
-    "Silo 6",
-    "Silo 7",
-    "Silo 8",
-    "Silo 9",
-    "Silo 10",
-    "Silo 11",
-    "Silo 12",
-    "Silo 13",
-]
-
-# Standard active constituents list (must match ipm_backend.py)
-STANDARD_ACTIVES = [
-    # Herbicides
-    "2,4-D", "Atrazine", "Bromoxynil", "Carfentrazone-ethyl", "Clethodim",
-    "Clodinafop-propargyl", "Clopyralid", "Dicamba", "Diflufenican", "Diquat",
-    "Fenoxaprop-P-ethyl", "Florasulam", "Fluazifop-P-butyl", "Flumetsulam",
-    "Fluroxypyr", "Glufosinate-ammonium", "Glyphosate", "Haloxyfop", "Imazamox",
-    "Imazapic", "Imazapyr", "Imazethapyr", "MCPA", "Mesotrione", "Metolachlor",
-    "Metsulfuron-methyl", "Paraquat", "Pendimethalin", "Picloram", "Pinoxaden",
-    "Propaquizafop", "Prosulfocarb", "Pyroxasulfone", "Pyroxsulam",
-    "Quizalofop-P-ethyl", "Sethoxydim", "Simazine", "Sulfometuron-methyl",
-    "Sulfosulfuron", "Terbuthylazine", "Triallate", "Tribenuron-methyl",
-    "Triclopyr", "Trifluralin", "Trifloxysulfuron",
-    # Fungicides
-    "Azoxystrobin", "Bixafen", "Boscalid", "Carbendazim", "Chlorothalonil",
-    "Cyproconazole", "Difenoconazole", "Epoxiconazole", "Fludioxonil",
-    "Fluopyram", "Flutriafol", "Fluxapyroxad", "Iprodione", "Isopyrazam",
-    "Mancozeb", "Metalaxyl", "Propiconazole", "Prothioconazole",
-    "Pyraclostrobin", "Tebuconazole", "Thiram", "Triadimefon", "Triadimenol",
-    "Trifloxystrobin",
-    # Insecticides
-    "Abamectin", "Acetamiprid", "Alpha-cypermethrin", "Bifenthrin",
-    "Chlorantraniliprole", "Chlorpyrifos", "Clothianidin", "Cyantraniliprole",
-    "Cypermethrin", "Deltamethrin", "Dimethoate", "Emamectin benzoate",
-    "Esfenvalerate", "Fipronil", "Imidacloprid", "Indoxacarb",
-    "Lambda-cyhalothrin", "Malathion", "Methomyl", "Omethoate", "Pirimicarb",
-    "Spinetoram", "Spinosad", "Sulfoxaflor", "Thiacloprid", "Thiamethoxam",
-    # Seed Treatments
-    "Ipconazole", "Metalaxyl-M", "Sedaxane", "Triticonazole",
-    # Fertiliser Elements
-    "Boron", "Calcium", "Copper", "Iron", "Magnesium", "Manganese",
-    "Molybdenum", "Nitrogen", "Phosphorus", "Potassium", "Sulfur", "Zinc",
-    # Adjuvants
-    "Alcohol ethoxylate", "Ammonium sulfate", "Methylated seed oil",
-    "Organosilicone", "Paraffin oil", "Petroleum oil",
-]
-
 
 def load_config() -> dict:
-    """Load config from JSON file, or return defaults."""
+    """Load config from JSON file, handling both v1 and v2 formats."""
     if not CONFIG_FILE.exists():
-        return {"locations": DEFAULT_LOCATIONS}
+        return {
+            "version": None,
+            "categories": DEFAULT_CATEGORIES,
+            "chemical_groups": DEFAULT_CHEMICAL_GROUPS,
+            "actives": [],
+            "locations": DEFAULT_LOCATIONS,
+            "units": DEFAULT_UNITS,
+        }
+
     try:
-        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+
+        # Check if v2.0.0 format
+        if config.get("version") == CONFIG_VERSION:
+            return config
+
+        # v1 format - return with defaults for missing fields
+        return {
+            "version": config.get("version"),
+            "categories": DEFAULT_CATEGORIES,
+            "chemical_groups": DEFAULT_CHEMICAL_GROUPS,
+            "actives": [],  # Will be built from custom_actives if present
+            "locations": config.get("locations", DEFAULT_LOCATIONS),
+            "units": DEFAULT_UNITS,
+            "custom_actives": config.get("custom_actives", []),  # v1 field
+        }
+
     except (json.JSONDecodeError, IOError):
-        return {"locations": DEFAULT_LOCATIONS}
+        return {
+            "version": None,
+            "categories": DEFAULT_CATEGORIES,
+            "chemical_groups": DEFAULT_CHEMICAL_GROUPS,
+            "actives": [],
+            "locations": DEFAULT_LOCATIONS,
+            "units": DEFAULT_UNITS,
+        }
 
 
 def get_backup_info() -> dict:
@@ -193,27 +178,37 @@ def get_backup_info() -> dict:
 
 
 def main():
-    # Load config for locations and custom actives
+    # Load config
     config = load_config()
-    locations = config.get("locations", DEFAULT_LOCATIONS)
-    custom_actives = config.get("custom_actives", [])
 
-    # Build merged actives list (standard + custom)
-    all_actives_list = []
-    for name in STANDARD_ACTIVES:
-        all_actives_list.append({
-            "name": name,
-            "type": "standard",
-            "common_groups": [],
-        })
-    for active in custom_actives:
-        if isinstance(active, dict) and active.get("name"):
-            all_actives_list.append({
-                "name": active["name"],
-                "type": "custom",
-                "common_groups": active.get("common_groups", []),
-            })
-    all_actives_list.sort(key=lambda x: x["name"].lower())
+    # Get values from config (v2.0.0 format)
+    config_version = config.get("version")
+    needs_migration = config_version != CONFIG_VERSION if config_version else True
+
+    # Categories and subcategories
+    categories = config.get("categories", DEFAULT_CATEGORIES)
+    category_list = list(categories.keys())
+
+    # Chemical groups
+    chemical_groups = config.get("chemical_groups", DEFAULT_CHEMICAL_GROUPS)
+
+    # Locations
+    locations = config.get("locations", DEFAULT_LOCATIONS)
+
+    # Units
+    units = config.get("units", DEFAULT_UNITS)
+
+    # Actives - handle both v1 and v2 format
+    if config_version == CONFIG_VERSION:
+        # v2.0.0 - actives is a list of dicts with name and common_groups
+        actives = config.get("actives", [])
+    else:
+        # v1 format - no actives in config, just custom_actives
+        # For v1, output empty list (automations will handle with fallback)
+        actives = []
+
+    # Build active names list for dropdowns
+    active_names_from_config = [a.get("name", "") for a in actives if a.get("name")]
 
     # Determine system status
     config_exists = CONFIG_FILE.exists()
@@ -236,16 +231,20 @@ def main():
         "products": {},
         "product_names": [],
         "product_locations": {},
-        "categories": list(CATEGORY_SUBCATEGORIES.keys()),
-        "category_subcategories": CATEGORY_SUBCATEGORIES,
+        "categories": category_list,
+        "category_subcategories": categories,
         "locations": locations,
+        "chemical_groups": chemical_groups,
+        "actives": actives,
         "active_names": [],
+        "active_names_from_config": active_names_from_config,
+        "units": units,
         "system_status": system_status,
         "config_exists": config_exists,
         "database_exists": database_exists,
+        "config_version": config_version or "1.0.0",
+        "needs_migration": needs_migration,
         "locations_with_stock": [],
-        "custom_actives_count": len(custom_actives),
-        "all_actives_list": all_actives_list,
         "active_products_map": {},
         "backup_count": backup_info["backup_count"],
         "last_backup": backup_info["last_backup"],
@@ -269,7 +268,7 @@ def main():
     # Build output structures
     product_names = []
     product_locations = {}
-    active_names_set = set()
+    active_names_in_use = set()
     all_locations_with_stock = set()
     active_products_map = {}  # Maps active name to list of product names using it
 
@@ -299,14 +298,14 @@ def main():
             product_locations[product_id] = sorted(locations_with_stock)
 
         # Collect active constituent names and build active -> products map
-        actives = product.get("active_constituents", [])
-        if isinstance(actives, list):
-            for active in actives:
+        product_actives = product.get("active_constituents", [])
+        if isinstance(product_actives, list):
+            for active in product_actives:
                 if isinstance(active, dict):
                     active_name = active.get("name", "")
                     if active_name and isinstance(active_name, str):
                         active_name = active_name.strip()
-                        active_names_set.add(active_name)
+                        active_names_in_use.add(active_name)
                         # Add to products map
                         if active_name not in active_products_map:
                             active_products_map[active_name] = []
@@ -318,16 +317,20 @@ def main():
         "products": products,
         "product_names": sorted(product_names),
         "product_locations": product_locations,
-        "categories": list(CATEGORY_SUBCATEGORIES.keys()),
-        "category_subcategories": CATEGORY_SUBCATEGORIES,
+        "categories": category_list,
+        "category_subcategories": categories,
         "locations": locations,
-        "active_names": sorted(active_names_set),
+        "chemical_groups": chemical_groups,
+        "actives": actives,
+        "active_names": sorted(active_names_in_use),  # Active names currently used by products
+        "active_names_from_config": active_names_from_config,  # All active names from config
+        "units": units,
         "system_status": "ready",
         "config_exists": config_exists,
         "database_exists": database_exists,
+        "config_version": config_version or "1.0.0",
+        "needs_migration": needs_migration,
         "locations_with_stock": sorted(all_locations_with_stock),
-        "custom_actives_count": len(custom_actives),
-        "all_actives_list": all_actives_list,
         "active_products_map": active_products_map,
         "backup_count": backup_info["backup_count"],
         "last_backup": backup_info["last_backup"],

@@ -13,7 +13,7 @@ This is a Home Assistant configuration repository for a farm/agricultural operat
 - **WSS** (Work Safety System) - Coming soon
 - **HFM** (Hey Farmer) - Coming soon
 
-## Current System Baseline (18 January 2026)
+## Current System Baseline (20 January 2026)
 
 ### Home Assistant
 - **Core:** 2026.1.2
@@ -21,12 +21,23 @@ This is a Home Assistant configuration repository for a farm/agricultural operat
 - **Operating System:** 16.3
 - **Frontend:** 20260107.2
 
-### IPM Inventory (v1.0.0)
+### IPM Inventory (v1.1.0)
 - **Total Products:** 11
-- **Categories in use:** Chemical (3), Fertiliser (2), Seed (4), Lubricant (2)
-- **Active Constituents tracked:** Glyphosate, Nitrogen, Act1, Act 2
-- **Locations configured:** 17
-- **Transactions logged:** 21
+- **Categories in use:** Chemical (3), Fertiliser (2), Seed (4), Hay (0), Lubricant (2)
+- **Config Version:** 2.0.0 (with categories, actives, groups, units)
+- **Active Constituents:** 118 (standard library + custom)
+- **Locations configured:** 19
+- **Transactions logged:** 28
+- **Backups Available:** 3
+
+**New in v1.1.0:**
+- Config migration system (v1.0.0 → v2.0.0)
+- Category/subcategory management (CRUD with validation)
+- Active constituents library (118 standard actives)
+- Chemical groups management
+- Unit types management (product, container, application, concentration)
+- Location management (add/remove with stock validation)
+- Backup/restore/reset system with auto pre-backup
 
 ### ASM Assets & Parts (v1.0.0)
 - **Total Assets:** 2 (Case Magnum 280, Case Puma 140)
@@ -60,7 +71,7 @@ This is a Home Assistant configuration repository for a farm/agricultural operat
 - Local gateway sensors, API sensors, binary sensors consolidated under one `template:` key
 - All command_line, shell_command, input helpers merged (no duplicate YAML keys)
 
-### PWM Water Management (v1.0.0)
+### PWM Water Management (v1.0.0) - IN DEVELOPMENT
 - **Total Paddocks:** 7 (Test Field, SW4-E, SW4-W, SW5, W17, W18, W19)
 - **Total Bays:** 29 with device assignments
 - **Farms Configured:** 1 (farm_1)
@@ -75,6 +86,31 @@ This is a Home Assistant configuration repository for a farm/agricultural operat
 - W17 B-03 has Channel Supply on supply_2
 - Test Field B-05 is last bay with drain door
 
+**Development Status (19 Jan 2026):**
+| Component | Status | Notes |
+|-----------|--------|-------|
+| config.json data | Complete | 7 paddocks, 29 bays with device assignments |
+| server.yaml | Complete | PWM enabled, farm_1 configured |
+| pwm_sensor.py | Complete | Reads config.json + server.yaml, outputs JSON |
+| pwm_backend.py | Complete | CRUD operations for paddocks/bays |
+| package.yaml sensors | Complete | command_line sensor for pwm_data |
+| package.yaml input_select | Complete | All 7 paddock automation states, all bay door controls |
+| views.yaml dashboard | Complete | button_card_templates, 9 views (Overview + 7 paddocks + Settings) |
+| Template sensors | Complete | 29 per-bay water depth sensors with offset support |
+| Timers & Booleans | Complete | 29 flush timers, 29 flush_active input_booleans |
+| State propagation | Complete | 7 automations propagate paddock→bay states |
+| Door control scripts | Complete | pwm_set_door, pwm_open/close_supply/drain |
+| Flush automation | Complete | SW5 fully implemented (example for other paddocks) |
+| Pond automation | Complete | SW5 B-01 and B-05 (last bay) implemented |
+| Drain automation | Complete | SW5 implemented |
+| Off mode automation | Complete | SW5 stops all timers and closes doors |
+| ESPHome integration | Stubbed | Scripts target input_select.<device>_actuator_state |
+
+**Remaining Work:**
+- Replicate SW5 flush/pond/drain automations to other 6 paddocks
+- Full dashboard testing with live ESPHome devices
+- Fine-tune timing and water level thresholds
+
 ## Deployment Architecture
 
 PaddiSense uses git for distribution with per-server customization via local config files.
@@ -87,7 +123,7 @@ PaddiSense/                          server.yaml       ← module selection + fa
 ├── install.sh                       secrets.yaml      ← API keys
 ├── update.sh                        local_data/       ← runtime data
 ├── server.yaml.example              ├── ipm/
-├── ipm/      (v1.0.0)               │   ├── inventory.json
+├── ipm/      (v1.1.0)               │   ├── inventory.json
 ├── asm/      (v1.0.0)               │   └── config.json
 ├── weather/  (v2.0.0)               ├── asm/
 │   └── python/                      │   ├── data.json
@@ -264,16 +300,37 @@ Versions are:
 6. Python backend updates `inventory.json` or `config.json`
 7. Sensor refreshes to reflect changes
 
-### Configuration File (config.json)
+### Configuration File (config.json v2.0.0)
 User-configurable settings stored separately from inventory data:
 ```json
 {
-  "locations": ["Chem Shed", "Seed Shed", "Oil Shed", "Silo 1", ...],
-  "custom_actives": [],
+  "version": "2.0.0",
+  "categories": {
+    "Chemical": ["Adjuvant", "Fungicide", "Herbicide", ...],
+    "Fertiliser": ["Nitrogen", "Phosphorus", ...],
+    "Seed": ["Wheat", "Barley", ...],
+    "Hay": ["Barley", "Wheat", "Clover", ...],
+    "Lubricant": ["Engine Oil", "Hydraulic Oil", ...]
+  },
+  "chemical_groups": ["None", "N/A", "1", "2", ...],
+  "actives": [
+    {"name": "Glyphosate", "common_groups": ["9"]},
+    {"name": "2,4-D", "common_groups": ["4"]},
+    ...
+  ],
+  "locations": ["Chem Shed", "Seed Shed", "Oil Shed", ...],
+  "units": {
+    "product": ["None", "L", "kg", "ea", "t", "mL"],
+    "container": ["1", "5", "10", "20", ...],
+    "application": ["L/ha", "mL/ha", "kg/ha", ...],
+    "concentration": ["g/L", "g/kg", "mL/L", "%"]
+  },
   "created": "2026-01-16T...",
-  "modified": "2026-01-16T..."
+  "modified": "2026-01-20T..."
 }
 ```
+
+**Migration:** Old v1.0.0 configs are automatically migrated to v2.0.0 on first `init` call. A backup is created before migration.
 
 ### Key Entities
 - `sensor.ipm_products` - Main data source (JSON attributes including `active_names`)
@@ -303,8 +360,11 @@ User-configurable settings stored separately from inventory data:
 Chemical    → Adjuvant, Fungicide, Herbicide, Insecticide, Pesticide, Rodenticide, Seed Treatment
 Fertiliser  → Nitrogen, Phosphorus, Potassium, NPK Blend, Trace Elements, Organic
 Seed        → Wheat, Barley, Canola, Rice, Oats, Pasture, Other
+Hay         → Barley, Wheat, Clover, Lucerne, Vetch, Other
 Lubricant   → Engine Oil, Hydraulic Oil, Grease, Gear Oil, Transmission Fluid, Coolant
 ```
+
+**Note:** Categories and subcategories are configurable via backend commands.
 
 ### Storage Locations
 Default locations: Chem Shed, Seed Shed, Oil Shed, Silo 1-13
@@ -321,7 +381,49 @@ Products in the Chemical and Fertiliser categories can have up to 6 active const
 **Data field:** `active_constituents` (array in product JSON)
 
 ### Chemical Groups
-Available groups: None, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 22, M (multi-site)
+Available groups: None, N/A, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 22, M (multi-site)
+
+### Backend Commands (ipm_backend.py)
+
+**Product Management:**
+- `add_product --name --category [--subcategory] [--unit] [--container_size] [--min_stock] [--application_unit] [--location] [--initial_stock] [--actives]`
+- `edit_product --id [--name] [--category] [--subcategory] [--unit] [--container_size] [--min_stock] [--application_unit] [--actives]`
+- `delete_product --id`
+- `move_stock --id --location --delta [--note]`
+
+**Category Management:**
+- `add_category --name`
+- `remove_category --name` (only if unused)
+- `add_subcategory --category --name`
+- `remove_subcategory --category --name` (only if unused)
+
+**Active Constituent Management:**
+- `list_actives` - List all active constituents (standard + custom)
+- `add_active --name [--groups]` - Add custom active with optional chemical groups
+- `remove_active --name` (only if not used by any product)
+
+**Chemical Group Management:**
+- `add_chemical_group --name`
+- `remove_chemical_group --name` (only if unused)
+
+**Unit Management:**
+- `add_unit --type --value` (type: product/container/application/concentration)
+- `remove_unit --type --value` (only if unused)
+
+**Location Management:**
+- `add_location --name`
+- `remove_location --name` (only if no stock at location)
+
+**System Management:**
+- `status` - Return system status as JSON
+- `init` - Initialize or migrate config to v2.0.0
+- `migrate_config` - Explicitly migrate config to v2.0.0
+
+**Data Management:**
+- `export` - Create timestamped backup file
+- `import_backup --filename` - Restore from backup (auto-creates pre-import backup)
+- `reset --token CONFIRM_RESET` - Full reset (auto-creates pre-reset backup)
+- `backup_list` - List available backups with metadata
 
 ## ASM System Architecture
 
@@ -719,17 +821,42 @@ template:
           {% endif %}
 ```
 
-### Key Entities (Dynamic)
-Per paddock:
-- `sensor.pwm_<paddock>_automation_state` - Current mode
-- `sensor.pwm_<paddock>_supply_water_depth` - Channel supply level
-- `input_select.pwm_<paddock>_drain_door_control` - Drain door control
+### Key Entities
 
-Per bay:
-- `sensor.pwm_<paddock>_<bay>_water_depth` - Calculated water depth
-- `sensor.pwm_<paddock>_<bay>_automation_state` - Bay mode
-- `sensor.pwm_<paddock>_<bay>_door_control` - Supply door control
-- `sensor.pwm_<paddock>_<bay>_flush_active` - Flush in progress flag
+**Main Sensor:**
+- `sensor.pwm_data` - JSON with farms, paddocks, bays, devices, version
+
+**Paddock Automation States (input_select):**
+- `input_select.test_field_automation_state`
+- `input_select.sw4_e_automation_state`
+- `input_select.sw4_w_automation_state`
+- `input_select.sw5_automation_state`
+- `input_select.w17_automation_state`
+- `input_select.w18_automation_state`
+- `input_select.w19_automation_state`
+
+**Bay Door Controls (input_select):**
+- `input_select.<paddock>_b_<nn>_door_control` - Supply door (per bay)
+- `input_select.<paddock>_drain_door_control` - Drain door (per paddock)
+- `input_select.w17_b_01_nml_door_control` - W17 NML spur
+- `input_select.w17_b_03_channel_supply_door_control` - W17 channel supply
+
+**Water Depth Sensors (29 sensors):**
+- `sensor.pwm_<paddock>_b_<nn>_water_depth` - Calculated water depth with offset
+- Pattern: `sensor.pwm_sw5_b_01_water_depth`, etc.
+
+**Flush Timers (29 timers):**
+- `timer.pwm_<paddock>_b_<nn>_flush` - Per-bay flush hold timer
+- Default duration: 1 hour, can be overridden via bay settings
+
+**Flush Active Flags (29 input_booleans):**
+- `input_boolean.pwm_<paddock>_b_<nn>_flush_active` - True when bay is holding water
+
+**Door Control Scripts:**
+- `script.pwm_set_door` - Generic door control (device, state)
+- `script.pwm_open_supply` / `pwm_close_supply` - Bay supply door control
+- `script.pwm_open_drain` / `pwm_close_drain` - Paddock drain door control
+- `script.pwm_start_flush` / `pwm_stop_flush` - Start/stop flush cycle
 
 ### Backend Commands (pwm_backend.py)
 **Paddock Management:**
@@ -748,11 +875,27 @@ Per bay:
 - `export` / `import_backup` / `reset`
 
 ### Dashboard Views (views.yaml)
-1. **Overview** - All paddocks with status badges, quick automation controls
-2. **Paddock** - Per-paddock detail view with bay cards, water level visualization
-3. **Bay Editor** - Configure bay settings, assign devices to slots
-4. **Reports** - Water usage, automation history, event logs
-5. **Settings** - System status, paddock management, device discovery
+1. **Overview** - All paddocks with status chips, quick automation controls
+2. **Test Field** - Per-paddock view with bay door controls and automation state
+3. **SW4-E** - Per-paddock view (3 bays)
+4. **SW4-W** - Per-paddock view (3 bays)
+5. **SW5** - Per-paddock view (5 bays)
+6. **W17** - Per-paddock view (5 bays, includes NML spur and channel supply)
+7. **W18** - Per-paddock view (5 bays)
+8. **W19** - Per-paddock view (4 bays)
+9. **Settings** - System status, paddock management, device discovery
+
+**Dashboard Templates (button_card_templates):**
+- `template_titleblock` - Section headers with icons
+- `template_textblock` - Text display blocks
+- `template_buttoncard_openclose` - Door control buttons (Open/Close/Hold states)
+- `template_inputselect_automationstate` - Automation mode selector
+- `template_paddock_automationstate` - Paddock-level automation display
+- `template_channel_autostate` - Channel supply status
+- `template_paddockconfigbutton` - Paddock config popup trigger
+- `template_extradatabutton` - Extra data subview trigger
+- `template_paddock_overview_card` - Overview card for each paddock
+- `template_stat_chip` - Status chip for quick stats
 
 ### Module File Structure
 ```

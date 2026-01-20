@@ -7,14 +7,18 @@ This script handles all write operations for the inventory system:
   - add_product: Add a new product to the inventory
   - edit_product: Update an existing product's details
   - move_stock: Adjust stock levels at a specific location
+  - Configuration management (categories, actives, groups, units)
 
 Data is stored in: /config/local_data/ipm/inventory.json
+Config is stored in: /config/local_data/ipm/config.json (v2.0.0 format)
 This file is NOT tracked in git - each farm maintains their own inventory.
 
 Usage:
   python3 ipm_backend.py add_product --name "Urea" --category "Fertiliser" ...
   python3 ipm_backend.py edit_product --id "UREA" --name "Urea Granular" ...
   python3 ipm_backend.py move_stock --id "UREA" --location "Silo 1" --delta -50
+  python3 ipm_backend.py add_category --name "NewCategory"
+  python3 ipm_backend.py migrate_config
 """
 
 import argparse
@@ -31,28 +35,18 @@ DATA_FILE = DATA_DIR / "inventory.json"
 CONFIG_FILE = DATA_DIR / "config.json"
 BACKUP_DIR = DATA_DIR / "backups"
 
+# Current config version
+CONFIG_VERSION = "2.0.0"
+
 # Default locations (used when creating initial config)
 DEFAULT_LOCATIONS = [
     "Chem Shed",
     "Seed Shed",
     "Oil Shed",
-    "Silo 1",
-    "Silo 2",
-    "Silo 3",
-    "Silo 4",
-    "Silo 5",
-    "Silo 6",
-    "Silo 7",
-    "Silo 8",
-    "Silo 9",
-    "Silo 10",
-    "Silo 11",
-    "Silo 12",
-    "Silo 13",
 ]
 
-# Valid categories and their subcategories
-CATEGORY_SUBCATEGORIES = {
+# Default categories with subcategories
+DEFAULT_CATEGORIES = {
     "Chemical": [
         "Adjuvant",
         "Fungicide",
@@ -79,6 +73,14 @@ CATEGORY_SUBCATEGORIES = {
         "Pasture",
         "Other",
     ],
+    "Hay": [
+        "Barley",
+        "Wheat",
+        "Clover",
+        "Lucerne",
+        "Vetch",
+        "Other",
+    ],
     "Lubricant": [
         "Engine Oil",
         "Hydraulic Oil",
@@ -89,41 +91,145 @@ CATEGORY_SUBCATEGORIES = {
     ],
 }
 
-# Standard active constituents list (built-in, cannot be removed)
-STANDARD_ACTIVES = [
+# Default chemical groups
+DEFAULT_CHEMICAL_GROUPS = [
+    "None", "N/A", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "11", "12", "13", "14", "15", "22", "M"
+]
+
+# Default units organized by type
+DEFAULT_UNITS = {
+    "product": ["None", "L", "kg", "ea", "t", "mL"],
+    "container": ["1", "5", "10", "20", "110", "200", "400", "1000", "bulk"],
+    "application": ["L/ha", "mL/ha", "kg/ha", "g/ha", "t/ha", "mL/100L", "g/100L"],
+    "concentration": ["g/L", "g/kg", "mL/L", "%"],
+}
+
+# Standard active constituents list (merged into config on init/migration)
+DEFAULT_ACTIVES = [
     # Herbicides
-    "2,4-D", "Atrazine", "Bromoxynil", "Carfentrazone-ethyl", "Clethodim",
-    "Clodinafop-propargyl", "Clopyralid", "Dicamba", "Diflufenican", "Diquat",
-    "Fenoxaprop-P-ethyl", "Florasulam", "Fluazifop-P-butyl", "Flumetsulam",
-    "Fluroxypyr", "Glufosinate-ammonium", "Glyphosate", "Haloxyfop", "Imazamox",
-    "Imazapic", "Imazapyr", "Imazethapyr", "MCPA", "Mesotrione", "Metolachlor",
-    "Metsulfuron-methyl", "Paraquat", "Pendimethalin", "Picloram", "Pinoxaden",
-    "Propaquizafop", "Prosulfocarb", "Pyroxasulfone", "Pyroxsulam",
-    "Quizalofop-P-ethyl", "Sethoxydim", "Simazine", "Sulfometuron-methyl",
-    "Sulfosulfuron", "Terbuthylazine", "Triallate", "Tribenuron-methyl",
-    "Triclopyr", "Trifluralin", "Trifloxysulfuron",
+    {"name": "2,4-D", "common_groups": ["4"]},
+    {"name": "Atrazine", "common_groups": ["5"]},
+    {"name": "Bromoxynil", "common_groups": ["6"]},
+    {"name": "Carfentrazone-ethyl", "common_groups": ["14"]},
+    {"name": "Clethodim", "common_groups": ["1"]},
+    {"name": "Clodinafop-propargyl", "common_groups": ["1"]},
+    {"name": "Clopyralid", "common_groups": ["4"]},
+    {"name": "Dicamba", "common_groups": ["4"]},
+    {"name": "Diflufenican", "common_groups": ["12"]},
+    {"name": "Diquat", "common_groups": ["22"]},
+    {"name": "Fenoxaprop-P-ethyl", "common_groups": ["1"]},
+    {"name": "Florasulam", "common_groups": ["2"]},
+    {"name": "Fluazifop-P-butyl", "common_groups": ["1"]},
+    {"name": "Flumetsulam", "common_groups": ["2"]},
+    {"name": "Fluroxypyr", "common_groups": ["4"]},
+    {"name": "Glufosinate-ammonium", "common_groups": ["10"]},
+    {"name": "Glyphosate", "common_groups": ["9"]},
+    {"name": "Haloxyfop", "common_groups": ["1"]},
+    {"name": "Imazamox", "common_groups": ["2"]},
+    {"name": "Imazapic", "common_groups": ["2"]},
+    {"name": "Imazapyr", "common_groups": ["2"]},
+    {"name": "Imazethapyr", "common_groups": ["2"]},
+    {"name": "MCPA", "common_groups": ["4"]},
+    {"name": "Mesotrione", "common_groups": ["27"]},
+    {"name": "Metolachlor", "common_groups": ["15"]},
+    {"name": "Metsulfuron-methyl", "common_groups": ["2"]},
+    {"name": "Paraquat", "common_groups": ["22"]},
+    {"name": "Pendimethalin", "common_groups": ["3"]},
+    {"name": "Picloram", "common_groups": ["4"]},
+    {"name": "Pinoxaden", "common_groups": ["1"]},
+    {"name": "Propaquizafop", "common_groups": ["1"]},
+    {"name": "Prosulfocarb", "common_groups": ["15"]},
+    {"name": "Pyroxasulfone", "common_groups": ["15"]},
+    {"name": "Pyroxsulam", "common_groups": ["2"]},
+    {"name": "Quizalofop-P-ethyl", "common_groups": ["1"]},
+    {"name": "Sethoxydim", "common_groups": ["1"]},
+    {"name": "Simazine", "common_groups": ["5"]},
+    {"name": "Sulfometuron-methyl", "common_groups": ["2"]},
+    {"name": "Sulfosulfuron", "common_groups": ["2"]},
+    {"name": "Terbuthylazine", "common_groups": ["5"]},
+    {"name": "Triallate", "common_groups": ["8"]},
+    {"name": "Tribenuron-methyl", "common_groups": ["2"]},
+    {"name": "Triclopyr", "common_groups": ["4"]},
+    {"name": "Trifluralin", "common_groups": ["3"]},
+    {"name": "Trifloxysulfuron", "common_groups": ["2"]},
     # Fungicides
-    "Azoxystrobin", "Bixafen", "Boscalid", "Carbendazim", "Chlorothalonil",
-    "Cyproconazole", "Difenoconazole", "Epoxiconazole", "Fludioxonil",
-    "Fluopyram", "Flutriafol", "Fluxapyroxad", "Iprodione", "Isopyrazam",
-    "Mancozeb", "Metalaxyl", "Propiconazole", "Prothioconazole",
-    "Pyraclostrobin", "Tebuconazole", "Thiram", "Triadimefon", "Triadimenol",
-    "Trifloxystrobin",
+    {"name": "Azoxystrobin", "common_groups": ["11"]},
+    {"name": "Bixafen", "common_groups": ["7"]},
+    {"name": "Boscalid", "common_groups": ["7"]},
+    {"name": "Carbendazim", "common_groups": ["1"]},
+    {"name": "Chlorothalonil", "common_groups": ["M"]},
+    {"name": "Cyproconazole", "common_groups": ["3"]},
+    {"name": "Difenoconazole", "common_groups": ["3"]},
+    {"name": "Epoxiconazole", "common_groups": ["3"]},
+    {"name": "Fludioxonil", "common_groups": ["12"]},
+    {"name": "Fluopyram", "common_groups": ["7"]},
+    {"name": "Flutriafol", "common_groups": ["3"]},
+    {"name": "Fluxapyroxad", "common_groups": ["7"]},
+    {"name": "Iprodione", "common_groups": ["2"]},
+    {"name": "Isopyrazam", "common_groups": ["7"]},
+    {"name": "Mancozeb", "common_groups": ["M"]},
+    {"name": "Metalaxyl", "common_groups": ["4"]},
+    {"name": "Propiconazole", "common_groups": ["3"]},
+    {"name": "Prothioconazole", "common_groups": ["3"]},
+    {"name": "Pyraclostrobin", "common_groups": ["11"]},
+    {"name": "Tebuconazole", "common_groups": ["3"]},
+    {"name": "Thiram", "common_groups": ["M"]},
+    {"name": "Triadimefon", "common_groups": ["3"]},
+    {"name": "Triadimenol", "common_groups": ["3"]},
+    {"name": "Trifloxystrobin", "common_groups": ["11"]},
     # Insecticides
-    "Abamectin", "Acetamiprid", "Alpha-cypermethrin", "Bifenthrin",
-    "Chlorantraniliprole", "Chlorpyrifos", "Clothianidin", "Cyantraniliprole",
-    "Cypermethrin", "Deltamethrin", "Dimethoate", "Emamectin benzoate",
-    "Esfenvalerate", "Fipronil", "Imidacloprid", "Indoxacarb",
-    "Lambda-cyhalothrin", "Malathion", "Methomyl", "Omethoate", "Pirimicarb",
-    "Spinetoram", "Spinosad", "Sulfoxaflor", "Thiacloprid", "Thiamethoxam",
+    {"name": "Abamectin", "common_groups": ["6"]},
+    {"name": "Acetamiprid", "common_groups": ["4A"]},
+    {"name": "Alpha-cypermethrin", "common_groups": ["3A"]},
+    {"name": "Bifenthrin", "common_groups": ["3A"]},
+    {"name": "Chlorantraniliprole", "common_groups": ["28"]},
+    {"name": "Chlorpyrifos", "common_groups": ["1B"]},
+    {"name": "Clothianidin", "common_groups": ["4A"]},
+    {"name": "Cyantraniliprole", "common_groups": ["28"]},
+    {"name": "Cypermethrin", "common_groups": ["3A"]},
+    {"name": "Deltamethrin", "common_groups": ["3A"]},
+    {"name": "Dimethoate", "common_groups": ["1B"]},
+    {"name": "Emamectin benzoate", "common_groups": ["6"]},
+    {"name": "Esfenvalerate", "common_groups": ["3A"]},
+    {"name": "Fipronil", "common_groups": ["2B"]},
+    {"name": "Imidacloprid", "common_groups": ["4A"]},
+    {"name": "Indoxacarb", "common_groups": ["22A"]},
+    {"name": "Lambda-cyhalothrin", "common_groups": ["3A"]},
+    {"name": "Malathion", "common_groups": ["1B"]},
+    {"name": "Methomyl", "common_groups": ["1A"]},
+    {"name": "Omethoate", "common_groups": ["1B"]},
+    {"name": "Pirimicarb", "common_groups": ["1A"]},
+    {"name": "Spinetoram", "common_groups": ["5"]},
+    {"name": "Spinosad", "common_groups": ["5"]},
+    {"name": "Sulfoxaflor", "common_groups": ["4C"]},
+    {"name": "Thiacloprid", "common_groups": ["4A"]},
+    {"name": "Thiamethoxam", "common_groups": ["4A"]},
     # Seed Treatments
-    "Ipconazole", "Metalaxyl-M", "Sedaxane", "Triticonazole",
+    {"name": "Ipconazole", "common_groups": ["3"]},
+    {"name": "Metalaxyl-M", "common_groups": ["4"]},
+    {"name": "Sedaxane", "common_groups": ["7"]},
+    {"name": "Triticonazole", "common_groups": ["3"]},
     # Fertiliser Elements
-    "Boron", "Calcium", "Copper", "Iron", "Magnesium", "Manganese",
-    "Molybdenum", "Nitrogen", "Phosphorus", "Potassium", "Sulfur", "Zinc",
+    {"name": "Boron", "common_groups": []},
+    {"name": "Calcium", "common_groups": []},
+    {"name": "Copper", "common_groups": []},
+    {"name": "Iron", "common_groups": []},
+    {"name": "Magnesium", "common_groups": []},
+    {"name": "Manganese", "common_groups": []},
+    {"name": "Molybdenum", "common_groups": []},
+    {"name": "Nitrogen", "common_groups": []},
+    {"name": "Phosphorus", "common_groups": []},
+    {"name": "Potassium", "common_groups": []},
+    {"name": "Sulfur", "common_groups": []},
+    {"name": "Zinc", "common_groups": []},
     # Adjuvants
-    "Alcohol ethoxylate", "Ammonium sulfate", "Methylated seed oil",
-    "Organosilicone", "Paraffin oil", "Petroleum oil",
+    {"name": "Alcohol ethoxylate", "common_groups": []},
+    {"name": "Ammonium sulfate", "common_groups": []},
+    {"name": "Methylated seed oil", "common_groups": []},
+    {"name": "Organosilicone", "common_groups": []},
+    {"name": "Paraffin oil", "common_groups": []},
+    {"name": "Petroleum oil", "common_groups": []},
 ]
 
 
@@ -134,23 +240,6 @@ def generate_id(name: str) -> str:
     # Remove leading/trailing underscores and collapse multiples
     clean = re.sub(r"_+", "_", clean).strip("_")
     return clean[:20] if clean else "UNKNOWN"
-
-
-def normalize_category(raw: str) -> str:
-    """Normalize category name to standard format."""
-    lookup = {
-        "chemical": "Chemical",
-        "chemicals": "Chemical",
-        "fertiliser": "Fertiliser",
-        "fertilizer": "Fertiliser",
-        "seed": "Seed",
-        "seeds": "Seed",
-        "lubricant": "Lubricant",
-        "lubricants": "Lubricant",
-        "oil": "Lubricant",
-    }
-    key = raw.strip().lower()
-    return lookup.get(key, raw.strip().title())
 
 
 def load_inventory() -> dict[str, Any]:
@@ -173,19 +262,31 @@ def save_inventory(data: dict[str, Any]) -> None:
 
 
 def load_config() -> dict[str, Any]:
-    """Load config from JSON file, or return default structure."""
+    """Load config from JSON file, or return default v2.0.0 structure."""
     if not CONFIG_FILE.exists():
-        return {
-            "locations": DEFAULT_LOCATIONS.copy(),
-            "custom_actives": [],
-        }
+        return create_default_config()
     try:
-        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        # Check if migration is needed
+        if config.get("version") != CONFIG_VERSION:
+            return config  # Return as-is, caller should migrate
+        return config
     except (json.JSONDecodeError, IOError):
-        return {
-            "locations": DEFAULT_LOCATIONS.copy(),
-            "custom_actives": [],
-        }
+        return create_default_config()
+
+
+def create_default_config() -> dict[str, Any]:
+    """Create a new default config with v2.0.0 structure."""
+    return {
+        "version": CONFIG_VERSION,
+        "categories": DEFAULT_CATEGORIES.copy(),
+        "chemical_groups": DEFAULT_CHEMICAL_GROUPS.copy(),
+        "actives": [a.copy() for a in DEFAULT_ACTIVES],
+        "locations": DEFAULT_LOCATIONS.copy(),
+        "units": {k: v.copy() for k, v in DEFAULT_UNITS.items()},
+        "created": datetime.now().isoformat(timespec="seconds"),
+        "modified": datetime.now().isoformat(timespec="seconds"),
+    }
 
 
 def save_config(config: dict[str, Any]) -> None:
@@ -198,10 +299,62 @@ def save_config(config: dict[str, Any]) -> None:
     )
 
 
-def get_locations() -> list[str]:
-    """Get current locations list from config."""
-    config = load_config()
-    return config.get("locations", DEFAULT_LOCATIONS.copy())
+def ensure_migrated_config() -> dict[str, Any]:
+    """Load config, migrating if necessary. Always returns v2.0.0 format."""
+    if not CONFIG_FILE.exists():
+        config = create_default_config()
+        save_config(config)
+        return config
+
+    config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+    if config.get("version") == CONFIG_VERSION:
+        return config
+
+    # Migration needed
+    return migrate_config_internal(config)
+
+
+def migrate_config_internal(old_config: dict[str, Any]) -> dict[str, Any]:
+    """Migrate old config format to v2.0.0."""
+    # Preserve existing data
+    old_locations = old_config.get("locations", DEFAULT_LOCATIONS.copy())
+    old_custom_actives = old_config.get("custom_actives", [])
+
+    # Build merged actives list
+    actives = [a.copy() for a in DEFAULT_ACTIVES]
+    existing_names = {a["name"].lower() for a in actives}
+
+    # Add custom actives that aren't duplicates
+    for custom in old_custom_actives:
+        if isinstance(custom, dict) and custom.get("name"):
+            name = custom["name"]
+            if name.lower() not in existing_names:
+                actives.append({
+                    "name": name,
+                    "common_groups": custom.get("common_groups", []),
+                })
+                existing_names.add(name.lower())
+
+    # Sort actives alphabetically
+    actives.sort(key=lambda x: x["name"].lower())
+
+    new_config = {
+        "version": CONFIG_VERSION,
+        "categories": DEFAULT_CATEGORIES.copy(),
+        "chemical_groups": DEFAULT_CHEMICAL_GROUPS.copy(),
+        "actives": actives,
+        "locations": old_locations,
+        "units": {k: v.copy() for k, v in DEFAULT_UNITS.items()},
+        "created": old_config.get("created", datetime.now().isoformat(timespec="seconds")),
+        "modified": datetime.now().isoformat(timespec="seconds"),
+    }
+
+    return new_config
+
+
+def get_categories(config: dict[str, Any]) -> dict[str, list[str]]:
+    """Get categories dict from config."""
+    return config.get("categories", DEFAULT_CATEGORIES)
 
 
 def log_transaction(
@@ -225,8 +378,118 @@ def log_transaction(
     })
 
 
+# =========================================================================
+# VALIDATION FUNCTIONS
+# =========================================================================
+
+def validate_category_removal(config: dict[str, Any], category: str) -> tuple[bool, str]:
+    """Check if category can be removed (no products use it)."""
+    data = load_inventory()
+    products = data.get("products", {})
+
+    using = []
+    for product_id, product in products.items():
+        if product.get("category", "").lower() == category.lower():
+            using.append(product.get("name", product_id))
+
+    if using:
+        return False, f"Used by: {', '.join(using[:3])}"
+    return True, ""
+
+
+def validate_subcategory_removal(config: dict[str, Any], category: str, subcategory: str) -> tuple[bool, str]:
+    """Check if subcategory can be removed (no products use it)."""
+    data = load_inventory()
+    products = data.get("products", {})
+
+    using = []
+    for product_id, product in products.items():
+        if (product.get("category", "").lower() == category.lower() and
+            product.get("subcategory", "").lower() == subcategory.lower()):
+            using.append(product.get("name", product_id))
+
+    if using:
+        return False, f"Used by: {', '.join(using[:3])}"
+    return True, ""
+
+
+def validate_active_removal(config: dict[str, Any], active_name: str) -> tuple[bool, str]:
+    """Check if active constituent can be removed (no products use it)."""
+    data = load_inventory()
+    products = data.get("products", {})
+
+    using = []
+    for product_id, product in products.items():
+        actives = product.get("active_constituents", [])
+        if isinstance(actives, list):
+            for active in actives:
+                if isinstance(active, dict):
+                    if active.get("name", "").lower() == active_name.lower():
+                        using.append(product.get("name", product_id))
+                        break
+
+    if using:
+        return False, f"Used by: {', '.join(using[:3])}"
+    return True, ""
+
+
+def validate_chemical_group_removal(config: dict[str, Any], group: str) -> tuple[bool, str]:
+    """Check if chemical group can be removed (no products use it)."""
+    data = load_inventory()
+    products = data.get("products", {})
+
+    using = []
+    for product_id, product in products.items():
+        actives = product.get("active_constituents", [])
+        if isinstance(actives, list):
+            for active in actives:
+                if isinstance(active, dict):
+                    if active.get("group", "") == group:
+                        using.append(product.get("name", product_id))
+                        break
+
+    if using:
+        return False, f"Used by: {', '.join(using[:3])}"
+    return True, ""
+
+
+def validate_unit_removal(config: dict[str, Any], unit_type: str, value: str) -> tuple[bool, str]:
+    """Check if unit can be removed (no products use it)."""
+    data = load_inventory()
+    products = data.get("products", {})
+
+    using = []
+    for product_id, product in products.items():
+        if unit_type == "product":
+            if product.get("unit", "") == value:
+                using.append(product.get("name", product_id))
+        elif unit_type == "container":
+            if str(product.get("container_size", "")) == value:
+                using.append(product.get("name", product_id))
+        elif unit_type == "application":
+            if product.get("application_unit", "") == value:
+                using.append(product.get("name", product_id))
+        elif unit_type == "concentration":
+            actives = product.get("active_constituents", [])
+            if isinstance(actives, list):
+                for active in actives:
+                    if isinstance(active, dict):
+                        if active.get("unit", "") == value:
+                            using.append(product.get("name", product_id))
+                            break
+
+    if using:
+        return False, f"Used by: {', '.join(using[:3])}"
+    return True, ""
+
+
+# =========================================================================
+# PRODUCT COMMANDS
+# =========================================================================
+
 def cmd_add_product(args: argparse.Namespace) -> int:
     """Add a new product to the inventory."""
+    config = ensure_migrated_config()
     data = load_inventory()
     products = data.setdefault("products", {})
 
@@ -238,32 +501,47 @@ def cmd_add_product(args: argparse.Namespace) -> int:
         print(f"ERROR: Product '{product_id}' already exists", file=sys.stderr)
         return 1
 
-    # Normalize and validate category
-    category = normalize_category(args.category)
-    if category not in CATEGORY_SUBCATEGORIES:
+    # Validate category
+    categories = get_categories(config)
+    category = args.category.strip()
+
+    # Case-insensitive category match
+    matched_category = None
+    for cat in categories:
+        if cat.lower() == category.lower():
+            matched_category = cat
+            break
+
+    if not matched_category:
         print(f"ERROR: Invalid category '{category}'", file=sys.stderr)
         return 1
 
+    category = matched_category
+
     # Validate subcategory belongs to category
     subcategory = args.subcategory.strip() if args.subcategory else ""
-    if subcategory and subcategory not in CATEGORY_SUBCATEGORIES[category]:
-        print(f"ERROR: Subcategory '{subcategory}' not valid for {category}", file=sys.stderr)
-        return 1
+    if subcategory:
+        valid_subs = categories.get(category, [])
+        matched_sub = None
+        for sub in valid_subs:
+            if sub.lower() == subcategory.lower():
+                matched_sub = sub
+                break
+        if not matched_sub:
+            print(f"ERROR: Subcategory '{subcategory}' not valid for {category}", file=sys.stderr)
+            return 1
+        subcategory = matched_sub
 
     # Parse active constituents if provided (for Chemical/Fertiliser)
-    # Format: [{"name": "...", "concentration": number, "unit": "g/L", "group": "2"}, ...]
-    # Note: chemical_group is stored per active constituent, not at product level
     active_constituents = []
     if args.actives and args.actives.strip() and args.actives.strip() != "[]":
         try:
             parsed = json.loads(args.actives)
             if isinstance(parsed, list):
-                # Filter out empty entries
                 for a in parsed:
                     name = a.get("name", "").strip() if isinstance(a.get("name"), str) else ""
                     if name:
                         conc = a.get("concentration", 0)
-                        # Handle concentration as number or string
                         if isinstance(conc, (int, float)):
                             conc_val = float(conc)
                         else:
@@ -280,10 +558,9 @@ def cmd_add_product(args: argparse.Namespace) -> int:
                             "group": group
                         })
         except json.JSONDecodeError:
-            pass  # Ignore invalid JSON
+            pass
 
     # Create product record
-    # Note: chemical_group is stored per active constituent, not at product level
     product = {
         "id": product_id,
         "name": args.name.strip(),
@@ -321,6 +598,7 @@ def cmd_add_product(args: argparse.Namespace) -> int:
 
 def cmd_edit_product(args: argparse.Namespace) -> int:
     """Edit an existing product's details (not stock levels)."""
+    config = ensure_migrated_config()
     data = load_inventory()
     products = data.get("products", {})
 
@@ -330,24 +608,38 @@ def cmd_edit_product(args: argparse.Namespace) -> int:
         return 1
 
     product = products[product_id]
+    categories = get_categories(config)
 
     # Update fields if provided
     if args.name:
         product["name"] = args.name.strip()
 
     if args.category:
-        category = normalize_category(args.category)
-        if category not in CATEGORY_SUBCATEGORIES:
+        category = args.category.strip()
+        matched_category = None
+        for cat in categories:
+            if cat.lower() == category.lower():
+                matched_category = cat
+                break
+        if not matched_category:
             print(f"ERROR: Invalid category '{category}'", file=sys.stderr)
             return 1
-        product["category"] = category
+        product["category"] = matched_category
 
     if args.subcategory is not None:
         subcategory = args.subcategory.strip()
         category = product.get("category", "Chemical")
-        if subcategory and subcategory not in CATEGORY_SUBCATEGORIES.get(category, []):
-            print(f"ERROR: Subcategory '{subcategory}' not valid for {category}", file=sys.stderr)
-            return 1
+        if subcategory:
+            valid_subs = categories.get(category, [])
+            matched_sub = None
+            for sub in valid_subs:
+                if sub.lower() == subcategory.lower():
+                    matched_sub = sub
+                    break
+            if not matched_sub:
+                print(f"ERROR: Subcategory '{subcategory}' not valid for {category}", file=sys.stderr)
+                return 1
+            subcategory = matched_sub
         product["subcategory"] = subcategory
 
     if args.unit:
@@ -362,22 +654,18 @@ def cmd_edit_product(args: argparse.Namespace) -> int:
     if args.application_unit is not None:
         product["application_unit"] = args.application_unit.strip()
 
-    # Handle active constituents (for Chemical/Fertiliser)
-    # Format: [{"name": "...", "concentration": number, "unit": "g/L", "group": "2"}, ...]
-    # Note: chemical_group is stored per active constituent, not at product level
+    # Handle active constituents
     if args.actives is not None and args.actives.strip():
         category = product.get("category", "")
         if category in ["Chemical", "Fertiliser"]:
             try:
                 parsed = json.loads(args.actives)
                 if isinstance(parsed, list):
-                    # Filter out empty entries
                     active_constituents = []
                     for a in parsed:
                         name = a.get("name", "").strip() if isinstance(a.get("name"), str) else ""
                         if name:
                             conc = a.get("concentration", 0)
-                            # Handle concentration as number or string
                             if isinstance(conc, (int, float)):
                                 conc_val = float(conc)
                             else:
@@ -395,7 +683,7 @@ def cmd_edit_product(args: argparse.Namespace) -> int:
                             })
                     product["active_constituents"] = active_constituents
             except json.JSONDecodeError:
-                pass  # Ignore invalid JSON
+                pass
 
     product["modified"] = datetime.now().isoformat(timespec="seconds")
 
@@ -485,23 +773,445 @@ def cmd_delete_product(args: argparse.Namespace) -> int:
     return 0
 
 
+# =========================================================================
+# CATEGORY COMMANDS
+# =========================================================================
+
+def cmd_add_category(args: argparse.Namespace) -> int:
+    """Add a new category."""
+    name = args.name.strip()
+    if not name:
+        print("ERROR: Category name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    categories = config.get("categories", {})
+
+    # Check if already exists (case-insensitive)
+    if any(cat.lower() == name.lower() for cat in categories):
+        print(f"ERROR: Category '{name}' already exists", file=sys.stderr)
+        return 1
+
+    categories[name] = []
+    config["categories"] = categories
+    save_config(config)
+
+    print(f"OK:{name}")
+    return 0
+
+
+def cmd_remove_category(args: argparse.Namespace) -> int:
+    """Remove a category (only if unused)."""
+    name = args.name.strip()
+    if not name:
+        print("ERROR: Category name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    categories = config.get("categories", {})
+
+    # Find exact match (case-insensitive)
+    matching = [cat for cat in categories if cat.lower() == name.lower()]
+    if not matching:
+        print(f"ERROR: Category '{name}' not found", file=sys.stderr)
+        return 1
+
+    actual_name = matching[0]
+
+    # Check if in use
+    can_remove, reason = validate_category_removal(config, actual_name)
+    if not can_remove:
+        print(f"ERROR: Cannot remove '{actual_name}' - {reason}", file=sys.stderr)
+        return 1
+
+    del categories[actual_name]
+    config["categories"] = categories
+    save_config(config)
+
+    print(f"OK:removed:{actual_name}")
+    return 0
+
+
+def cmd_add_subcategory(args: argparse.Namespace) -> int:
+    """Add a subcategory to a category."""
+    category = args.category.strip()
+    name = args.name.strip()
+
+    if not category or not name:
+        print("ERROR: Category and subcategory name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    categories = config.get("categories", {})
+
+    # Find category (case-insensitive)
+    matching = [cat for cat in categories if cat.lower() == category.lower()]
+    if not matching:
+        print(f"ERROR: Category '{category}' not found", file=sys.stderr)
+        return 1
+
+    actual_category = matching[0]
+    subcats = categories[actual_category]
+
+    # Check if already exists (case-insensitive)
+    if any(sub.lower() == name.lower() for sub in subcats):
+        print(f"ERROR: Subcategory '{name}' already exists in {actual_category}", file=sys.stderr)
+        return 1
+
+    subcats.append(name)
+    categories[actual_category] = subcats
+    config["categories"] = categories
+    save_config(config)
+
+    print(f"OK:{name}")
+    return 0
+
+
+def cmd_remove_subcategory(args: argparse.Namespace) -> int:
+    """Remove a subcategory from a category (only if unused)."""
+    category = args.category.strip()
+    name = args.name.strip()
+
+    if not category or not name:
+        print("ERROR: Category and subcategory name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    categories = config.get("categories", {})
+
+    # Find category
+    matching_cat = [cat for cat in categories if cat.lower() == category.lower()]
+    if not matching_cat:
+        print(f"ERROR: Category '{category}' not found", file=sys.stderr)
+        return 1
+
+    actual_category = matching_cat[0]
+    subcats = categories[actual_category]
+
+    # Find subcategory
+    matching_sub = [sub for sub in subcats if sub.lower() == name.lower()]
+    if not matching_sub:
+        print(f"ERROR: Subcategory '{name}' not found in {actual_category}", file=sys.stderr)
+        return 1
+
+    actual_sub = matching_sub[0]
+
+    # Check if in use
+    can_remove, reason = validate_subcategory_removal(config, actual_category, actual_sub)
+    if not can_remove:
+        print(f"ERROR: Cannot remove '{actual_sub}' - {reason}", file=sys.stderr)
+        return 1
+
+    categories[actual_category] = [sub for sub in subcats if sub != actual_sub]
+    config["categories"] = categories
+    save_config(config)
+
+    print(f"OK:removed:{actual_sub}")
+    return 0
+
+
+# =========================================================================
+# CHEMICAL GROUP COMMANDS
+# =========================================================================
+
+def cmd_add_chemical_group(args: argparse.Namespace) -> int:
+    """Add a new chemical group."""
+    name = args.name.strip()
+    if not name:
+        print("ERROR: Group name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    groups = config.get("chemical_groups", [])
+
+    # Check if already exists
+    if name in groups:
+        print(f"ERROR: Chemical group '{name}' already exists", file=sys.stderr)
+        return 1
+
+    groups.append(name)
+    config["chemical_groups"] = groups
+    save_config(config)
+
+    print(f"OK:{name}")
+    return 0
+
+
+def cmd_remove_chemical_group(args: argparse.Namespace) -> int:
+    """Remove a chemical group (only if unused)."""
+    name = args.name.strip()
+    if not name:
+        print("ERROR: Group name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    groups = config.get("chemical_groups", [])
+
+    if name not in groups:
+        print(f"ERROR: Chemical group '{name}' not found", file=sys.stderr)
+        return 1
+
+    # Check if in use
+    can_remove, reason = validate_chemical_group_removal(config, name)
+    if not can_remove:
+        print(f"ERROR: Cannot remove '{name}' - {reason}", file=sys.stderr)
+        return 1
+
+    config["chemical_groups"] = [g for g in groups if g != name]
+    save_config(config)
+
+    print(f"OK:removed:{name}")
+    return 0
+
+
+# =========================================================================
+# UNIT COMMANDS
+# =========================================================================
+
+def cmd_add_unit(args: argparse.Namespace) -> int:
+    """Add a new unit to a unit type."""
+    unit_type = args.type.strip()
+    value = args.value.strip()
+
+    if not unit_type or not value:
+        print("ERROR: Unit type and value cannot be empty", file=sys.stderr)
+        return 1
+
+    if unit_type not in ["product", "container", "application", "concentration"]:
+        print(f"ERROR: Invalid unit type '{unit_type}'", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    units = config.get("units", DEFAULT_UNITS.copy())
+
+    if unit_type not in units:
+        units[unit_type] = []
+
+    unit_list = units[unit_type]
+
+    # Check if already exists
+    if value in unit_list:
+        print(f"ERROR: Unit '{value}' already exists in {unit_type}", file=sys.stderr)
+        return 1
+
+    unit_list.append(value)
+    config["units"] = units
+    save_config(config)
+
+    print(f"OK:{value}")
+    return 0
+
+
+def cmd_remove_unit(args: argparse.Namespace) -> int:
+    """Remove a unit from a unit type (only if unused)."""
+    unit_type = args.type.strip()
+    value = args.value.strip()
+
+    if not unit_type or not value:
+        print("ERROR: Unit type and value cannot be empty", file=sys.stderr)
+        return 1
+
+    if unit_type not in ["product", "container", "application", "concentration"]:
+        print(f"ERROR: Invalid unit type '{unit_type}'", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    units = config.get("units", {})
+
+    if unit_type not in units or value not in units[unit_type]:
+        print(f"ERROR: Unit '{value}' not found in {unit_type}", file=sys.stderr)
+        return 1
+
+    # Check if in use
+    can_remove, reason = validate_unit_removal(config, unit_type, value)
+    if not can_remove:
+        print(f"ERROR: Cannot remove '{value}' - {reason}", file=sys.stderr)
+        return 1
+
+    units[unit_type] = [u for u in units[unit_type] if u != value]
+    config["units"] = units
+    save_config(config)
+
+    print(f"OK:removed:{value}")
+    return 0
+
+
+# =========================================================================
+# ACTIVE CONSTITUENT COMMANDS
+# =========================================================================
+
+def cmd_list_actives(args: argparse.Namespace) -> int:
+    """List all active constituents."""
+    config = ensure_migrated_config()
+    actives = config.get("actives", [])
+
+    result = {
+        "total": len(actives),
+        "actives": actives,
+    }
+
+    print(json.dumps(result))
+    return 0
+
+
+def cmd_add_active(args: argparse.Namespace) -> int:
+    """Add an active constituent."""
+    name = args.name.strip()
+    if not name:
+        print("ERROR: Active name cannot be empty", file=sys.stderr)
+        return 1
+
+    # Parse common groups if provided
+    common_groups = []
+    if args.groups and args.groups.strip():
+        common_groups = [g.strip() for g in args.groups.split(",") if g.strip()]
+
+    config = ensure_migrated_config()
+    actives = config.get("actives", [])
+
+    # Check if already exists (case-insensitive)
+    if any(a.get("name", "").lower() == name.lower() for a in actives):
+        print(f"ERROR: Active '{name}' already exists", file=sys.stderr)
+        return 1
+
+    # Add new active
+    actives.append({
+        "name": name,
+        "common_groups": common_groups,
+    })
+
+    # Sort alphabetically
+    actives.sort(key=lambda x: x.get("name", "").lower())
+    config["actives"] = actives
+    save_config(config)
+
+    print(f"OK:{name}")
+    return 0
+
+
+def cmd_remove_active(args: argparse.Namespace) -> int:
+    """Remove an active constituent (only if unused)."""
+    name = args.name.strip()
+    if not name:
+        print("ERROR: Active name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    actives = config.get("actives", [])
+
+    # Find the active
+    matching = [a for a in actives if a.get("name", "").lower() == name.lower()]
+    if not matching:
+        print(f"ERROR: Active '{name}' not found", file=sys.stderr)
+        return 1
+
+    actual_name = matching[0].get("name", name)
+
+    # Check if in use
+    can_remove, reason = validate_active_removal(config, actual_name)
+    if not can_remove:
+        print(f"ERROR: Cannot remove '{actual_name}' - {reason}", file=sys.stderr)
+        return 1
+
+    # Remove the active
+    config["actives"] = [a for a in actives if a.get("name", "").lower() != actual_name.lower()]
+    save_config(config)
+
+    print(f"OK:removed:{actual_name}")
+    return 0
+
+
+# =========================================================================
+# LOCATION COMMANDS
+# =========================================================================
+
+def cmd_add_location(args: argparse.Namespace) -> int:
+    """Add a new storage location."""
+    location = args.name.strip()
+    if not location:
+        print("ERROR: Location name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    locations = config.get("locations", [])
+
+    # Check if already exists (case-insensitive)
+    if any(loc.lower() == location.lower() for loc in locations):
+        print(f"ERROR: Location '{location}' already exists", file=sys.stderr)
+        return 1
+
+    locations.append(location)
+    config["locations"] = locations
+    save_config(config)
+
+    print(f"OK:{location}")
+    return 0
+
+
+def cmd_remove_location(args: argparse.Namespace) -> int:
+    """Remove a storage location (only if no stock there)."""
+    location = args.name.strip()
+    if not location:
+        print("ERROR: Location name cannot be empty", file=sys.stderr)
+        return 1
+
+    config = ensure_migrated_config()
+    locations = config.get("locations", [])
+
+    # Find exact match
+    matching = [loc for loc in locations if loc.lower() == location.lower()]
+    if not matching:
+        print(f"ERROR: Location '{location}' not found", file=sys.stderr)
+        return 1
+
+    actual_location = matching[0]
+
+    # Check if any products have stock at this location
+    data = load_inventory()
+    products = data.get("products", {})
+    for product_id, product in products.items():
+        stock = product.get("stock_by_location", {}).get(actual_location, 0)
+        if stock and float(stock) > 0:
+            print(f"ERROR: Cannot remove '{actual_location}' - has stock for {product.get('name', product_id)}", file=sys.stderr)
+            return 1
+
+    # Remove location
+    config["locations"] = [loc for loc in locations if loc != actual_location]
+    save_config(config)
+
+    print(f"OK:removed:{actual_location}")
+    return 0
+
+
+# =========================================================================
+# SYSTEM COMMANDS
+# =========================================================================
+
 def cmd_status(args: argparse.Namespace) -> int:
     """Return system status as JSON."""
     status = {
         "database_exists": DATA_FILE.exists(),
         "config_exists": CONFIG_FILE.exists(),
+        "config_version": "",
+        "needs_migration": False,
         "status": "not_initialized",
         "product_count": 0,
         "transaction_count": 0,
         "location_count": 0,
+        "category_count": 0,
+        "active_count": 0,
         "locations_with_stock": [],
     }
 
     # Check config
     if CONFIG_FILE.exists():
         try:
-            config = load_config()
+            config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            status["config_version"] = config.get("version", "1.0.0")
+            status["needs_migration"] = config.get("version") != CONFIG_VERSION
             status["location_count"] = len(config.get("locations", []))
+            status["category_count"] = len(config.get("categories", {}))
+            status["active_count"] = len(config.get("actives", []))
         except Exception:
             status["status"] = "error"
             status["error"] = "Config file corrupted"
@@ -539,19 +1249,34 @@ def cmd_status(args: argparse.Namespace) -> int:
 def cmd_init(args: argparse.Namespace) -> int:
     """Initialize the IPM system - create config and database files."""
     created = []
+    migrated = False
 
     # Create directory
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Create config if missing
+    # Create or migrate config
     if not CONFIG_FILE.exists():
-        config = {
-            "locations": DEFAULT_LOCATIONS.copy(),
-            "custom_actives": [],
-            "created": datetime.now().isoformat(timespec="seconds"),
-        }
+        config = create_default_config()
         save_config(config)
         created.append("config")
+    else:
+        # Check if migration needed
+        try:
+            config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            if config.get("version") != CONFIG_VERSION:
+                # Backup old config
+                BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+                backup_file = BACKUP_DIR / f"config_pre_migration_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.json"
+                backup_file.write_text(CONFIG_FILE.read_text(encoding="utf-8"), encoding="utf-8")
+
+                # Migrate
+                new_config = migrate_config_internal(config)
+                save_config(new_config)
+                migrated = True
+        except (json.JSONDecodeError, IOError):
+            config = create_default_config()
+            save_config(config)
+            created.append("config")
 
     # Create empty inventory if missing
     if not DATA_FILE.exists():
@@ -559,227 +1284,66 @@ def cmd_init(args: argparse.Namespace) -> int:
         save_inventory(data)
         created.append("database")
 
-    if created:
+    if migrated:
+        print("OK:migrated")
+    elif created:
         print(f"OK:created:{','.join(created)}")
     else:
         print("OK:already_initialized")
     return 0
 
 
-def cmd_add_location(args: argparse.Namespace) -> int:
-    """Add a new storage location."""
-    location = args.name.strip()
-    if not location:
-        print("ERROR: Location name cannot be empty", file=sys.stderr)
+def cmd_migrate_config(args: argparse.Namespace) -> int:
+    """Explicitly migrate config to v2.0.0 format."""
+    if not CONFIG_FILE.exists():
+        print("ERROR: No config file to migrate", file=sys.stderr)
         return 1
 
-    config = load_config()
-    locations = config.get("locations", DEFAULT_LOCATIONS.copy())
-
-    # Check if already exists (case-insensitive)
-    if any(loc.lower() == location.lower() for loc in locations):
-        print(f"ERROR: Location '{location}' already exists", file=sys.stderr)
+    try:
+        config = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"ERROR: Cannot read config: {e}", file=sys.stderr)
         return 1
 
-    locations.append(location)
-    config["locations"] = locations
-    save_config(config)
+    if config.get("version") == CONFIG_VERSION:
+        print("OK:already_migrated")
+        return 0
 
-    print(f"OK:{location}")
-    return 0
+    # Backup old config
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    backup_file = BACKUP_DIR / f"config_pre_migration_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.json"
+    backup_file.write_text(CONFIG_FILE.read_text(encoding="utf-8"), encoding="utf-8")
 
+    # Migrate
+    new_config = migrate_config_internal(config)
+    save_config(new_config)
 
-def cmd_remove_location(args: argparse.Namespace) -> int:
-    """Remove a storage location (only if no stock there)."""
-    location = args.name.strip()
-    if not location:
-        print("ERROR: Location name cannot be empty", file=sys.stderr)
-        return 1
-
-    config = load_config()
-    locations = config.get("locations", [])
-
-    # Find exact match
-    matching = [loc for loc in locations if loc.lower() == location.lower()]
-    if not matching:
-        print(f"ERROR: Location '{location}' not found", file=sys.stderr)
-        return 1
-
-    actual_location = matching[0]
-
-    # Check if any products have stock at this location
-    data = load_inventory()
-    products = data.get("products", {})
-    for product_id, product in products.items():
-        stock = product.get("stock_by_location", {}).get(actual_location, 0)
-        if stock and float(stock) > 0:
-            print(f"ERROR: Cannot remove '{actual_location}' - has stock for {product.get('name', product_id)}", file=sys.stderr)
-            return 1
-
-    # Remove location
-    config["locations"] = [loc for loc in locations if loc != actual_location]
-    save_config(config)
-
-    print(f"OK:removed:{actual_location}")
-    return 0
-
-
-def cmd_list_actives(args: argparse.Namespace) -> int:
-    """List all active constituents (standard + custom)."""
-    config = load_config()
-    custom_actives = config.get("custom_actives", [])
-
-    # Build merged list
-    all_actives = []
-
-    # Add standard actives
-    for name in STANDARD_ACTIVES:
-        all_actives.append({
-            "name": name,
-            "type": "standard",
-            "common_groups": [],
-        })
-
-    # Add custom actives
-    for active in custom_actives:
-        if isinstance(active, dict) and active.get("name"):
-            all_actives.append({
-                "name": active["name"],
-                "type": "custom",
-                "common_groups": active.get("common_groups", []),
-            })
-
-    # Sort alphabetically by name
-    all_actives.sort(key=lambda x: x["name"].lower())
-
-    result = {
-        "total": len(all_actives),
-        "standard_count": len(STANDARD_ACTIVES),
-        "custom_count": len(custom_actives),
-        "actives": all_actives,
-    }
-
-    print(json.dumps(result))
-    return 0
-
-
-def cmd_add_active(args: argparse.Namespace) -> int:
-    """Add a custom active constituent."""
-    name = args.name.strip()
-    if not name:
-        print("ERROR: Active name cannot be empty", file=sys.stderr)
-        return 1
-
-    # Parse common groups if provided
-    common_groups = []
-    if args.groups and args.groups.strip():
-        common_groups = [g.strip() for g in args.groups.split(",") if g.strip()]
-
-    config = load_config()
-    custom_actives = config.get("custom_actives", [])
-
-    # Check if already exists in standard list (case-insensitive)
-    if any(std.lower() == name.lower() for std in STANDARD_ACTIVES):
-        print(f"ERROR: '{name}' is already a standard active", file=sys.stderr)
-        return 1
-
-    # Check if already exists in custom list (case-insensitive)
-    if any(a.get("name", "").lower() == name.lower() for a in custom_actives):
-        print(f"ERROR: Active '{name}' already exists in custom list", file=sys.stderr)
-        return 1
-
-    # Add new custom active
-    custom_actives.append({
-        "name": name,
-        "common_groups": common_groups,
-        "created": datetime.now().isoformat(timespec="seconds"),
-    })
-
-    config["custom_actives"] = custom_actives
-    save_config(config)
-
-    print(f"OK:{name}")
-    return 0
-
-
-def cmd_remove_active(args: argparse.Namespace) -> int:
-    """Remove a custom active constituent (only if unused)."""
-    name = args.name.strip()
-    if not name:
-        print("ERROR: Active name cannot be empty", file=sys.stderr)
-        return 1
-
-    # Check if it's a standard active (cannot remove)
-    if any(std.lower() == name.lower() for std in STANDARD_ACTIVES):
-        print(f"ERROR: Cannot remove standard active '{name}'", file=sys.stderr)
-        return 1
-
-    config = load_config()
-    custom_actives = config.get("custom_actives", [])
-
-    # Find the custom active
-    matching = [a for a in custom_actives if a.get("name", "").lower() == name.lower()]
-    if not matching:
-        print(f"ERROR: Custom active '{name}' not found", file=sys.stderr)
-        return 1
-
-    actual_name = matching[0].get("name", name)
-
-    # Check if any products use this active
-    data = load_inventory()
-    products = data.get("products", {})
-    products_using = []
-
-    for product_id, product in products.items():
-        actives = product.get("active_constituents", [])
-        if isinstance(actives, list):
-            for active in actives:
-                if isinstance(active, dict):
-                    if active.get("name", "").lower() == actual_name.lower():
-                        products_using.append(product.get("name", product_id))
-                        break
-
-    if products_using:
-        print(f"ERROR: Cannot remove '{actual_name}' - used by: {', '.join(products_using[:3])}", file=sys.stderr)
-        return 1
-
-    # Remove the custom active
-    config["custom_actives"] = [
-        a for a in custom_actives if a.get("name", "").lower() != actual_name.lower()
-    ]
-    save_config(config)
-
-    print(f"OK:removed:{actual_name}")
+    print(f"OK:migrated:{backup_file.name}")
     return 0
 
 
 # =========================================================================
-# PHASE 3: DATA MANAGEMENT COMMANDS
+# DATA MANAGEMENT COMMANDS
 # =========================================================================
 
 def cmd_export(args: argparse.Namespace) -> int:
     """Export inventory and config to a timestamped backup file."""
-    # Create backup directory if needed
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Generate timestamp for filename
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     backup_file = BACKUP_DIR / f"inventory_{timestamp}.json"
 
-    # Load current data
     inventory = load_inventory()
-    config = load_config()
+    config = ensure_migrated_config()
 
-    # Create backup structure
     backup_data = {
-        "version": "1.0",
+        "version": CONFIG_VERSION,
         "created": datetime.now().isoformat(timespec="seconds"),
         "type": "ipm_backup",
         "inventory": inventory,
         "config": config,
     }
 
-    # Write backup file
     backup_file.write_text(
         json.dumps(backup_data, indent=2, ensure_ascii=False),
         encoding="utf-8"
@@ -796,20 +1360,17 @@ def cmd_import(args: argparse.Namespace) -> int:
         print("ERROR: Filename cannot be empty", file=sys.stderr)
         return 1
 
-    # Construct full path
     backup_file = BACKUP_DIR / filename
     if not backup_file.exists():
         print(f"ERROR: Backup file '{filename}' not found", file=sys.stderr)
         return 1
 
-    # Load and validate backup
     try:
         backup_data = json.loads(backup_file.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         print(f"ERROR: Invalid JSON in backup file: {e}", file=sys.stderr)
         return 1
 
-    # Validate backup structure
     if backup_data.get("type") != "ipm_backup":
         print("ERROR: File is not a valid IPM backup", file=sys.stderr)
         return 1
@@ -821,12 +1382,12 @@ def cmd_import(args: argparse.Namespace) -> int:
         print("ERROR: Backup contains invalid inventory data", file=sys.stderr)
         return 1
 
-    # Create a backup of current data before importing
+    # Create pre-import backup
     current_inventory = load_inventory()
-    current_config = load_config()
+    current_config = ensure_migrated_config()
 
     pre_import_backup = {
-        "version": "1.0",
+        "version": CONFIG_VERSION,
         "created": datetime.now().isoformat(timespec="seconds"),
         "type": "ipm_backup",
         "note": "Pre-import automatic backup",
@@ -844,6 +1405,9 @@ def cmd_import(args: argparse.Namespace) -> int:
     # Import the data
     save_inventory(inventory)
     if config and isinstance(config, dict):
+        # Ensure imported config is v2.0.0
+        if config.get("version") != CONFIG_VERSION:
+            config = migrate_config_internal(config)
         save_config(config)
 
     product_count = len(inventory.get("products", {}))
@@ -855,18 +1419,17 @@ def cmd_reset(args: argparse.Namespace) -> int:
     """Reset all IPM data (requires confirmation token)."""
     token = args.token.strip() if args.token else ""
 
-    # Token must be "CONFIRM_RESET" to proceed
     if token != "CONFIRM_RESET":
         print("ERROR: Invalid confirmation token. Use --token CONFIRM_RESET", file=sys.stderr)
         return 1
 
     # Create backup before reset
     current_inventory = load_inventory()
-    current_config = load_config()
+    current_config = ensure_migrated_config()
 
-    if current_inventory.get("products") or current_config.get("custom_actives"):
+    if current_inventory.get("products") or current_config.get("actives"):
         pre_reset_backup = {
-            "version": "1.0",
+            "version": CONFIG_VERSION,
             "created": datetime.now().isoformat(timespec="seconds"),
             "type": "ipm_backup",
             "note": "Pre-reset automatic backup",
@@ -885,12 +1448,8 @@ def cmd_reset(args: argparse.Namespace) -> int:
     empty_inventory = {"products": {}, "transactions": []}
     save_inventory(empty_inventory)
 
-    # Reset config to defaults (keep locations, clear custom actives)
-    reset_config = {
-        "locations": DEFAULT_LOCATIONS.copy(),
-        "custom_actives": [],
-        "created": datetime.now().isoformat(timespec="seconds"),
-    }
+    # Reset config to defaults
+    reset_config = create_default_config()
     save_config(reset_config)
 
     print("OK:reset")
@@ -914,7 +1473,6 @@ def cmd_backup_list(args: argparse.Namespace) -> int:
                     "size_kb": round(backup_file.stat().st_size / 1024, 1),
                 })
             except (json.JSONDecodeError, IOError):
-                # Include file even if we can't read it
                 backups.append({
                     "filename": backup_file.name,
                     "created": "",
@@ -932,6 +1490,10 @@ def cmd_backup_list(args: argparse.Namespace) -> int:
     return 0
 
 
+# =========================================================================
+# ARGUMENT PARSER
+# =========================================================================
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the argument parser."""
     parser = argparse.ArgumentParser(
@@ -940,7 +1502,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # add_product command
+    # ----- Product Commands -----
     add_p = subparsers.add_parser("add_product", help="Add a new product")
     add_p.add_argument("--name", required=True, help="Product name")
     add_p.add_argument("--category", required=True, help="Category")
@@ -951,10 +1513,9 @@ def build_parser() -> argparse.ArgumentParser:
     add_p.add_argument("--application_unit", default="", help="Application unit")
     add_p.add_argument("--location", default="", help="Initial stock location")
     add_p.add_argument("--initial_stock", type=float, default=0, help="Initial stock quantity")
-    add_p.add_argument("--actives", default="", help="Active constituents as JSON array (includes group per active)")
+    add_p.add_argument("--actives", default="", help="Active constituents as JSON array")
     add_p.set_defaults(func=cmd_add_product)
 
-    # edit_product command
     edit_p = subparsers.add_parser("edit_product", help="Edit product details")
     edit_p.add_argument("--id", required=True, help="Product ID")
     edit_p.add_argument("--name", help="New product name")
@@ -964,10 +1525,9 @@ def build_parser() -> argparse.ArgumentParser:
     edit_p.add_argument("--container_size", help="New container size")
     edit_p.add_argument("--min_stock", type=float, help="New minimum stock")
     edit_p.add_argument("--application_unit", help="New application unit")
-    edit_p.add_argument("--actives", help="Active constituents as JSON array (includes group per active)")
+    edit_p.add_argument("--actives", help="Active constituents as JSON array")
     edit_p.set_defaults(func=cmd_edit_product)
 
-    # move_stock command
     move_p = subparsers.add_parser("move_stock", help="Adjust stock at a location")
     move_p.add_argument("--id", required=True, help="Product ID")
     move_p.add_argument("--location", required=True, help="Storage location")
@@ -975,61 +1535,93 @@ def build_parser() -> argparse.ArgumentParser:
     move_p.add_argument("--note", default="", help="Optional note")
     move_p.set_defaults(func=cmd_move_stock)
 
-    # delete_product command
     del_p = subparsers.add_parser("delete_product", help="Delete a product")
     del_p.add_argument("--id", required=True, help="Product ID")
     del_p.set_defaults(func=cmd_delete_product)
 
-    # status command
-    status_p = subparsers.add_parser("status", help="Get system status")
-    status_p.set_defaults(func=cmd_status)
+    # ----- Category Commands -----
+    add_cat_p = subparsers.add_parser("add_category", help="Add a category")
+    add_cat_p.add_argument("--name", required=True, help="Category name")
+    add_cat_p.set_defaults(func=cmd_add_category)
 
-    # init command
-    init_p = subparsers.add_parser("init", help="Initialize IPM system")
-    init_p.set_defaults(func=cmd_init)
+    rem_cat_p = subparsers.add_parser("remove_category", help="Remove a category")
+    rem_cat_p.add_argument("--name", required=True, help="Category name")
+    rem_cat_p.set_defaults(func=cmd_remove_category)
 
-    # add_location command
-    add_loc_p = subparsers.add_parser("add_location", help="Add a storage location")
-    add_loc_p.add_argument("--name", required=True, help="Location name")
-    add_loc_p.set_defaults(func=cmd_add_location)
+    add_sub_p = subparsers.add_parser("add_subcategory", help="Add a subcategory")
+    add_sub_p.add_argument("--category", required=True, help="Parent category")
+    add_sub_p.add_argument("--name", required=True, help="Subcategory name")
+    add_sub_p.set_defaults(func=cmd_add_subcategory)
 
-    # remove_location command
-    rem_loc_p = subparsers.add_parser("remove_location", help="Remove a storage location")
-    rem_loc_p.add_argument("--name", required=True, help="Location name")
-    rem_loc_p.set_defaults(func=cmd_remove_location)
+    rem_sub_p = subparsers.add_parser("remove_subcategory", help="Remove a subcategory")
+    rem_sub_p.add_argument("--category", required=True, help="Parent category")
+    rem_sub_p.add_argument("--name", required=True, help="Subcategory name")
+    rem_sub_p.set_defaults(func=cmd_remove_subcategory)
+
+    # ----- Chemical Group Commands -----
+    add_grp_p = subparsers.add_parser("add_chemical_group", help="Add a chemical group")
+    add_grp_p.add_argument("--name", required=True, help="Group name")
+    add_grp_p.set_defaults(func=cmd_add_chemical_group)
+
+    rem_grp_p = subparsers.add_parser("remove_chemical_group", help="Remove a chemical group")
+    rem_grp_p.add_argument("--name", required=True, help="Group name")
+    rem_grp_p.set_defaults(func=cmd_remove_chemical_group)
+
+    # ----- Unit Commands -----
+    add_unit_p = subparsers.add_parser("add_unit", help="Add a unit")
+    add_unit_p.add_argument("--type", required=True, help="Unit type (product/container/application/concentration)")
+    add_unit_p.add_argument("--value", required=True, help="Unit value")
+    add_unit_p.set_defaults(func=cmd_add_unit)
+
+    rem_unit_p = subparsers.add_parser("remove_unit", help="Remove a unit")
+    rem_unit_p.add_argument("--type", required=True, help="Unit type")
+    rem_unit_p.add_argument("--value", required=True, help="Unit value")
+    rem_unit_p.set_defaults(func=cmd_remove_unit)
 
     # ----- Active Constituents Commands -----
-    # list_actives command
     list_act_p = subparsers.add_parser("list_actives", help="List all active constituents")
     list_act_p.set_defaults(func=cmd_list_actives)
 
-    # add_active command
-    add_act_p = subparsers.add_parser("add_active", help="Add a custom active constituent")
+    add_act_p = subparsers.add_parser("add_active", help="Add an active constituent")
     add_act_p.add_argument("--name", required=True, help="Active name")
     add_act_p.add_argument("--groups", default="", help="Common chemical groups (comma-separated)")
     add_act_p.set_defaults(func=cmd_add_active)
 
-    # remove_active command
-    rem_act_p = subparsers.add_parser("remove_active", help="Remove a custom active constituent")
+    rem_act_p = subparsers.add_parser("remove_active", help="Remove an active constituent")
     rem_act_p.add_argument("--name", required=True, help="Active name")
     rem_act_p.set_defaults(func=cmd_remove_active)
 
-    # ----- Data Management Commands (Phase 3) -----
-    # export command
+    # ----- Location Commands -----
+    add_loc_p = subparsers.add_parser("add_location", help="Add a storage location")
+    add_loc_p.add_argument("--name", required=True, help="Location name")
+    add_loc_p.set_defaults(func=cmd_add_location)
+
+    rem_loc_p = subparsers.add_parser("remove_location", help="Remove a storage location")
+    rem_loc_p.add_argument("--name", required=True, help="Location name")
+    rem_loc_p.set_defaults(func=cmd_remove_location)
+
+    # ----- System Commands -----
+    status_p = subparsers.add_parser("status", help="Get system status")
+    status_p.set_defaults(func=cmd_status)
+
+    init_p = subparsers.add_parser("init", help="Initialize IPM system")
+    init_p.set_defaults(func=cmd_init)
+
+    migrate_p = subparsers.add_parser("migrate_config", help="Migrate config to v2.0.0")
+    migrate_p.set_defaults(func=cmd_migrate_config)
+
+    # ----- Data Management Commands -----
     export_p = subparsers.add_parser("export", help="Export data to backup file")
     export_p.set_defaults(func=cmd_export)
 
-    # import command
     import_p = subparsers.add_parser("import_backup", help="Import data from backup file")
     import_p.add_argument("--filename", required=True, help="Backup filename to import")
     import_p.set_defaults(func=cmd_import)
 
-    # reset command
     reset_p = subparsers.add_parser("reset", help="Reset all data (requires confirmation)")
     reset_p.add_argument("--token", required=True, help="Confirmation token (CONFIRM_RESET)")
     reset_p.set_defaults(func=cmd_reset)
 
-    # backup_list command
     backup_list_p = subparsers.add_parser("backup_list", help="List available backups")
     backup_list_p.set_defaults(func=cmd_backup_list)
 

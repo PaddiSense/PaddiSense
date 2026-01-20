@@ -233,19 +233,19 @@ views:
                     }
 
               # Search
-              - type: entities
-                entities:
-                  - entity: input_text.ipm_search
-                    name: Search
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 4px;
-                    }
-                    .mdc-text-field__input {
-                      font-size: 1.3rem !important;
-                    }
+  #            - type: entities
+  #              entities:
+  #                - entity: input_text.ipm_search
+  #                  name: Search
+  #              card_mod:
+  #                style: |
+  #                  ha-card {
+  #                    border-radius: 12px;
+  #                    padding: 4px;
+  #                  }
+  #                  .mdc-text-field__input {
+  #                    font-size: 1.3rem !important;
+  #                  }
 
               # Product selection (by NAME)
               - type: entities
@@ -257,7 +257,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 4px;
-                      background: #e8f5e9;
+                      background: #444;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.4rem !important;
@@ -274,7 +274,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 4px;
-                      background: #fff3e0;
+                      background: #4444;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.3rem !important;
@@ -538,7 +538,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 8px;
-                            background: #fff3e0;
+                            background: #444;
                           }
 
                     - type: entities
@@ -565,7 +565,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 4px;
-                            background: #e3f2fd;
+                            background: #444;
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.3rem !important;
@@ -607,7 +607,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 6px;
-                      background: #e8f5e9;
+                      background: #444;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.2rem !important;
@@ -629,7 +629,7 @@ views:
                       ha-card {
                         border-radius: 12px;
                         padding: 6px;
-                        background: #fff8e1;
+                        background: #444;
                       }
 
               #----------------------------------------------------------------
@@ -673,7 +673,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: #e8eaf6;
+                            background: #444;
                           }
                     - type: custom:button-card
                       name: "Clear Active 1"
@@ -1077,7 +1077,7 @@ views:
                       ha-card {
                         border-radius: 12px;
                         padding: 6px;
-                        background: #e1f5fe;
+                        background: #e1fe;
                       }
 
               #----------------------------------------------------------------
