@@ -25,7 +25,7 @@ import argparse
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -34,9 +34,13 @@ DATA_DIR = Path("/config/local_data/ipm")
 DATA_FILE = DATA_DIR / "inventory.json"
 CONFIG_FILE = DATA_DIR / "config.json"
 BACKUP_DIR = DATA_DIR / "backups"
+LOCK_DIR = DATA_DIR / "locks"
 
 # Current config version
 CONFIG_VERSION = "2.0.0"
+
+# Lock settings
+LOCK_TIMEOUT_SECONDS = 300  # 5 minutes
 
 # Default locations (used when creating initial config)
 DEFAULT_LOCATIONS = [
@@ -352,6 +356,162 @@ def migrate_config_internal(old_config: dict[str, Any]) -> dict[str, Any]:
     return new_config
 
 
+# =========================================================================
+# LOCKING FUNCTIONS
+# =========================================================================
+
+def get_lock_file(entity_type: str, entity_id: str) -> Path:
+    """Get the lock file path for an entity."""
+    safe_id = re.sub(r"[^A-Za-z0-9_-]", "_", entity_id)
+    return LOCK_DIR / f"{entity_type}_{safe_id}.lock"
+
+
+def is_lock_expired(lock_data: dict[str, Any]) -> bool:
+    """Check if a lock has expired."""
+    expires_at = lock_data.get("expires_at", "")
+    if not expires_at:
+        return True
+    try:
+        expiry_time = datetime.fromisoformat(expires_at)
+        return datetime.now() > expiry_time
+    except ValueError:
+        return True
+
+
+def load_lock(entity_type: str, entity_id: str) -> dict[str, Any] | None:
+    """Load lock data for an entity, or None if no valid lock exists."""
+    lock_file = get_lock_file(entity_type, entity_id)
+    if not lock_file.exists():
+        return None
+    try:
+        lock_data = json.loads(lock_file.read_text(encoding="utf-8"))
+        if is_lock_expired(lock_data):
+            # Clean up expired lock
+            lock_file.unlink(missing_ok=True)
+            return None
+        return lock_data
+    except (json.JSONDecodeError, IOError):
+        return None
+
+
+def acquire_lock(
+    entity_type: str,
+    entity_id: str,
+    session_id: str,
+    lock_type: str = "edit"
+) -> tuple[bool, str]:
+    """
+    Attempt to acquire a lock on an entity.
+    Returns (success, message).
+    """
+    LOCK_DIR.mkdir(parents=True, exist_ok=True)
+
+    existing = load_lock(entity_type, entity_id)
+    if existing:
+        if existing.get("session_id") == session_id:
+            # Same session - refresh the lock
+            pass
+        else:
+            # Locked by someone else
+            locked_by = existing.get("session_id", "unknown")
+            locked_at = existing.get("locked_at", "unknown")
+            return False, f"Locked by {locked_by} since {locked_at}"
+
+    # Create or refresh lock
+    now = datetime.now()
+    lock_data = {
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "session_id": session_id,
+        "lock_type": lock_type,
+        "locked_at": now.isoformat(timespec="seconds"),
+        "expires_at": (now + timedelta(seconds=LOCK_TIMEOUT_SECONDS)).isoformat(timespec="seconds"),
+    }
+
+    lock_file = get_lock_file(entity_type, entity_id)
+    lock_file.write_text(json.dumps(lock_data, indent=2), encoding="utf-8")
+
+    return True, "Lock acquired"
+
+
+def release_lock(entity_type: str, entity_id: str, session_id: str) -> tuple[bool, str]:
+    """
+    Release a lock on an entity.
+    Only the session that acquired the lock can release it.
+    Returns (success, message).
+    """
+    existing = load_lock(entity_type, entity_id)
+    if not existing:
+        return True, "No lock exists"
+
+    if existing.get("session_id") != session_id:
+        return False, "Lock owned by different session"
+
+    lock_file = get_lock_file(entity_type, entity_id)
+    lock_file.unlink(missing_ok=True)
+
+    return True, "Lock released"
+
+
+def check_lock(entity_type: str, entity_id: str) -> dict[str, Any]:
+    """
+    Check the lock status of an entity.
+    Returns lock info or {"locked": False}.
+    """
+    existing = load_lock(entity_type, entity_id)
+    if not existing:
+        return {"locked": False}
+
+    return {
+        "locked": True,
+        "session_id": existing.get("session_id", ""),
+        "lock_type": existing.get("lock_type", ""),
+        "locked_at": existing.get("locked_at", ""),
+        "expires_at": existing.get("expires_at", ""),
+    }
+
+
+def require_lock(entity_type: str, entity_id: str, session_id: str) -> tuple[bool, str]:
+    """
+    Check if a session holds the lock on an entity.
+    Used before edit operations to ensure proper locking.
+    Returns (has_lock, message).
+    """
+    if not session_id:
+        # No session provided - allow edit but warn
+        return True, "No session - edit allowed"
+
+    existing = load_lock(entity_type, entity_id)
+    if not existing:
+        # No lock - auto-acquire
+        return acquire_lock(entity_type, entity_id, session_id)
+
+    if existing.get("session_id") == session_id:
+        return True, "Lock held by this session"
+
+    return False, f"Locked by {existing.get('session_id', 'unknown')}"
+
+
+def cleanup_expired_locks() -> int:
+    """Remove all expired lock files. Returns count of removed locks."""
+    if not LOCK_DIR.exists():
+        return 0
+
+    removed = 0
+    for lock_file in LOCK_DIR.glob("*.lock"):
+        try:
+            lock_data = json.loads(lock_file.read_text(encoding="utf-8"))
+            if is_lock_expired(lock_data):
+                lock_file.unlink()
+                removed += 1
+        except (json.JSONDecodeError, IOError):
+            # Invalid lock file - remove it
+            lock_file.unlink(missing_ok=True)
+            removed += 1
+
+    return removed
+
+
 def get_categories(config: dict[str, Any]) -> dict[str, list[str]]:
     """Get categories dict from config."""
     return config.get("categories", DEFAULT_CATEGORIES)
@@ -606,6 +766,14 @@ def cmd_edit_product(args: argparse.Namespace) -> int:
     if product_id not in products:
         print(f"ERROR: Product '{product_id}' not found", file=sys.stderr)
         return 1
+
+    # Check lock if session provided
+    session_id = getattr(args, 'session', '') or ''
+    if session_id:
+        has_lock, lock_msg = require_lock("product", product_id, session_id)
+        if not has_lock:
+            print(f"ERROR: {lock_msg}", file=sys.stderr)
+            return 1
 
     product = products[product_id]
     categories = get_categories(config)
@@ -1184,6 +1352,87 @@ def cmd_remove_location(args: argparse.Namespace) -> int:
 
 
 # =========================================================================
+# LOCK COMMANDS
+# =========================================================================
+
+def cmd_lock_acquire(args: argparse.Namespace) -> int:
+    """Acquire a lock on an entity."""
+    entity_type = args.type.strip()
+    entity_id = args.id.strip()
+    session_id = args.session.strip()
+
+    if not entity_type or not entity_id or not session_id:
+        print("ERROR: type, id, and session are required", file=sys.stderr)
+        return 1
+
+    success, message = acquire_lock(entity_type, entity_id, session_id)
+    if success:
+        lock_info = check_lock(entity_type, entity_id)
+        print(json.dumps({"status": "acquired", "lock": lock_info}))
+        return 0
+    else:
+        print(json.dumps({"status": "failed", "message": message}))
+        return 1
+
+
+def cmd_lock_release(args: argparse.Namespace) -> int:
+    """Release a lock on an entity."""
+    entity_type = args.type.strip()
+    entity_id = args.id.strip()
+    session_id = args.session.strip()
+
+    if not entity_type or not entity_id or not session_id:
+        print("ERROR: type, id, and session are required", file=sys.stderr)
+        return 1
+
+    success, message = release_lock(entity_type, entity_id, session_id)
+    if success:
+        print(json.dumps({"status": "released"}))
+        return 0
+    else:
+        print(json.dumps({"status": "failed", "message": message}))
+        return 1
+
+
+def cmd_lock_check(args: argparse.Namespace) -> int:
+    """Check lock status of an entity."""
+    entity_type = args.type.strip()
+    entity_id = args.id.strip()
+
+    if not entity_type or not entity_id:
+        print("ERROR: type and id are required", file=sys.stderr)
+        return 1
+
+    lock_info = check_lock(entity_type, entity_id)
+    print(json.dumps(lock_info))
+    return 0
+
+
+def cmd_lock_cleanup(args: argparse.Namespace) -> int:
+    """Clean up expired locks."""
+    removed = cleanup_expired_locks()
+    print(json.dumps({"status": "ok", "removed": removed}))
+    return 0
+
+
+def cmd_lock_list(args: argparse.Namespace) -> int:
+    """List all active locks."""
+    locks = []
+
+    if LOCK_DIR.exists():
+        for lock_file in LOCK_DIR.glob("*.lock"):
+            try:
+                lock_data = json.loads(lock_file.read_text(encoding="utf-8"))
+                if not is_lock_expired(lock_data):
+                    locks.append(lock_data)
+            except (json.JSONDecodeError, IOError):
+                pass
+
+    print(json.dumps({"total": len(locks), "locks": locks}))
+    return 0
+
+
+# =========================================================================
 # SYSTEM COMMANDS
 # =========================================================================
 
@@ -1491,6 +1740,179 @@ def cmd_backup_list(args: argparse.Namespace) -> int:
 
 
 # =========================================================================
+# REPORT COMMANDS
+# =========================================================================
+
+def cmd_usage_report(args: argparse.Namespace) -> int:
+    """Generate usage report filtered by date range."""
+    data = load_inventory()
+    transactions = data.get("transactions", [])
+
+    # Parse date filters
+    start_date = None
+    end_date = None
+
+    if args.start:
+        try:
+            start_date = datetime.fromisoformat(args.start.strip())
+        except ValueError:
+            print(f"ERROR: Invalid start date format: {args.start}", file=sys.stderr)
+            return 1
+
+    if args.end:
+        try:
+            end_date = datetime.fromisoformat(args.end.strip())
+            # Include the entire end day
+            end_date = end_date.replace(hour=23, minute=59, second=59)
+        except ValueError:
+            print(f"ERROR: Invalid end date format: {args.end}", file=sys.stderr)
+            return 1
+
+    # Filter transactions by date
+    filtered_txns = []
+    for txn in transactions:
+        try:
+            txn_date = datetime.fromisoformat(txn.get("timestamp", ""))
+            if start_date and txn_date < start_date:
+                continue
+            if end_date and txn_date > end_date:
+                continue
+            filtered_txns.append(txn)
+        except ValueError:
+            continue
+
+    # Build usage summary by product
+    usage_by_product: dict[str, dict] = {}
+    for txn in filtered_txns:
+        product_id = txn.get("product_id", "")
+        product_name = txn.get("product_name", product_id)
+        action = txn.get("action", "")
+        delta = float(txn.get("delta", 0))
+
+        if product_id not in usage_by_product:
+            usage_by_product[product_id] = {
+                "id": product_id,
+                "name": product_name,
+                "stock_in": 0,
+                "stock_out": 0,
+                "net_change": 0,
+                "transaction_count": 0,
+            }
+
+        usage_by_product[product_id]["transaction_count"] += 1
+        usage_by_product[product_id]["net_change"] += delta
+
+        if action == "stock_in" or delta > 0:
+            usage_by_product[product_id]["stock_in"] += abs(delta)
+        elif action == "stock_out" or delta < 0:
+            usage_by_product[product_id]["stock_out"] += abs(delta)
+
+    # Convert to list sorted by usage (stock_out)
+    usage_list = sorted(
+        usage_by_product.values(),
+        key=lambda x: x["stock_out"],
+        reverse=True
+    )
+
+    # Build category summary
+    category_summary: dict[str, dict] = {}
+    products = data.get("products", {})
+    for item in usage_list:
+        product = products.get(item["id"], {})
+        category = product.get("category", "Unknown")
+
+        if category not in category_summary:
+            category_summary[category] = {
+                "category": category,
+                "stock_in": 0,
+                "stock_out": 0,
+                "net_change": 0,
+                "product_count": 0,
+            }
+
+        category_summary[category]["stock_in"] += item["stock_in"]
+        category_summary[category]["stock_out"] += item["stock_out"]
+        category_summary[category]["net_change"] += item["net_change"]
+        category_summary[category]["product_count"] += 1
+
+    result = {
+        "period": {
+            "start": start_date.isoformat() if start_date else None,
+            "end": end_date.isoformat() if end_date else None,
+        },
+        "total_transactions": len(filtered_txns),
+        "products_affected": len(usage_by_product),
+        "usage_by_product": usage_list,
+        "usage_by_category": sorted(
+            category_summary.values(),
+            key=lambda x: x["stock_out"],
+            reverse=True
+        ),
+    }
+
+    print(json.dumps(result, ensure_ascii=False))
+    return 0
+
+
+def cmd_transaction_history(args: argparse.Namespace) -> int:
+    """Get transaction history with optional filters."""
+    data = load_inventory()
+    transactions = data.get("transactions", [])
+
+    # Parse filters
+    start_date = None
+    end_date = None
+    product_filter = args.product.strip().upper() if args.product else None
+    action_filter = args.action.strip() if args.action else None
+    limit = int(args.limit) if args.limit else 100
+
+    if args.start:
+        try:
+            start_date = datetime.fromisoformat(args.start.strip())
+        except ValueError:
+            pass
+
+    if args.end:
+        try:
+            end_date = datetime.fromisoformat(args.end.strip())
+            end_date = end_date.replace(hour=23, minute=59, second=59)
+        except ValueError:
+            pass
+
+    # Filter transactions
+    filtered = []
+    for txn in reversed(transactions):  # Most recent first
+        try:
+            txn_date = datetime.fromisoformat(txn.get("timestamp", ""))
+            if start_date and txn_date < start_date:
+                continue
+            if end_date and txn_date > end_date:
+                continue
+        except ValueError:
+            continue
+
+        if product_filter and txn.get("product_id") != product_filter:
+            continue
+
+        if action_filter and txn.get("action") != action_filter:
+            continue
+
+        filtered.append(txn)
+
+        if len(filtered) >= limit:
+            break
+
+    result = {
+        "total": len(filtered),
+        "limit": limit,
+        "transactions": filtered,
+    }
+
+    print(json.dumps(result, ensure_ascii=False))
+    return 0
+
+
+# =========================================================================
 # ARGUMENT PARSER
 # =========================================================================
 
@@ -1518,6 +1940,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     edit_p = subparsers.add_parser("edit_product", help="Edit product details")
     edit_p.add_argument("--id", required=True, help="Product ID")
+    edit_p.add_argument("--session", default="", help="Session ID for locking")
     edit_p.add_argument("--name", help="New product name")
     edit_p.add_argument("--category", help="New category")
     edit_p.add_argument("--subcategory", help="New subcategory")
@@ -1624,6 +2047,44 @@ def build_parser() -> argparse.ArgumentParser:
 
     backup_list_p = subparsers.add_parser("backup_list", help="List available backups")
     backup_list_p.set_defaults(func=cmd_backup_list)
+
+    # ----- Report Commands -----
+    usage_report_p = subparsers.add_parser("usage_report", help="Generate usage report")
+    usage_report_p.add_argument("--start", help="Start date (YYYY-MM-DD)")
+    usage_report_p.add_argument("--end", help="End date (YYYY-MM-DD)")
+    usage_report_p.set_defaults(func=cmd_usage_report)
+
+    txn_history_p = subparsers.add_parser("transaction_history", help="Get transaction history")
+    txn_history_p.add_argument("--start", help="Start date (YYYY-MM-DD)")
+    txn_history_p.add_argument("--end", help="End date (YYYY-MM-DD)")
+    txn_history_p.add_argument("--product", help="Filter by product ID")
+    txn_history_p.add_argument("--action", help="Filter by action (stock_in, stock_out, etc.)")
+    txn_history_p.add_argument("--limit", type=int, default=100, help="Max records to return")
+    txn_history_p.set_defaults(func=cmd_transaction_history)
+
+    # ----- Lock Commands -----
+    lock_acquire_p = subparsers.add_parser("lock_acquire", help="Acquire a lock on an entity")
+    lock_acquire_p.add_argument("--type", required=True, help="Entity type (product, category, etc.)")
+    lock_acquire_p.add_argument("--id", required=True, help="Entity ID")
+    lock_acquire_p.add_argument("--session", required=True, help="Session ID")
+    lock_acquire_p.set_defaults(func=cmd_lock_acquire)
+
+    lock_release_p = subparsers.add_parser("lock_release", help="Release a lock on an entity")
+    lock_release_p.add_argument("--type", required=True, help="Entity type")
+    lock_release_p.add_argument("--id", required=True, help="Entity ID")
+    lock_release_p.add_argument("--session", required=True, help="Session ID")
+    lock_release_p.set_defaults(func=cmd_lock_release)
+
+    lock_check_p = subparsers.add_parser("lock_check", help="Check lock status of an entity")
+    lock_check_p.add_argument("--type", required=True, help="Entity type")
+    lock_check_p.add_argument("--id", required=True, help="Entity ID")
+    lock_check_p.set_defaults(func=cmd_lock_check)
+
+    lock_cleanup_p = subparsers.add_parser("lock_cleanup", help="Clean up expired locks")
+    lock_cleanup_p.set_defaults(func=cmd_lock_cleanup)
+
+    lock_list_p = subparsers.add_parser("lock_list", help="List all active locks")
+    lock_list_p.set_defaults(func=cmd_lock_list)
 
     return parser
 

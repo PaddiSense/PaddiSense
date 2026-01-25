@@ -1,0 +1,446 @@
+# =============================================================================
+# FARM REGISTRY - PaddiSense Shared Core
+# =============================================================================
+# This package provides the farm hierarchy (farms, paddocks, bays, seasons)
+# for all PaddiSense modules. It is the single source of truth for:
+#   - Grower/server identity
+#   - Farm definitions (from server.yaml)
+#   - Paddock configurations
+#   - Bay configurations
+#   - Season definitions
+#
+# Other modules (PWM, HFM, IPM, ASM) consume this data but store their own
+# module-specific settings separately.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# COMMAND LINE SENSORS
+# -----------------------------------------------------------------------------
+command_line:
+  - sensor:
+      name: Farm Registry Data
+      unique_id: farm_registry_data
+      command: "python3 /config/PaddiSense/registry/python/registry_sensor.py"
+      scan_interval: 60
+      value_template: "{{ value_json.status }}"
+      json_attributes:
+        - initialized
+        - config_ok
+        - version
+        - grower
+        - total_farms
+        - total_paddocks
+        - total_bays
+        - total_seasons
+        - active_season
+        - active_season_name
+        - farms
+        - paddocks
+        - bays
+        - seasons
+        - hierarchy
+        - farm_names
+        - paddock_names
+        - season_names
+        - modules
+        - backup_count
+
+# -----------------------------------------------------------------------------
+# SHELL COMMANDS
+# -----------------------------------------------------------------------------
+shell_command:
+  # System commands
+  registry_init: "python3 /config/PaddiSense/registry/python/registry_backend.py init"
+  registry_status: "python3 /config/PaddiSense/registry/python/registry_backend.py status"
+  registry_export: "python3 /config/PaddiSense/registry/python/registry_backend.py export"
+  registry_migrate_pwm: "python3 /config/PaddiSense/registry/python/registry_backend.py migrate_from_pwm"
+  registry_reset: "python3 /config/PaddiSense/registry/python/registry_backend.py reset --token {{ token }}"
+  registry_import: "python3 /config/PaddiSense/registry/python/registry_backend.py import_backup --filename '{{ filename }}'"
+  registry_backup_list: "python3 /config/PaddiSense/registry/python/registry_backend.py backup_list"
+
+  # Paddock commands
+  registry_add_paddock: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py add_paddock
+    --name '{{ name }}'
+    --farm '{{ farm | default("farm_1") }}'
+    --bay_prefix '{{ bay_prefix | default("B-") }}'
+    --bay_count {{ bay_count }}
+
+  registry_edit_paddock: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_paddock
+    --id '{{ id }}'
+    {% if name is defined %}--name '{{ name }}'{% endif %}
+    {% if farm is defined %}--farm '{{ farm }}'{% endif %}
+
+  registry_delete_paddock: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_paddock --id '{{ id }}'"
+
+  # Bay commands
+  registry_add_bay: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py add_bay
+    --paddock '{{ paddock }}'
+    --name '{{ name }}'
+    {% if order is defined %}--order {{ order }}{% endif %}
+    {% if is_last is defined and is_last %}--is_last{% endif %}
+
+  registry_edit_bay: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_bay
+    --id '{{ id }}'
+    {% if name is defined %}--name '{{ name }}'{% endif %}
+    {% if order is defined %}--order {{ order }}{% endif %}
+    {% if is_last is defined %}--is_last {{ is_last }}{% endif %}
+
+  registry_delete_bay: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_bay --id '{{ id }}'"
+
+  # Season commands
+  registry_add_season: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py add_season
+    --name '{{ name }}'
+    --start '{{ start }}'
+    --end '{{ end }}'
+    {% if active is defined and active %}--active{% endif %}
+
+  registry_edit_season: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_season
+    --id '{{ id }}'
+    {% if name is defined %}--name '{{ name }}'{% endif %}
+    {% if start is defined %}--start '{{ start }}'{% endif %}
+    {% if end is defined %}--end '{{ end }}'{% endif %}
+
+  registry_delete_season: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_season --id '{{ id }}'"
+  registry_set_active_season: "python3 /config/PaddiSense/registry/python/registry_backend.py set_active_season --id '{{ id }}'"
+
+# -----------------------------------------------------------------------------
+# TEMPLATE SENSORS
+# -----------------------------------------------------------------------------
+template:
+  - sensor:
+      # Version sensor for diagnostics
+      - name: "Farm Registry Version"
+        unique_id: farm_registry_version
+        state: "{{ state_attr('sensor.farm_registry_data', 'version') | default('unknown') }}"
+        icon: mdi:tag
+
+      # Grower name
+      - name: "Farm Registry Grower"
+        unique_id: farm_registry_grower
+        state: >-
+          {% set grower = state_attr('sensor.farm_registry_data', 'grower') or {} %}
+          {{ grower.get('name', 'PaddiSense Farm') }}
+        icon: mdi:account-tie
+
+      # Active season
+      - name: "Farm Registry Active Season"
+        unique_id: farm_registry_active_season
+        state: "{{ state_attr('sensor.farm_registry_data', 'active_season_name') | default('None') }}"
+        icon: mdi:calendar-range
+        attributes:
+          season_id: "{{ state_attr('sensor.farm_registry_data', 'active_season') }}"
+
+      # Counts
+      - name: "Farm Registry Paddock Count"
+        unique_id: farm_registry_paddock_count
+        state: "{{ state_attr('sensor.farm_registry_data', 'total_paddocks') | default(0) }}"
+        icon: mdi:view-grid
+        unit_of_measurement: "paddocks"
+
+      - name: "Farm Registry Bay Count"
+        unique_id: farm_registry_bay_count
+        state: "{{ state_attr('sensor.farm_registry_data', 'total_bays') | default(0) }}"
+        icon: mdi:view-column
+        unit_of_measurement: "bays"
+
+  - binary_sensor:
+      # Registry initialized
+      - name: "Farm Registry Initialized"
+        unique_id: farm_registry_initialized
+        state: "{{ state_attr('sensor.farm_registry_data', 'initialized') | default(false) }}"
+        icon: mdi:check-circle
+
+# -----------------------------------------------------------------------------
+# INPUT HELPERS
+# -----------------------------------------------------------------------------
+input_select:
+  # Season selector
+  registry_season:
+    name: "Registry Season"
+    options:
+      - "None"
+    icon: mdi:calendar-range
+
+  # Farm selector (for filtering)
+  registry_farm:
+    name: "Registry Farm"
+    options:
+      - "All Farms"
+    icon: mdi:barn
+
+  # Paddock selector (for operations)
+  registry_paddock:
+    name: "Registry Paddock"
+    options:
+      - "Select..."
+    icon: mdi:view-grid
+
+# -----------------------------------------------------------------------------
+# INPUT TEXT (for add/edit forms)
+# -----------------------------------------------------------------------------
+input_text:
+  registry_new_paddock_name:
+    name: "New Paddock Name"
+    icon: mdi:view-grid
+    max: 50
+
+  registry_new_season_name:
+    name: "New Season Name"
+    icon: mdi:calendar
+    max: 20
+
+# -----------------------------------------------------------------------------
+# INPUT NUMBER (for add paddock form)
+# -----------------------------------------------------------------------------
+input_number:
+  registry_new_paddock_bay_count:
+    name: "New Paddock Bay Count"
+    icon: mdi:numeric
+    min: 1
+    max: 20
+    step: 1
+    mode: box
+
+# -----------------------------------------------------------------------------
+# INPUT DATETIME (for season dates)
+# -----------------------------------------------------------------------------
+input_datetime:
+  registry_season_start:
+    name: "Season Start Date"
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-start
+
+  registry_season_end:
+    name: "Season End Date"
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-end
+
+# -----------------------------------------------------------------------------
+# SCRIPTS
+# -----------------------------------------------------------------------------
+script:
+  # Initialize registry
+  registry_init_system:
+    alias: "Registry - Initialize System"
+    icon: mdi:database-plus
+    sequence:
+      - service: shell_command.registry_init
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Migrate from PWM
+  registry_migrate_from_pwm:
+    alias: "Registry - Migrate from PWM"
+    icon: mdi:database-import
+    sequence:
+      - service: shell_command.registry_migrate_pwm
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Refresh data
+  registry_refresh_data:
+    alias: "Registry - Refresh Data"
+    icon: mdi:refresh
+    sequence:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Export backup
+  registry_export_data:
+    alias: "Registry - Export Backup"
+    icon: mdi:database-export
+    sequence:
+      - service: shell_command.registry_export
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Add paddock
+  registry_add_paddock:
+    alias: "Registry - Add Paddock"
+    icon: mdi:view-grid-plus
+    fields:
+      name:
+        description: "Paddock name"
+        required: true
+        selector:
+          text:
+      bay_count:
+        description: "Number of bays"
+        required: true
+        selector:
+          number:
+            min: 1
+            max: 20
+      farm:
+        description: "Farm ID (optional)"
+        selector:
+          text:
+      bay_prefix:
+        description: "Bay prefix (default: B-)"
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_add_paddock
+        data:
+          name: "{{ name }}"
+          bay_count: "{{ bay_count }}"
+          farm: "{{ farm | default('farm_1') }}"
+          bay_prefix: "{{ bay_prefix | default('B-') }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Delete paddock
+  registry_delete_paddock:
+    alias: "Registry - Delete Paddock"
+    icon: mdi:view-grid-remove
+    fields:
+      id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_delete_paddock
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Add season
+  registry_add_season:
+    alias: "Registry - Add Season"
+    icon: mdi:calendar-plus
+    fields:
+      name:
+        description: "Season name (e.g., CY26)"
+        required: true
+        selector:
+          text:
+      start:
+        description: "Start date (YYYY-MM-DD)"
+        required: true
+        selector:
+          text:
+      end:
+        description: "End date (YYYY-MM-DD)"
+        required: true
+        selector:
+          text:
+      active:
+        description: "Set as active season"
+        selector:
+          boolean:
+    sequence:
+      - service: shell_command.registry_add_season
+        data:
+          name: "{{ name }}"
+          start: "{{ start }}"
+          end: "{{ end }}"
+          active: "{{ active | default(false) }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Set active season
+  registry_set_active_season:
+    alias: "Registry - Set Active Season"
+    icon: mdi:calendar-check
+    fields:
+      id:
+        description: "Season ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_set_active_season
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+# -----------------------------------------------------------------------------
+# AUTOMATIONS
+# -----------------------------------------------------------------------------
+automation:
+  # Update season dropdown when data changes
+  - id: registry_update_season_dropdown
+    alias: "Registry - Update Season Dropdown"
+    trigger:
+      - platform: state
+        entity_id: sensor.farm_registry_data
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.farm_registry_data', 'season_names') is not none }}"
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['None'] + seasons if seasons else ['None'] }}
+
+  # Update paddock dropdown when data changes
+  - id: registry_update_paddock_dropdown
+    alias: "Registry - Update Paddock Dropdown"
+    trigger:
+      - platform: state
+        entity_id: sensor.farm_registry_data
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.farm_registry_data', 'paddock_names') is not none }}"
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
+            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+
+  # Update farm dropdown when data changes
+  - id: registry_update_farm_dropdown
+    alias: "Registry - Update Farm Dropdown"
+    trigger:
+      - platform: state
+        entity_id: sensor.farm_registry_data
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.farm_registry_data', 'farm_names') is not none }}"
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['All Farms'] + farms if farms else ['All Farms'] }}

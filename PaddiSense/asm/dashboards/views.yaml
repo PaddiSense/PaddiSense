@@ -101,6 +101,7 @@ button_card_templates:
     show_icon: true
     show_name: true
     show_state: true
+    tap_action: null
     styles:
       card:
         - height: 50px
@@ -110,7 +111,13 @@ button_card_templates:
       grid:
         - grid-template-areas: '"i n s"'
         - grid-template-columns: 24px auto auto
+        - grid-template-rows: 1fr
         - gap: 8px
+        - align-items: center
+      img_cell:
+        - justify-self: start
+        - align-items: center
+        - justify-content: start
       name:
         - font-size: 12px
         - color: rgba(255,255,255,0.7)
@@ -123,6 +130,7 @@ button_card_templates:
       icon:
         - color: white
         - width: 22px
+        - justify-self: start
 
 ##############################################################################
 # VIEWS
@@ -157,7 +165,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 4px;
-                      background: #e8f5e9;
+                      background: --card-background-color;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.3rem !important;
@@ -549,7 +557,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: #f3f4f6;
+                            background: --card-background-color;
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.1rem !important;
@@ -604,7 +612,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 10px;
-                      background: #ffffff;
+                      background: --card-background-color;
                     }
                     table {
                       width: 100%;
@@ -649,7 +657,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 4px;
-                      background: #f3e5f5;
+                      background: --card-background-color;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.3rem !important;
@@ -917,7 +925,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: #f3f4f6;
+                            background: --card-background-color;
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.1rem !important;
@@ -1022,7 +1030,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: #ffffff;
+                            background: --card-background-color;
                           }
 
                     # Form action buttons
@@ -1072,7 +1080,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: #fff3e0;
+                            background: --card-background-color;
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.2rem !important;
@@ -1140,7 +1148,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 6px;
-                      background: #e8f5e9;
+                      background: --card-background-color;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.3rem !important;
@@ -1186,7 +1194,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 10px;
-                      background: #ffffff;
+                      background: --card-background-color;
                     }
                     table {
                       width: 100%;
@@ -1254,7 +1262,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 4px;
-                      background: #e8f5e9;
+                      background: --card-background-color;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.3rem !important;
@@ -1374,7 +1382,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: #f3f4f6;
+                            background: --card-background-color;
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.1rem !important;
@@ -1423,7 +1431,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 4px;
-                      background: #fff8e1;
+                      background: --card-background-color;
                     }
                     .mdc-list-item__primary-text {
                       font-size: 1.2rem !important;
@@ -1591,7 +1599,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 10px;
-                      background: #ffffff;
+                      background: --card-background-color;
                     }
                     table {
                       width: 100%;
@@ -1631,6 +1639,7 @@ views:
                 show_icon: false
                 show_name: false
                 show_state: false
+                tap_action: null
                 styles:
                   card:
                     - background: var(--card-background-color, #fff)
@@ -1816,7 +1825,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 12px;
-                      background: #f5f5f5;
+                      background: --card-background-color;
                     }
 
               #----------------------------------------------------------------
@@ -1843,5 +1852,5 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 12px;
-                      background: #e3f2fd;
+                      background: --card-background-color;
                     }

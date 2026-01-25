@@ -139,6 +139,474 @@ input_select:
     initial: "view"
     icon: mdi:pencil
 
+  # ---------------------------------------------------------------------------
+  # PADDOCK AUTOMATION STATES
+  # ---------------------------------------------------------------------------
+  test_field_automation_state:
+    name: "Test Field Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_e_automation_state:
+    name: "SW4-E Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_w_automation_state:
+    name: "SW4-W Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw5_automation_state:
+    name: "SW5 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w17_automation_state:
+    name: "W17 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w18_automation_state:
+    name: "W18 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w19_automation_state:
+    name: "W19 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  # ---------------------------------------------------------------------------
+  # TEST FIELD - Door Controls & Bay Automation
+  # ---------------------------------------------------------------------------
+  test_field_b_01_door_control:
+    name: "Test Field B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  test_field_b_01_automation_state:
+    name: "Test Field B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  test_field_b_02_door_control:
+    name: "Test Field B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  test_field_b_02_automation_state:
+    name: "Test Field B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  test_field_b_03_door_control:
+    name: "Test Field B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  test_field_b_03_automation_state:
+    name: "Test Field B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  test_field_b_04_door_control:
+    name: "Test Field B-04 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  test_field_b_04_automation_state:
+    name: "Test Field B-04 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  test_field_drain_door_control:
+    name: "Test Field Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  # ---------------------------------------------------------------------------
+  # SW4-E - Door Controls & Bay Automation
+  # ---------------------------------------------------------------------------
+  sw4_e_b_01_door_control:
+    name: "SW4-E B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw4_e_b_01_automation_state:
+    name: "SW4-E B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_e_b_02_door_control:
+    name: "SW4-E B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw4_e_b_02_automation_state:
+    name: "SW4-E B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_e_b_03_door_control:
+    name: "SW4-E B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw4_e_b_03_automation_state:
+    name: "SW4-E B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_e_drain_door_control:
+    name: "SW4-E Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  # ---------------------------------------------------------------------------
+  # SW4-W - Door Controls & Bay Automation
+  # ---------------------------------------------------------------------------
+  sw4_w_b_01_door_control:
+    name: "SW4-W B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw4_w_b_01_automation_state:
+    name: "SW4-W B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_w_b_02_door_control:
+    name: "SW4-W B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw4_w_b_02_automation_state:
+    name: "SW4-W B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_w_b_03_door_control:
+    name: "SW4-W B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw4_w_b_03_automation_state:
+    name: "SW4-W B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw4_w_drain_door_control:
+    name: "SW4-W Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  # ---------------------------------------------------------------------------
+  # SW5 - Door Controls & Bay Automation
+  # ---------------------------------------------------------------------------
+  sw5_b_01_door_control:
+    name: "SW5 B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw5_b_01_automation_state:
+    name: "SW5 B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw5_b_02_door_control:
+    name: "SW5 B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw5_b_02_automation_state:
+    name: "SW5 B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw5_b_03_door_control:
+    name: "SW5 B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw5_b_03_automation_state:
+    name: "SW5 B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw5_b_04_door_control:
+    name: "SW5 B-04 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw5_b_04_automation_state:
+    name: "SW5 B-04 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw5_b_05_door_control:
+    name: "SW5 B-05 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  sw5_b_05_automation_state:
+    name: "SW5 B-05 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  sw5_drain_door_control:
+    name: "SW5 Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  # ---------------------------------------------------------------------------
+  # W17 - Door Controls & Bay Automation (includes NML and Channel Supply)
+  # ---------------------------------------------------------------------------
+  w17_b_01_door_control:
+    name: "W17 B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_01_nml_door_control:
+    name: "W17 B-01 NML Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_01_automation_state:
+    name: "W17 B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w17_b_02_door_control:
+    name: "W17 B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_02_automation_state:
+    name: "W17 B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w17_b_03_door_control:
+    name: "W17 B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_03_channel_supply_door_control:
+    name: "W17 B-03 Channel Supply Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_03_automation_state:
+    name: "W17 B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w17_b_04_door_control:
+    name: "W17 B-04 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_04_automation_state:
+    name: "W17 B-04 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w17_b_05_door_control:
+    name: "W17 B-05 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w17_b_05_automation_state:
+    name: "W17 B-05 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w17_drain_door_control:
+    name: "W17 Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  # ---------------------------------------------------------------------------
+  # W18 - Door Controls & Bay Automation
+  # ---------------------------------------------------------------------------
+  w18_b_01_door_control:
+    name: "W18 B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w18_b_01_automation_state:
+    name: "W18 B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w18_b_02_door_control:
+    name: "W18 B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w18_b_02_automation_state:
+    name: "W18 B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w18_b_03_door_control:
+    name: "W18 B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w18_b_03_automation_state:
+    name: "W18 B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w18_b_04_door_control:
+    name: "W18 B-04 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w18_b_04_automation_state:
+    name: "W18 B-04 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w18_b_05_door_control:
+    name: "W18 B-05 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w18_b_05_automation_state:
+    name: "W18 B-05 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w18_drain_door_control:
+    name: "W18 Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  # ---------------------------------------------------------------------------
+  # W19 - Door Controls & Bay Automation
+  # ---------------------------------------------------------------------------
+  w19_b_01_door_control:
+    name: "W19 B-01 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w19_b_01_automation_state:
+    name: "W19 B-01 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w19_b_02_door_control:
+    name: "W19 B-02 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w19_b_02_automation_state:
+    name: "W19 B-02 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w19_b_03_door_control:
+    name: "W19 B-03 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w19_b_03_automation_state:
+    name: "W19 B-03 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w19_b_04_door_control:
+    name: "W19 B-04 Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
+  w19_b_04_automation_state:
+    name: "W19 B-04 Automation State"
+    options: ["Off", "Flush", "Pond", "Drain", "Saturate", "Maintain"]
+    initial: "Off"
+    icon: mdi:auto-mode
+
+  w19_drain_door_control:
+    name: "W19 Drain Door Control"
+    options: ["Close", "Open", "HoldOne", "HoldTwo"]
+    initial: "Close"
+    icon: mdi:door
+
 input_text:
   pwm_new_paddock_name:
     name: "PWM New Paddock Name"
@@ -201,6 +669,244 @@ input_boolean:
     name: "PWM New Paddock Individual Mode"
     initial: false
     icon: mdi:account-details
+
+  # ---------------------------------------------------------------------------
+  # FLUSH ACTIVE FLAGS - Track flush state per bay
+  # ---------------------------------------------------------------------------
+  # TEST FIELD
+  pwm_test_field_b_01_flush_active:
+    name: "Test Field B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_test_field_b_02_flush_active:
+    name: "Test Field B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_test_field_b_03_flush_active:
+    name: "Test Field B-03 Flush Active"
+    icon: mdi:water-sync
+  pwm_test_field_b_04_flush_active:
+    name: "Test Field B-04 Flush Active"
+    icon: mdi:water-sync
+
+  # SW4-E
+  pwm_sw4_e_b_01_flush_active:
+    name: "SW4-E B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw4_e_b_02_flush_active:
+    name: "SW4-E B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw4_e_b_03_flush_active:
+    name: "SW4-E B-03 Flush Active"
+    icon: mdi:water-sync
+
+  # SW4-W
+  pwm_sw4_w_b_01_flush_active:
+    name: "SW4-W B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw4_w_b_02_flush_active:
+    name: "SW4-W B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw4_w_b_03_flush_active:
+    name: "SW4-W B-03 Flush Active"
+    icon: mdi:water-sync
+
+  # SW5
+  pwm_sw5_b_01_flush_active:
+    name: "SW5 B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw5_b_02_flush_active:
+    name: "SW5 B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw5_b_03_flush_active:
+    name: "SW5 B-03 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw5_b_04_flush_active:
+    name: "SW5 B-04 Flush Active"
+    icon: mdi:water-sync
+  pwm_sw5_b_05_flush_active:
+    name: "SW5 B-05 Flush Active"
+    icon: mdi:water-sync
+
+  # W17
+  pwm_w17_b_01_flush_active:
+    name: "W17 B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_w17_b_02_flush_active:
+    name: "W17 B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_w17_b_03_flush_active:
+    name: "W17 B-03 Flush Active"
+    icon: mdi:water-sync
+  pwm_w17_b_04_flush_active:
+    name: "W17 B-04 Flush Active"
+    icon: mdi:water-sync
+  pwm_w17_b_05_flush_active:
+    name: "W17 B-05 Flush Active"
+    icon: mdi:water-sync
+
+  # W18
+  pwm_w18_b_01_flush_active:
+    name: "W18 B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_w18_b_02_flush_active:
+    name: "W18 B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_w18_b_03_flush_active:
+    name: "W18 B-03 Flush Active"
+    icon: mdi:water-sync
+  pwm_w18_b_04_flush_active:
+    name: "W18 B-04 Flush Active"
+    icon: mdi:water-sync
+  pwm_w18_b_05_flush_active:
+    name: "W18 B-05 Flush Active"
+    icon: mdi:water-sync
+
+  # W19
+  pwm_w19_b_01_flush_active:
+    name: "W19 B-01 Flush Active"
+    icon: mdi:water-sync
+  pwm_w19_b_02_flush_active:
+    name: "W19 B-02 Flush Active"
+    icon: mdi:water-sync
+  pwm_w19_b_03_flush_active:
+    name: "W19 B-03 Flush Active"
+    icon: mdi:water-sync
+  pwm_w19_b_04_flush_active:
+    name: "W19 B-04 Flush Active"
+    icon: mdi:water-sync
+
+# -----------------------------------------------------------------------------
+# TIMERS - Flush hold timers per bay
+# -----------------------------------------------------------------------------
+timer:
+  # TEST FIELD
+  pwm_test_field_b_01_flush:
+    name: "Test Field B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_test_field_b_02_flush:
+    name: "Test Field B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_test_field_b_03_flush:
+    name: "Test Field B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_test_field_b_04_flush:
+    name: "Test Field B-04 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+
+  # SW4-E
+  pwm_sw4_e_b_01_flush:
+    name: "SW4-E B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw4_e_b_02_flush:
+    name: "SW4-E B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw4_e_b_03_flush:
+    name: "SW4-E B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+
+  # SW4-W
+  pwm_sw4_w_b_01_flush:
+    name: "SW4-W B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw4_w_b_02_flush:
+    name: "SW4-W B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw4_w_b_03_flush:
+    name: "SW4-W B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+
+  # SW5
+  pwm_sw5_b_01_flush:
+    name: "SW5 B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw5_b_02_flush:
+    name: "SW5 B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw5_b_03_flush:
+    name: "SW5 B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw5_b_04_flush:
+    name: "SW5 B-04 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_sw5_b_05_flush:
+    name: "SW5 B-05 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+
+  # W17
+  pwm_w17_b_01_flush:
+    name: "W17 B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w17_b_02_flush:
+    name: "W17 B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w17_b_03_flush:
+    name: "W17 B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w17_b_04_flush:
+    name: "W17 B-04 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w17_b_05_flush:
+    name: "W17 B-05 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+
+  # W18
+  pwm_w18_b_01_flush:
+    name: "W18 B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w18_b_02_flush:
+    name: "W18 B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w18_b_03_flush:
+    name: "W18 B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w18_b_04_flush:
+    name: "W18 B-04 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w18_b_05_flush:
+    name: "W18 B-05 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+
+  # W19
+  pwm_w19_b_01_flush:
+    name: "W19 B-01 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w19_b_02_flush:
+    name: "W19 B-02 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w19_b_03_flush:
+    name: "W19 B-03 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
+  pwm_w19_b_04_flush:
+    name: "W19 B-04 Flush Timer"
+    duration: "01:00:00"
+    icon: mdi:timer
 
 # -----------------------------------------------------------------------------
 # TEMPLATE SENSORS - Extract data from main sensor
@@ -293,6 +999,541 @@ template:
             {% else %}
               none
             {% endfor %}
+
+      # -------------------------------------------------------------------------
+      # PER-BAY WATER DEPTH SENSORS
+      # Reads from ESPHome sensor and applies water_level_offset
+      # Pattern: sensor.<device>_<device>_1m_water_depth
+      # -------------------------------------------------------------------------
+
+      # TEST FIELD
+      - name: "PWM Test Field B-01 Water Depth"
+        unique_id: pwm_test_field_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('test_field_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM Test Field B-02 Water Depth"
+        unique_id: pwm_test_field_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('test_field_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM Test Field B-03 Water Depth"
+        unique_id: pwm_test_field_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('test_field_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM Test Field B-04 Water Depth"
+        unique_id: pwm_test_field_b_04_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('test_field_b_04', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      # SW4-E
+      - name: "PWM SW4-E B-01 Water Depth"
+        unique_id: pwm_sw4_e_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw4_e_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW4-E B-02 Water Depth"
+        unique_id: pwm_sw4_e_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw4_e_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW4-E B-03 Water Depth"
+        unique_id: pwm_sw4_e_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw4_e_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      # SW4-W
+      - name: "PWM SW4-W B-01 Water Depth"
+        unique_id: pwm_sw4_w_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw4_w_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW4-W B-02 Water Depth"
+        unique_id: pwm_sw4_w_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw4_w_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW4-W B-03 Water Depth"
+        unique_id: pwm_sw4_w_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw4_w_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      # SW5
+      - name: "PWM SW5 B-01 Water Depth"
+        unique_id: pwm_sw5_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw5_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW5 B-02 Water Depth"
+        unique_id: pwm_sw5_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw5_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW5 B-03 Water Depth"
+        unique_id: pwm_sw5_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw5_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW5 B-04 Water Depth"
+        unique_id: pwm_sw5_b_04_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw5_b_04', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM SW5 B-05 Water Depth"
+        unique_id: pwm_sw5_b_05_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('sw5_b_05', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      # W17
+      - name: "PWM W17 B-01 Water Depth"
+        unique_id: pwm_w17_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w17_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W17 B-02 Water Depth"
+        unique_id: pwm_w17_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w17_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W17 B-03 Water Depth"
+        unique_id: pwm_w17_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w17_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W17 B-04 Water Depth"
+        unique_id: pwm_w17_b_04_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w17_b_04', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W17 B-05 Water Depth"
+        unique_id: pwm_w17_b_05_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w17_b_05', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      # W18
+      - name: "PWM W18 B-01 Water Depth"
+        unique_id: pwm_w18_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w18_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W18 B-02 Water Depth"
+        unique_id: pwm_w18_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w18_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W18 B-03 Water Depth"
+        unique_id: pwm_w18_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w18_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W18 B-04 Water Depth"
+        unique_id: pwm_w18_b_04_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w18_b_04', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W18 B-05 Water Depth"
+        unique_id: pwm_w18_b_05_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w18_b_05', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      # W19
+      - name: "PWM W19 B-01 Water Depth"
+        unique_id: pwm_w19_b_01_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w19_b_01', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W19 B-02 Water Depth"
+        unique_id: pwm_w19_b_02_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w19_b_02', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W19 B-03 Water Depth"
+        unique_id: pwm_w19_b_03_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w19_b_03', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
+
+      - name: "PWM W19 B-04 Water Depth"
+        unique_id: pwm_w19_b_04_water_depth
+        state: >-
+          {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+          {% set bay = bays.get('w19_b_04', {}) %}
+          {% set device = bay.get('level_sensor', '') %}
+          {% if device %}
+            {% set sensor_id = 'sensor.' ~ device | replace(' ', '_') | lower ~ '_' ~ device | replace(' ', '_') | lower ~ '_1m_water_depth' %}
+            {% set raw = states(sensor_id) %}
+            {% if raw not in ['unknown', 'unavailable'] %}
+              {% set offset = bay.get('settings', {}).get('water_level_offset', 0) %}
+              {{ (raw | float(0) - offset) | round(1) }}
+            {% else %}unavailable{% endif %}
+          {% else %}unavailable{% endif %}
+        unit_of_measurement: "cm"
+        icon: mdi:water
+        device_class: distance
 
 # -----------------------------------------------------------------------------
 # SCRIPTS - UI Actions
@@ -554,4 +1795,3497 @@ script:
           options: >-
             {% set names = state_attr('sensor.pwm_data', 'paddock_names') or [] %}
             {{ ['Select Paddock'] + names }}
+    mode: single
+
+  # ---------------------------------------------------------------------------
+  # DOOR CONTROL SCRIPTS - Interface with ESPHome devices
+  # ---------------------------------------------------------------------------
+  pwm_set_door:
+    alias: "PWM Set Door State"
+    description: "Set a door/valve to Open or Close via ESPHome input_select"
+    fields:
+      device:
+        description: "ESPHome device name"
+        required: true
+        selector:
+          text:
+      state:
+        description: "Target state: Open or Close"
+        required: true
+        selector:
+          select:
+            options:
+              - Open
+              - Close
+    sequence:
+      # ESPHome uses input_select.<device>_actuator_state
+      - action: input_select.select_option
+        target:
+          entity_id: "input_select.{{ device }}_actuator_state"
+        data:
+          option: "{{ state }}"
+    mode: queued
+    max: 20
+
+  pwm_open_supply:
+    alias: "PWM Open Supply Door"
+    description: "Open the supply door for a bay"
+    fields:
+      bay_id:
+        description: "Bay ID (e.g., sw5_b_01)"
+        required: true
+        selector:
+          text:
+    sequence:
+      - variables:
+          bays: "{{ state_attr('sensor.pwm_data', 'bays') or {} }}"
+          bay: "{{ bays.get(bay_id, {}) }}"
+          device: "{{ bay.get('supply_1', {}).get('device', '') }}"
+      - condition: template
+        value_template: "{{ device != '' and device is not none }}"
+      - action: script.pwm_set_door
+        data:
+          device: "{{ device }}"
+          state: "Open"
+    mode: queued
+    max: 20
+
+  pwm_close_supply:
+    alias: "PWM Close Supply Door"
+    description: "Close the supply door for a bay"
+    fields:
+      bay_id:
+        description: "Bay ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - variables:
+          bays: "{{ state_attr('sensor.pwm_data', 'bays') or {} }}"
+          bay: "{{ bays.get(bay_id, {}) }}"
+          device: "{{ bay.get('supply_1', {}).get('device', '') }}"
+      - condition: template
+        value_template: "{{ device != '' and device is not none }}"
+      - action: script.pwm_set_door
+        data:
+          device: "{{ device }}"
+          state: "Close"
+    mode: queued
+    max: 20
+
+  pwm_open_drain:
+    alias: "PWM Open Drain Door"
+    description: "Open the drain door for a paddock's last bay"
+    fields:
+      paddock_id:
+        description: "Paddock ID (e.g., sw5)"
+        required: true
+        selector:
+          text:
+    sequence:
+      - variables:
+          bays: "{{ state_attr('sensor.pwm_data', 'bays') or {} }}"
+          # Find the last bay with drain_1 device
+          drain_device: >-
+            {% for bid, b in bays.items() if b.paddock_id == paddock_id and b.get('is_last_bay') %}
+              {{ b.get('drain_1', {}).get('device', '') }}
+            {% endfor %}
+      - condition: template
+        value_template: "{{ drain_device != '' and drain_device is not none }}"
+      - action: script.pwm_set_door
+        data:
+          device: "{{ drain_device | trim }}"
+          state: "Open"
+    mode: queued
+    max: 10
+
+  pwm_close_drain:
+    alias: "PWM Close Drain Door"
+    description: "Close the drain door for a paddock's last bay"
+    fields:
+      paddock_id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - variables:
+          bays: "{{ state_attr('sensor.pwm_data', 'bays') or {} }}"
+          drain_device: >-
+            {% for bid, b in bays.items() if b.paddock_id == paddock_id and b.get('is_last_bay') %}
+              {{ b.get('drain_1', {}).get('device', '') }}
+            {% endfor %}
+      - condition: template
+        value_template: "{{ drain_device != '' and drain_device is not none }}"
+      - action: script.pwm_set_door
+        data:
+          device: "{{ drain_device | trim }}"
+          state: "Close"
+    mode: queued
+    max: 10
+
+  pwm_start_flush:
+    alias: "PWM Start Flush for Bay"
+    description: "Start flush cycle for a specific bay"
+    fields:
+      paddock_id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+      bay_id:
+        description: "Bay ID"
+        required: true
+        selector:
+          text:
+      bay_num:
+        description: "Bay number (01, 02, etc.)"
+        required: true
+        selector:
+          text:
+    sequence:
+      - variables:
+          bays: "{{ state_attr('sensor.pwm_data', 'bays') or {} }}"
+          bay: "{{ bays.get(bay_id, {}) }}"
+          flush_time: "{{ bay.get('settings', {}).get('flush_time_on_water', 3600) }}"
+          timer_id: "timer.pwm_{{ paddock_id }}_b_{{ bay_num }}_flush"
+          flush_flag: "input_boolean.pwm_{{ paddock_id }}_b_{{ bay_num }}_flush_active"
+      # Turn on flush_active flag
+      - action: input_boolean.turn_on
+        target:
+          entity_id: "{{ flush_flag }}"
+      # Start the flush timer with bay's configured duration
+      - action: timer.start
+        target:
+          entity_id: "{{ timer_id }}"
+        data:
+          duration: "{{ flush_time }}"
+    mode: queued
+    max: 20
+
+  pwm_stop_flush:
+    alias: "PWM Stop Flush for Bay"
+    description: "Stop flush cycle for a specific bay"
+    fields:
+      paddock_id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+      bay_num:
+        description: "Bay number (01, 02, etc.)"
+        required: true
+        selector:
+          text:
+    sequence:
+      - variables:
+          timer_id: "timer.pwm_{{ paddock_id }}_b_{{ bay_num }}_flush"
+          flush_flag: "input_boolean.pwm_{{ paddock_id }}_b_{{ bay_num }}_flush_active"
+      # Cancel the timer
+      - action: timer.cancel
+        target:
+          entity_id: "{{ timer_id }}"
+      # Turn off flush_active flag
+      - action: input_boolean.turn_off
+        target:
+          entity_id: "{{ flush_flag }}"
+    mode: queued
+    max: 20
+
+# -----------------------------------------------------------------------------
+# AUTOMATIONS - Irrigation control logic
+# -----------------------------------------------------------------------------
+automation:
+  # ---------------------------------------------------------------------------
+  # STATE PROPAGATION - Paddock state to all bays (when not individual mode)
+  # ---------------------------------------------------------------------------
+  - id: pwm_propagate_test_field_state
+    alias: "PWM Propagate Test Field State"
+    description: "Propagate paddock state to all bays"
+    trigger:
+      - platform: state
+        entity_id: input_select.test_field_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('test_field', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.test_field_b_01_automation_state
+            - input_select.test_field_b_02_automation_state
+            - input_select.test_field_b_03_automation_state
+            - input_select.test_field_b_04_automation_state
+        data:
+          option: "{{ states('input_select.test_field_automation_state') }}"
+    mode: single
+
+  - id: pwm_propagate_sw4_e_state
+    alias: "PWM Propagate SW4-E State"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw4_e_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('sw4_e', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.sw4_e_b_01_automation_state
+            - input_select.sw4_e_b_02_automation_state
+            - input_select.sw4_e_b_03_automation_state
+        data:
+          option: "{{ states('input_select.sw4_e_automation_state') }}"
+    mode: single
+
+  - id: pwm_propagate_sw4_w_state
+    alias: "PWM Propagate SW4-W State"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw4_w_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('sw4_w', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.sw4_w_b_01_automation_state
+            - input_select.sw4_w_b_02_automation_state
+            - input_select.sw4_w_b_03_automation_state
+        data:
+          option: "{{ states('input_select.sw4_w_automation_state') }}"
+    mode: single
+
+  - id: pwm_propagate_sw5_state
+    alias: "PWM Propagate SW5 State"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw5_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('sw5', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.sw5_b_01_automation_state
+            - input_select.sw5_b_02_automation_state
+            - input_select.sw5_b_03_automation_state
+            - input_select.sw5_b_04_automation_state
+            - input_select.sw5_b_05_automation_state
+        data:
+          option: "{{ states('input_select.sw5_automation_state') }}"
+    mode: single
+
+  - id: pwm_propagate_w17_state
+    alias: "PWM Propagate W17 State"
+    trigger:
+      - platform: state
+        entity_id: input_select.w17_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('w17', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.w17_b_01_automation_state
+            - input_select.w17_b_02_automation_state
+            - input_select.w17_b_03_automation_state
+            - input_select.w17_b_04_automation_state
+            - input_select.w17_b_05_automation_state
+        data:
+          option: "{{ states('input_select.w17_automation_state') }}"
+    mode: single
+
+  - id: pwm_propagate_w18_state
+    alias: "PWM Propagate W18 State"
+    trigger:
+      - platform: state
+        entity_id: input_select.w18_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('w18', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.w18_b_01_automation_state
+            - input_select.w18_b_02_automation_state
+            - input_select.w18_b_03_automation_state
+            - input_select.w18_b_04_automation_state
+            - input_select.w18_b_05_automation_state
+        data:
+          option: "{{ states('input_select.w18_automation_state') }}"
+    mode: single
+
+  - id: pwm_propagate_w19_state
+    alias: "PWM Propagate W19 State"
+    trigger:
+      - platform: state
+        entity_id: input_select.w19_automation_state
+    condition:
+      - condition: template
+        value_template: >-
+          {% set paddocks = state_attr('sensor.pwm_data', 'paddocks') or {} %}
+          {% set p = paddocks.get('w19', {}) %}
+          {{ not p.get('automation_state_individual', false) }}
+    action:
+      - action: input_select.select_option
+        target:
+          entity_id:
+            - input_select.w19_b_01_automation_state
+            - input_select.w19_b_02_automation_state
+            - input_select.w19_b_03_automation_state
+            - input_select.w19_b_04_automation_state
+        data:
+          option: "{{ states('input_select.w19_automation_state') }}"
+    mode: single
+
+  # ---------------------------------------------------------------------------
+  # FLUSH MODE - Fill bay, hold water for timer duration, then release
+  # Triggers on water depth changes and automation state changes
+  # ---------------------------------------------------------------------------
+  - id: pwm_flush_sw5_b_01
+    alias: "PWM Flush SW5 B-01"
+    description: "Flush automation for SW5 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_01_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_01_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw5_b_01_flush_active', 'on') }}"
+      - choose:
+          # Water level below minimum - need to fill
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_01"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          # Water level at or above minimum - start or continue flush timer
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_01"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw5"
+                  bay_id: "sw5_b_01"
+                  bay_num: "01"
+    mode: single
+
+  - id: pwm_flush_sw5_b_02
+    alias: "PWM Flush SW5 B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_02_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_02_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_02_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_02_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_02', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw5_b_02_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_02"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_02"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw5"
+                  bay_id: "sw5_b_02"
+                  bay_num: "02"
+    mode: single
+
+  - id: pwm_flush_sw5_b_03
+    alias: "PWM Flush SW5 B-03"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_03_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_03_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_03_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_03_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_03', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw5_b_03_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_03"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw5"
+                  bay_id: "sw5_b_03"
+                  bay_num: "03"
+    mode: single
+
+  - id: pwm_flush_sw5_b_04
+    alias: "PWM Flush SW5 B-04"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_04_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_04_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_04_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_04_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_04', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw5_b_04_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_04"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_04"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw5"
+                  bay_id: "sw5_b_04"
+                  bay_num: "04"
+    mode: single
+
+  - id: pwm_flush_sw5_b_05
+    alias: "PWM Flush SW5 B-05 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_05_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_05_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_05_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_05_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_05', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw5_b_05_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_05"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_05"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw5"
+                  bay_id: "sw5_b_05"
+                  bay_num: "05"
+    mode: single
+
+  # ---------------------------------------------------------------------------
+  # FLUSH TIMER FINISHED - Release water to next bay
+  # ---------------------------------------------------------------------------
+  - id: pwm_flush_timer_finished_sw5_b_01
+    alias: "PWM Flush Timer Finished SW5 B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw5_b_01_flush
+    action:
+      # Turn off flush_active
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw5_b_01_flush_active
+      # Open supply to release water to next bay
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw5_b_01"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw5_b_02
+    alias: "PWM Flush Timer Finished SW5 B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw5_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw5_b_02_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw5_b_02"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw5_b_03
+    alias: "PWM Flush Timer Finished SW5 B-03"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw5_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw5_b_03_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw5_b_03"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw5_b_04
+    alias: "PWM Flush Timer Finished SW5 B-04"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw5_b_04_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw5_b_04_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw5_b_04"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw5_b_05
+    alias: "PWM Flush Timer Finished SW5 B-05 (Last Bay)"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw5_b_05_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw5_b_05_flush_active
+      # Last bay - open drain to release water out of paddock
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "sw5"
+      # Set paddock back to Off when last bay flush completes
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.sw5_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # ---------------------------------------------------------------------------
+  # POND MODE - Maintain water level between min and max
+  # ---------------------------------------------------------------------------
+  - id: pwm_pond_sw5_b_01
+    alias: "PWM Pond SW5 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_01_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_01_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_01', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          # Below minimum - need to fill
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_01"
+          # At optimal level - close supply
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_01"
+          # Above maximum - release excess (open supply to pass water to next bay)
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_01"
+    mode: single
+
+  - id: pwm_pond_sw5_b_05
+    alias: "PWM Pond SW5 B-05 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_05_water_depth
+      - platform: state
+        entity_id: input_select.sw5_b_05_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_b_05_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_05_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_05', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw5_b_05', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          # Below minimum - need to fill, close drain
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw5_b_05"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          # At optimal level - close supply, close drain
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_05"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+          # Above maximum - close supply, open drain
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_05"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "sw5"
+    mode: single
+
+  # ---------------------------------------------------------------------------
+  # DRAIN MODE - Drain water below threshold
+  # ---------------------------------------------------------------------------
+  - id: pwm_drain_sw5
+    alias: "PWM Drain SW5"
+    description: "Drain mode for SW5 paddock"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw5_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_sw5_b_05_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.sw5_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw5_b_05_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          # Water still present - open drain
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              # Close all supplies
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_03"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_04"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw5_b_05"
+              # Open drain
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "sw5"
+          # Drained below threshold - complete
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw5"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.sw5_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # ---------------------------------------------------------------------------
+  # OFF MODE - Stop all automations when set to Off
+  # ---------------------------------------------------------------------------
+  - id: pwm_off_sw5
+    alias: "PWM Off SW5"
+    description: "Stop automations when SW5 set to Off"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw5_automation_state
+        to: "Off"
+    action:
+      # Cancel all flush timers
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_sw5_b_01_flush
+            - timer.pwm_sw5_b_02_flush
+            - timer.pwm_sw5_b_03_flush
+            - timer.pwm_sw5_b_04_flush
+            - timer.pwm_sw5_b_05_flush
+      # Turn off all flush_active flags
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_sw5_b_01_flush_active
+            - input_boolean.pwm_sw5_b_02_flush_active
+            - input_boolean.pwm_sw5_b_03_flush_active
+            - input_boolean.pwm_sw5_b_04_flush_active
+            - input_boolean.pwm_sw5_b_05_flush_active
+      # Close all doors
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw5_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw5_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw5_b_03"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw5_b_04"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw5_b_05"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "sw5"
+    mode: single
+
+  # ===========================================================================
+  # TEST FIELD AUTOMATIONS (4 bays)
+  # ===========================================================================
+
+  # FLUSH MODE - Test Field
+  - id: pwm_flush_test_field_b_01
+    alias: "PWM Flush Test Field B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_01_water_depth
+      - platform: state
+        entity_id: input_select.test_field_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_b_01_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_test_field_b_01_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_01"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_01"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "test_field"
+                  bay_id: "test_field_b_01"
+                  bay_num: "01"
+    mode: single
+
+  - id: pwm_flush_test_field_b_02
+    alias: "PWM Flush Test Field B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_02_water_depth
+      - platform: state
+        entity_id: input_select.test_field_b_02_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_b_02_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_02_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_02', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_test_field_b_02_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_02"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_02"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "test_field"
+                  bay_id: "test_field_b_02"
+                  bay_num: "02"
+    mode: single
+
+  - id: pwm_flush_test_field_b_03
+    alias: "PWM Flush Test Field B-03"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_03_water_depth
+      - platform: state
+        entity_id: input_select.test_field_b_03_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_b_03_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_03_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_03', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_test_field_b_03_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_03"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "test_field"
+                  bay_id: "test_field_b_03"
+                  bay_num: "03"
+    mode: single
+
+  - id: pwm_flush_test_field_b_04
+    alias: "PWM Flush Test Field B-04 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_04_water_depth
+      - platform: state
+        entity_id: input_select.test_field_b_04_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_b_04_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_04_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_04', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_test_field_b_04_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_04"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_04"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "test_field"
+                  bay_id: "test_field_b_04"
+                  bay_num: "04"
+    mode: single
+
+  # FLUSH TIMER FINISHED - Test Field
+  - id: pwm_flush_timer_finished_test_field_b_01
+    alias: "PWM Flush Timer Finished Test Field B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_test_field_b_01_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_test_field_b_01_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "test_field_b_01"
+    mode: single
+
+  - id: pwm_flush_timer_finished_test_field_b_02
+    alias: "PWM Flush Timer Finished Test Field B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_test_field_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_test_field_b_02_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "test_field_b_02"
+    mode: single
+
+  - id: pwm_flush_timer_finished_test_field_b_03
+    alias: "PWM Flush Timer Finished Test Field B-03"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_test_field_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_test_field_b_03_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "test_field_b_03"
+    mode: single
+
+  - id: pwm_flush_timer_finished_test_field_b_04
+    alias: "PWM Flush Timer Finished Test Field B-04 (Last Bay)"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_test_field_b_04_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_test_field_b_04_flush_active
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "test_field"
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.test_field_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # POND MODE - Test Field
+  - id: pwm_pond_test_field_b_01
+    alias: "PWM Pond Test Field B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_01_water_depth
+      - platform: state
+        entity_id: input_select.test_field_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_b_01_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_01', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_01"
+    mode: single
+
+  - id: pwm_pond_test_field_b_04
+    alias: "PWM Pond Test Field B-04 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_04_water_depth
+      - platform: state
+        entity_id: input_select.test_field_b_04_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_b_04_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_04_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_04', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('test_field_b_04', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "test_field_b_04"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_04"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_04"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "test_field"
+    mode: single
+
+  # DRAIN MODE - Test Field
+  - id: pwm_drain_test_field
+    alias: "PWM Drain Test Field"
+    trigger:
+      - platform: state
+        entity_id: input_select.test_field_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_test_field_b_04_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.test_field_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_test_field_b_04_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_03"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "test_field_b_04"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "test_field"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "test_field"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.test_field_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # OFF MODE - Test Field
+  - id: pwm_off_test_field
+    alias: "PWM Off Test Field"
+    trigger:
+      - platform: state
+        entity_id: input_select.test_field_automation_state
+        to: "Off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_test_field_b_01_flush
+            - timer.pwm_test_field_b_02_flush
+            - timer.pwm_test_field_b_03_flush
+            - timer.pwm_test_field_b_04_flush
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_test_field_b_01_flush_active
+            - input_boolean.pwm_test_field_b_02_flush_active
+            - input_boolean.pwm_test_field_b_03_flush_active
+            - input_boolean.pwm_test_field_b_04_flush_active
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "test_field_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "test_field_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "test_field_b_03"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "test_field_b_04"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "test_field"
+    mode: single
+
+  # ===========================================================================
+  # SW4-E AUTOMATIONS (3 bays)
+  # ===========================================================================
+
+  # FLUSH MODE - SW4-E
+  - id: pwm_flush_sw4_e_b_01
+    alias: "PWM Flush SW4-E B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_e_b_01_water_depth
+      - platform: state
+        entity_id: input_select.sw4_e_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_e_b_01_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_e_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw4_e_b_01_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_e_b_01"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_e"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_01"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw4_e"
+                  bay_id: "sw4_e_b_01"
+                  bay_num: "01"
+    mode: single
+
+  - id: pwm_flush_sw4_e_b_02
+    alias: "PWM Flush SW4-E B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_e_b_02_water_depth
+      - platform: state
+        entity_id: input_select.sw4_e_b_02_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_e_b_02_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_e_b_02_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_02', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw4_e_b_02_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_e_b_02"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_e"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_02"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw4_e"
+                  bay_id: "sw4_e_b_02"
+                  bay_num: "02"
+    mode: single
+
+  - id: pwm_flush_sw4_e_b_03
+    alias: "PWM Flush SW4-E B-03 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_e_b_03_water_depth
+      - platform: state
+        entity_id: input_select.sw4_e_b_03_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_e_b_03_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_e_b_03_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_03', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw4_e_b_03_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_e_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_e"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_03"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw4_e"
+                  bay_id: "sw4_e_b_03"
+                  bay_num: "03"
+    mode: single
+
+  # FLUSH TIMER FINISHED - SW4-E
+  - id: pwm_flush_timer_finished_sw4_e_b_01
+    alias: "PWM Flush Timer Finished SW4-E B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw4_e_b_01_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw4_e_b_01_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw4_e_b_01"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw4_e_b_02
+    alias: "PWM Flush Timer Finished SW4-E B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw4_e_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw4_e_b_02_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw4_e_b_02"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw4_e_b_03
+    alias: "PWM Flush Timer Finished SW4-E B-03 (Last Bay)"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw4_e_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw4_e_b_03_flush_active
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "sw4_e"
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.sw4_e_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # POND MODE - SW4-E
+  - id: pwm_pond_sw4_e_b_01
+    alias: "PWM Pond SW4-E B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_e_b_01_water_depth
+      - platform: state
+        entity_id: input_select.sw4_e_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_e_b_01_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_e_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_01', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_e_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_e_b_01"
+    mode: single
+
+  - id: pwm_pond_sw4_e_b_03
+    alias: "PWM Pond SW4-E B-03 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_e_b_03_water_depth
+      - platform: state
+        entity_id: input_select.sw4_e_b_03_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_e_b_03_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_e_b_03_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_03', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_e_b_03', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_e_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_e"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_e"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_03"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "sw4_e"
+    mode: single
+
+  # DRAIN MODE - SW4-E
+  - id: pwm_drain_sw4_e
+    alias: "PWM Drain SW4-E"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw4_e_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_sw4_e_b_03_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_e_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_e_b_03_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_e_b_03"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "sw4_e"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_e"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.sw4_e_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # OFF MODE - SW4-E
+  - id: pwm_off_sw4_e
+    alias: "PWM Off SW4-E"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw4_e_automation_state
+        to: "Off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_sw4_e_b_01_flush
+            - timer.pwm_sw4_e_b_02_flush
+            - timer.pwm_sw4_e_b_03_flush
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_sw4_e_b_01_flush_active
+            - input_boolean.pwm_sw4_e_b_02_flush_active
+            - input_boolean.pwm_sw4_e_b_03_flush_active
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw4_e_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw4_e_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw4_e_b_03"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "sw4_e"
+    mode: single
+
+  # ===========================================================================
+  # SW4-W AUTOMATIONS (3 bays)
+  # ===========================================================================
+
+  # FLUSH MODE - SW4-W
+  - id: pwm_flush_sw4_w_b_01
+    alias: "PWM Flush SW4-W B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_w_b_01_water_depth
+      - platform: state
+        entity_id: input_select.sw4_w_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_w_b_01_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_w_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw4_w_b_01_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_w_b_01"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_w"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_01"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw4_w"
+                  bay_id: "sw4_w_b_01"
+                  bay_num: "01"
+    mode: single
+
+  - id: pwm_flush_sw4_w_b_02
+    alias: "PWM Flush SW4-W B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_w_b_02_water_depth
+      - platform: state
+        entity_id: input_select.sw4_w_b_02_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_w_b_02_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_w_b_02_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_02', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw4_w_b_02_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_w_b_02"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_w"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_02"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw4_w"
+                  bay_id: "sw4_w_b_02"
+                  bay_num: "02"
+    mode: single
+
+  - id: pwm_flush_sw4_w_b_03
+    alias: "PWM Flush SW4-W B-03 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_w_b_03_water_depth
+      - platform: state
+        entity_id: input_select.sw4_w_b_03_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_w_b_03_automation_state
+        state: "Flush"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_w_b_03_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_03', {}).get('settings', {}).get('water_level_min', 5) }}
+          flush_active: "{{ is_state('input_boolean.pwm_sw4_w_b_03_flush_active', 'on') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_w_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_w"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and not flush_active }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_03"
+              - action: script.pwm_start_flush
+                data:
+                  paddock_id: "sw4_w"
+                  bay_id: "sw4_w_b_03"
+                  bay_num: "03"
+    mode: single
+
+  # FLUSH TIMER FINISHED - SW4-W
+  - id: pwm_flush_timer_finished_sw4_w_b_01
+    alias: "PWM Flush Timer Finished SW4-W B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw4_w_b_01_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw4_w_b_01_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw4_w_b_01"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw4_w_b_02
+    alias: "PWM Flush Timer Finished SW4-W B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw4_w_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw4_w_b_02_flush_active
+      - action: script.pwm_open_supply
+        data:
+          bay_id: "sw4_w_b_02"
+    mode: single
+
+  - id: pwm_flush_timer_finished_sw4_w_b_03
+    alias: "PWM Flush Timer Finished SW4-W B-03 (Last Bay)"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_sw4_w_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_sw4_w_b_03_flush_active
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "sw4_w"
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.sw4_w_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # POND MODE - SW4-W
+  - id: pwm_pond_sw4_w_b_01
+    alias: "PWM Pond SW4-W B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_w_b_01_water_depth
+      - platform: state
+        entity_id: input_select.sw4_w_b_01_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_w_b_01_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_w_b_01_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_01', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_01', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_w_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_w_b_01"
+    mode: single
+
+  - id: pwm_pond_sw4_w_b_03
+    alias: "PWM Pond SW4-W B-03 (Last Bay)"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_sw4_w_b_03_water_depth
+      - platform: state
+        entity_id: input_select.sw4_w_b_03_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_w_b_03_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_w_b_03_water_depth') | float(0) }}"
+          min_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_03', {}).get('settings', {}).get('water_level_min', 5) }}
+          max_level: >-
+            {% set bays = state_attr('sensor.pwm_data', 'bays') or {} %}
+            {{ bays.get('sw4_w_b_03', {}).get('settings', {}).get('water_level_max', 15) }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < min_level }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "sw4_w_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_w"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= min_level and water_level <= max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_03"
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_w"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > max_level }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_03"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "sw4_w"
+    mode: single
+
+  # DRAIN MODE - SW4-W
+  - id: pwm_drain_sw4_w
+    alias: "PWM Drain SW4-W"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw4_w_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_sw4_w_b_03_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.sw4_w_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_sw4_w_b_03_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "sw4_w_b_03"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "sw4_w"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "sw4_w"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.sw4_w_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # OFF MODE - SW4-W
+  - id: pwm_off_sw4_w
+    alias: "PWM Off SW4-W"
+    trigger:
+      - platform: state
+        entity_id: input_select.sw4_w_automation_state
+        to: "Off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_sw4_w_b_01_flush
+            - timer.pwm_sw4_w_b_02_flush
+            - timer.pwm_sw4_w_b_03_flush
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_sw4_w_b_01_flush_active
+            - input_boolean.pwm_sw4_w_b_02_flush_active
+            - input_boolean.pwm_sw4_w_b_03_flush_active
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw4_w_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw4_w_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "sw4_w_b_03"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "sw4_w"
+    mode: single
+
+  # ============================================================================
+  # W17 AUTOMATIONS (5 bays: B-01 through B-05, B-05 is last bay with drain)
+  # Special: W17 B-01 has NML spur (supply_2), W17 B-03 has Channel Supply (supply_2)
+  # ============================================================================
+
+  # FLUSH MODE - W17 B-01
+  - id: pwm_flush_w17_b_01
+    alias: "PWM Flush W17 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_01_water_depth
+      - platform: state
+        entity_id: input_select.w17_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_01_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_01_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_01.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w17_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_01"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w17_b_01_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w17_b_01_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_01.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W17 B-02
+  - id: pwm_flush_w17_b_02
+    alias: "PWM Flush W17 B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_02_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w17_b_01_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_02_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_01_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_02_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_02.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w17_b_02"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_02"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w17_b_02_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w17_b_02_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_02.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W17 B-03
+  - id: pwm_flush_w17_b_03
+    alias: "PWM Flush W17 B-03"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_03_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w17_b_02_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_03_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_02_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_03_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_03.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w17_b_03"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_03"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w17_b_03_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w17_b_03_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_03.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W17 B-04
+  - id: pwm_flush_w17_b_04
+    alias: "PWM Flush W17 B-04"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_04_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w17_b_03_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_04_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_03_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_04_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_04.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w17_b_04"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_04"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w17_b_04_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w17_b_04_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_04.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W17 B-05 (Last bay - releases to drain)
+  - id: pwm_flush_w17_b_05
+    alias: "PWM Flush W17 B-05"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_05_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w17_b_04_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_05_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w17_b_04_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_05_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_05.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w17_b_05"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_05"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w17_b_05_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w17_b_05_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_05.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH TIMER FINISHED - W17 B-01
+  - id: pwm_flush_timer_w17_b_01
+    alias: "PWM Flush Timer W17 B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w17_b_01_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w17_b_01_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W17 B-02
+  - id: pwm_flush_timer_w17_b_02
+    alias: "PWM Flush Timer W17 B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w17_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w17_b_02_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W17 B-03
+  - id: pwm_flush_timer_w17_b_03
+    alias: "PWM Flush Timer W17 B-03"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w17_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w17_b_03_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W17 B-04
+  - id: pwm_flush_timer_w17_b_04
+    alias: "PWM Flush Timer W17 B-04"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w17_b_04_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w17_b_04_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W17 B-05 (Last bay - turns off paddock flush)
+  - id: pwm_flush_timer_w17_b_05
+    alias: "PWM Flush Timer W17 B-05"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w17_b_05_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w17_b_05_flush_active
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "w17"
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.w17_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # POND MODE - W17 B-01 (First bay - supply control)
+  - id: pwm_pond_w17_b_01
+    alias: "PWM Pond W17 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_01_water_depth
+      - platform: state
+        entity_id: input_select.w17_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_01_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_01.settings.water_level_min | default(5) }}"
+          water_max: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_01.settings.water_level_max | default(15) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w17_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min and water_level <= water_max }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > water_max }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_01"
+    mode: single
+
+  # POND MODE - W17 B-05 (Last bay - drain control)
+  - id: pwm_pond_w17_b_05
+    alias: "PWM Pond W17 B-05"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w17_b_05_water_depth
+      - platform: state
+        entity_id: input_select.w17_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_05_water_depth') | float(0) }}"
+          water_max: "{{ state_attr('sensor.pwm_data', 'bays').w17_b_05.settings.water_level_max | default(15) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > water_max }}"
+            sequence:
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "w17"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= water_max }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "w17"
+    mode: single
+
+  # DRAIN MODE - W17
+  - id: pwm_drain_w17
+    alias: "PWM Drain W17"
+    trigger:
+      - platform: state
+        entity_id: input_select.w17_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_w17_b_05_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.w17_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w17_b_05_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_03"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_04"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w17_b_05"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "w17"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "w17"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.w17_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # OFF MODE - W17
+  - id: pwm_off_w17
+    alias: "PWM Off W17"
+    trigger:
+      - platform: state
+        entity_id: input_select.w17_automation_state
+        to: "Off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_w17_b_01_flush
+            - timer.pwm_w17_b_02_flush
+            - timer.pwm_w17_b_03_flush
+            - timer.pwm_w17_b_04_flush
+            - timer.pwm_w17_b_05_flush
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_w17_b_01_flush_active
+            - input_boolean.pwm_w17_b_02_flush_active
+            - input_boolean.pwm_w17_b_03_flush_active
+            - input_boolean.pwm_w17_b_04_flush_active
+            - input_boolean.pwm_w17_b_05_flush_active
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w17_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w17_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w17_b_03"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w17_b_04"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w17_b_05"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "w17"
+    mode: single
+
+  # ============================================================================
+  # W18 AUTOMATIONS (5 bays: B-01 through B-05, B-05 is last bay with drain)
+  # ============================================================================
+
+  # FLUSH MODE - W18 B-01
+  - id: pwm_flush_w18_b_01
+    alias: "PWM Flush W18 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_01_water_depth
+      - platform: state
+        entity_id: input_select.w18_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_01_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_01_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_01.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w18_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_01"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w18_b_01_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w18_b_01_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_01.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W18 B-02
+  - id: pwm_flush_w18_b_02
+    alias: "PWM Flush W18 B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_02_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w18_b_01_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_02_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_01_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_02_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_02.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w18_b_02"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_02"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w18_b_02_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w18_b_02_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_02.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W18 B-03
+  - id: pwm_flush_w18_b_03
+    alias: "PWM Flush W18 B-03"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_03_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w18_b_02_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_03_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_02_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_03_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_03.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w18_b_03"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_03"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w18_b_03_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w18_b_03_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_03.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W18 B-04
+  - id: pwm_flush_w18_b_04
+    alias: "PWM Flush W18 B-04"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_04_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w18_b_03_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_04_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_03_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_04_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_04.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w18_b_04"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_04"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w18_b_04_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w18_b_04_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_04.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W18 B-05 (Last bay - releases to drain)
+  - id: pwm_flush_w18_b_05
+    alias: "PWM Flush W18 B-05"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_05_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w18_b_04_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_05_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w18_b_04_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_05_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_05.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w18_b_05"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_05"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w18_b_05_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w18_b_05_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_05.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH TIMER FINISHED - W18 B-01
+  - id: pwm_flush_timer_w18_b_01
+    alias: "PWM Flush Timer W18 B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w18_b_01_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w18_b_01_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W18 B-02
+  - id: pwm_flush_timer_w18_b_02
+    alias: "PWM Flush Timer W18 B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w18_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w18_b_02_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W18 B-03
+  - id: pwm_flush_timer_w18_b_03
+    alias: "PWM Flush Timer W18 B-03"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w18_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w18_b_03_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W18 B-04
+  - id: pwm_flush_timer_w18_b_04
+    alias: "PWM Flush Timer W18 B-04"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w18_b_04_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w18_b_04_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W18 B-05 (Last bay - turns off paddock flush)
+  - id: pwm_flush_timer_w18_b_05
+    alias: "PWM Flush Timer W18 B-05"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w18_b_05_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w18_b_05_flush_active
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "w18"
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.w18_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # POND MODE - W18 B-01 (First bay - supply control)
+  - id: pwm_pond_w18_b_01
+    alias: "PWM Pond W18 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_01_water_depth
+      - platform: state
+        entity_id: input_select.w18_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_01_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_01.settings.water_level_min | default(5) }}"
+          water_max: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_01.settings.water_level_max | default(15) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w18_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min and water_level <= water_max }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > water_max }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_01"
+    mode: single
+
+  # POND MODE - W18 B-05 (Last bay - drain control)
+  - id: pwm_pond_w18_b_05
+    alias: "PWM Pond W18 B-05"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w18_b_05_water_depth
+      - platform: state
+        entity_id: input_select.w18_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_05_water_depth') | float(0) }}"
+          water_max: "{{ state_attr('sensor.pwm_data', 'bays').w18_b_05.settings.water_level_max | default(15) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > water_max }}"
+            sequence:
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "w18"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= water_max }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "w18"
+    mode: single
+
+  # DRAIN MODE - W18
+  - id: pwm_drain_w18
+    alias: "PWM Drain W18"
+    trigger:
+      - platform: state
+        entity_id: input_select.w18_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_w18_b_05_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.w18_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w18_b_05_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_03"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_04"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w18_b_05"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "w18"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "w18"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.w18_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # OFF MODE - W18
+  - id: pwm_off_w18
+    alias: "PWM Off W18"
+    trigger:
+      - platform: state
+        entity_id: input_select.w18_automation_state
+        to: "Off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_w18_b_01_flush
+            - timer.pwm_w18_b_02_flush
+            - timer.pwm_w18_b_03_flush
+            - timer.pwm_w18_b_04_flush
+            - timer.pwm_w18_b_05_flush
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_w18_b_01_flush_active
+            - input_boolean.pwm_w18_b_02_flush_active
+            - input_boolean.pwm_w18_b_03_flush_active
+            - input_boolean.pwm_w18_b_04_flush_active
+            - input_boolean.pwm_w18_b_05_flush_active
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w18_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w18_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w18_b_03"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w18_b_04"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w18_b_05"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "w18"
+    mode: single
+
+  # ============================================================================
+  # W19 AUTOMATIONS (4 bays: B-01 through B-04, B-04 is last bay with drain)
+  # ============================================================================
+
+  # FLUSH MODE - W19 B-01
+  - id: pwm_flush_w19_b_01
+    alias: "PWM Flush W19 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w19_b_01_water_depth
+      - platform: state
+        entity_id: input_select.w19_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_01_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_01_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_01.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w19_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_01"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w19_b_01_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w19_b_01_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_01.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W19 B-02
+  - id: pwm_flush_w19_b_02
+    alias: "PWM Flush W19 B-02"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w19_b_02_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w19_b_01_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_02_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_01_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_02_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_02.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w19_b_02"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_02"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w19_b_02_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w19_b_02_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_02.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W19 B-03
+  - id: pwm_flush_w19_b_03
+    alias: "PWM Flush W19 B-03"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w19_b_03_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w19_b_02_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_03_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_02_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_03_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_03.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w19_b_03"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_03"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w19_b_03_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w19_b_03_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_03.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH MODE - W19 B-04 (Last bay - releases to drain)
+  - id: pwm_flush_w19_b_04
+    alias: "PWM Flush W19 B-04"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w19_b_04_water_depth
+      - platform: state
+        entity_id: input_boolean.pwm_w19_b_03_flush_active
+        to: "off"
+        from: "on"
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Flush"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_04_flush_active
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.pwm_w19_b_03_flush_active
+        state: "off"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_04_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_04.settings.water_level_min | default(5) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w19_b_04"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_04"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pwm_w19_b_04_flush_active
+              - action: timer.start
+                target:
+                  entity_id: timer.pwm_w19_b_04_flush
+                data:
+                  duration: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_04.settings.flush_time_on_water | default(3600) }}"
+    mode: single
+
+  # FLUSH TIMER FINISHED - W19 B-01
+  - id: pwm_flush_timer_w19_b_01
+    alias: "PWM Flush Timer W19 B-01"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w19_b_01_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w19_b_01_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W19 B-02
+  - id: pwm_flush_timer_w19_b_02
+    alias: "PWM Flush Timer W19 B-02"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w19_b_02_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w19_b_02_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W19 B-03
+  - id: pwm_flush_timer_w19_b_03
+    alias: "PWM Flush Timer W19 B-03"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w19_b_03_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w19_b_03_flush_active
+    mode: single
+
+  # FLUSH TIMER FINISHED - W19 B-04 (Last bay - turns off paddock flush)
+  - id: pwm_flush_timer_w19_b_04
+    alias: "PWM Flush Timer W19 B-04"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.pwm_w19_b_04_flush
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.pwm_w19_b_04_flush_active
+      - action: script.pwm_open_drain
+        data:
+          paddock_id: "w19"
+      - delay:
+          seconds: 30
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.w19_automation_state
+        data:
+          option: "Off"
+    mode: single
+
+  # POND MODE - W19 B-01 (First bay - supply control)
+  - id: pwm_pond_w19_b_01
+    alias: "PWM Pond W19 B-01"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w19_b_01_water_depth
+      - platform: state
+        entity_id: input_select.w19_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_01_water_depth') | float(0) }}"
+          water_min: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_01.settings.water_level_min | default(5) }}"
+          water_max: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_01.settings.water_level_max | default(15) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level < water_min }}"
+            sequence:
+              - action: script.pwm_open_supply
+                data:
+                  bay_id: "w19_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level >= water_min and water_level <= water_max }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_01"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > water_max }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_01"
+    mode: single
+
+  # POND MODE - W19 B-04 (Last bay - drain control)
+  - id: pwm_pond_w19_b_04
+    alias: "PWM Pond W19 B-04"
+    trigger:
+      - platform: state
+        entity_id: sensor.pwm_w19_b_04_water_depth
+      - platform: state
+        entity_id: input_select.w19_automation_state
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Pond"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_04_water_depth') | float(0) }}"
+          water_max: "{{ state_attr('sensor.pwm_data', 'bays').w19_b_04.settings.water_level_max | default(15) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > water_max }}"
+            sequence:
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "w19"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= water_max }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "w19"
+    mode: single
+
+  # DRAIN MODE - W19
+  - id: pwm_drain_w19
+    alias: "PWM Drain W19"
+    trigger:
+      - platform: state
+        entity_id: input_select.w19_automation_state
+        to: "Drain"
+      - platform: state
+        entity_id: sensor.pwm_w19_b_04_water_depth
+    condition:
+      - condition: state
+        entity_id: input_select.w19_automation_state
+        state: "Drain"
+    action:
+      - variables:
+          water_level: "{{ states('sensor.pwm_w19_b_04_water_depth') | float(0) }}"
+          drain_threshold: -8
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level > drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_01"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_02"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_03"
+              - action: script.pwm_close_supply
+                data:
+                  bay_id: "w19_b_04"
+              - action: script.pwm_open_drain
+                data:
+                  paddock_id: "w19"
+          - conditions:
+              - condition: template
+                value_template: "{{ water_level <= drain_threshold }}"
+            sequence:
+              - action: script.pwm_close_drain
+                data:
+                  paddock_id: "w19"
+              - action: input_select.select_option
+                target:
+                  entity_id: input_select.w19_automation_state
+                data:
+                  option: "Off"
+    mode: single
+
+  # OFF MODE - W19
+  - id: pwm_off_w19
+    alias: "PWM Off W19"
+    trigger:
+      - platform: state
+        entity_id: input_select.w19_automation_state
+        to: "Off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id:
+            - timer.pwm_w19_b_01_flush
+            - timer.pwm_w19_b_02_flush
+            - timer.pwm_w19_b_03_flush
+            - timer.pwm_w19_b_04_flush
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.pwm_w19_b_01_flush_active
+            - input_boolean.pwm_w19_b_02_flush_active
+            - input_boolean.pwm_w19_b_03_flush_active
+            - input_boolean.pwm_w19_b_04_flush_active
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w19_b_01"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w19_b_02"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w19_b_03"
+      - action: script.pwm_close_supply
+        data:
+          bay_id: "w19_b_04"
+      - action: script.pwm_close_drain
+        data:
+          paddock_id: "w19"
     mode: single

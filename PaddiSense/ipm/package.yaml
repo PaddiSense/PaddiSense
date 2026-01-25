@@ -34,6 +34,8 @@ command_line:
         - product_locations
         - categories
         - category_subcategories
+        - chemical_groups
+        - units
         - locations
         - active_names
         - system_status
@@ -47,6 +49,8 @@ command_line:
         - last_backup
         - backup_filenames
         - version
+        - low_stock_count
+        - low_stock_products
 
 #=============================================================================
 # SHELL COMMANDS - Python backend calls
@@ -68,6 +72,7 @@ shell_command:
   ipm_edit_product: >-
     python3 /config/PaddiSense/ipm/python/ipm_backend.py edit_product
     --id "{{ product_id }}"
+    --session "{{ session | default('') }}"
     --name "{{ name }}"
     --category "{{ category }}"
     --subcategory "{{ subcategory }}"
@@ -149,6 +154,64 @@ shell_command:
     python3 /config/PaddiSense/ipm/python/ipm_backend.py remove_subcategory
     --category "{{ category }}"
     --name "{{ name }}"
+
+  # ----- Chemical Group Management Commands -----
+  ipm_add_chemical_group: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py add_chemical_group
+    --name "{{ name }}"
+
+  ipm_remove_chemical_group: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py remove_chemical_group
+    --name "{{ name }}"
+
+  # ----- Unit Management Commands -----
+  ipm_add_unit: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py add_unit
+    --type "{{ unit_type }}"
+    --value "{{ value }}"
+
+  ipm_remove_unit: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py remove_unit
+    --type "{{ unit_type }}"
+    --value "{{ value }}"
+
+  # ----- Lock Management Commands -----
+  ipm_lock_acquire: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_acquire
+    --type "{{ entity_type }}"
+    --id "{{ entity_id }}"
+    --session "{{ session }}"
+
+  ipm_lock_release: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_release
+    --type "{{ entity_type }}"
+    --id "{{ entity_id }}"
+    --session "{{ session }}"
+
+  ipm_lock_check: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_check
+    --type "{{ entity_type }}"
+    --id "{{ entity_id }}"
+
+  ipm_lock_cleanup: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_cleanup
+
+  ipm_lock_list: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_list
+
+  # ----- Report Commands -----
+  ipm_usage_report: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py usage_report
+    {% if start is defined and start %}--start "{{ start }}"{% endif %}
+    {% if end is defined and end %}--end "{{ end }}"{% endif %}
+
+  ipm_transaction_history: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py transaction_history
+    {% if start is defined and start %}--start "{{ start }}"{% endif %}
+    {% if end is defined and end %}--end "{{ end }}"{% endif %}
+    {% if product is defined and product %}--product "{{ product }}"{% endif %}
+    {% if action is defined and action %}--action "{{ action }}"{% endif %}
+    {% if limit is defined and limit %}--limit "{{ limit }}"{% endif %}
 
 #=============================================================================
 # INPUT HELPERS - User interface controls
@@ -1296,6 +1359,65 @@ input_select:
     options:
       - Select Backup
 
+  # ----- Category Management (Phase 4) -----
+  ipm_manage_category:
+    name: IPM Manage Category
+    icon: mdi:shape-outline
+    options:
+      - Select Category
+
+  ipm_manage_subcategory_parent:
+    name: IPM Subcategory Parent
+    icon: mdi:shape
+    options:
+      - Select Category
+
+  ipm_manage_subcategory:
+    name: IPM Manage Subcategory
+    icon: mdi:shape-outline
+    options:
+      - Select Subcategory
+
+  ipm_manage_chemical_group:
+    name: IPM Manage Chemical Group
+    icon: mdi:flask-remove
+    options:
+      - Select Group
+
+  ipm_manage_unit_type:
+    name: IPM Unit Type
+    icon: mdi:ruler
+    options:
+      - product
+      - container
+      - application
+      - concentration
+
+  ipm_manage_unit_value:
+    name: IPM Manage Unit Value
+    icon: mdi:ruler-square
+    options:
+      - Select Unit
+
+  # ----- Report Filters -----
+  ipm_report_season:
+    name: IPM Report Season
+    icon: mdi:calendar-range
+    options:
+      - Custom Date Range
+      - CY26
+
+  ipm_report_action:
+    name: IPM Report Action Filter
+    icon: mdi:filter-variant
+    options:
+      - All
+      - stock_in
+      - stock_out
+      - initial_stock
+      - edit_product
+      - delete_product
+
 input_number:
   # Stock movement quantity
   ipm_quantity:
@@ -1403,6 +1525,44 @@ input_text:
     icon: mdi:flask-outline
     max: 50
 
+  # ----- Category Management (Phase 4) -----
+  ipm_new_category:
+    name: IPM New Category
+    icon: mdi:shape-plus
+    max: 50
+
+  ipm_new_subcategory:
+    name: IPM New Subcategory
+    icon: mdi:shape-plus-outline
+    max: 50
+
+  ipm_new_chemical_group:
+    name: IPM New Chemical Group
+    icon: mdi:flask-plus
+    max: 20
+
+  ipm_new_unit_value:
+    name: IPM New Unit Value
+    icon: mdi:ruler-square
+    max: 20
+
+#=============================================================================
+# INPUT DATETIME - Date pickers for reports
+#=============================================================================
+input_datetime:
+  # Report date range
+  ipm_report_start:
+    name: IPM Report Start Date
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-start
+
+  ipm_report_end:
+    name: IPM Report End Date
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-end
+
 input_boolean:
   # ----- Data Management (Phase 3) -----
   ipm_confirm_reset:
@@ -1487,23 +1647,43 @@ template:
             {{ ns.names | sort }}
 
       #-----------------------------------------------------------------------
-      # Count of products below minimum stock
+      # Count of products below minimum stock (using pre-calculated data)
       #-----------------------------------------------------------------------
       - name: IPM Low Stock Count
         unique_id: ipm_low_stock_count
         icon: mdi:alert
+        state: "{{ state_attr('sensor.ipm_products', 'low_stock_count') | default(0) }}"
+        unit_of_measurement: "products"
+        attributes:
+          low_stock_products: "{{ state_attr('sensor.ipm_products', 'low_stock_products') | default([]) }}"
+
+      #-----------------------------------------------------------------------
+      # Low stock product list formatted for display
+      #-----------------------------------------------------------------------
+      - name: IPM Low Stock List
+        unique_id: ipm_low_stock_list
+        icon: mdi:alert-circle
         state: >
-          {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
-          {% set ns = namespace(count=0) %}
-          {% for pid, p in products.items() %}
-            {% set sbl = p.stock_by_location if p.stock_by_location is defined else {} %}
-            {% set total = sbl.values() | map('float', 0) | sum %}
-            {% set min_stock = p.min_stock | default(0) | float %}
-            {% if min_stock > 0 and total < min_stock %}
-              {% set ns.count = ns.count + 1 %}
+          {% set count = state_attr('sensor.ipm_products', 'low_stock_count') | default(0) %}
+          {% if count == 0 %}
+            All stock OK
+          {% elif count == 1 %}
+            1 product low
+          {% else %}
+            {{ count }} products low
+          {% endif %}
+        attributes:
+          products: "{{ state_attr('sensor.ipm_products', 'low_stock_products') | default([]) }}"
+          summary: >
+            {% set items = state_attr('sensor.ipm_products', 'low_stock_products') | default([]) %}
+            {% set ns = namespace(lines=[]) %}
+            {% for item in items[:5] %}
+              {% set ns.lines = ns.lines + [item.name ~ ': ' ~ item.total_stock ~ '/' ~ item.min_stock ~ ' ' ~ item.unit] %}
+            {% endfor %}
+            {% if items | length > 5 %}
+              {% set ns.lines = ns.lines + ['... and ' ~ (items | length - 5) ~ ' more'] %}
             {% endif %}
-          {% endfor %}
-          {{ ns.count }}
+            {{ ns.lines | join('\n') if ns.lines else 'All stock OK' }}
 
       #-----------------------------------------------------------------------
       # Subcategory options based on selected category
@@ -1656,6 +1836,28 @@ template:
             {% else %}
               []
             {% endif %}
+
+  #---------------------------------------------------------------------------
+  # Binary Sensors for alerts
+  #---------------------------------------------------------------------------
+  - binary_sensor:
+      #-----------------------------------------------------------------------
+      # Low stock alert - true when any product is below minimum
+      #-----------------------------------------------------------------------
+      - name: IPM Low Stock Alert
+        unique_id: ipm_low_stock_alert
+        device_class: problem
+        state: >
+          {{ (state_attr('sensor.ipm_products', 'low_stock_count') | default(0) | int) > 0 }}
+        icon: >
+          {% if (state_attr('sensor.ipm_products', 'low_stock_count') | default(0) | int) > 0 %}
+            mdi:alert-circle
+          {% else %}
+            mdi:check-circle
+          {% endif %}
+        attributes:
+          count: "{{ state_attr('sensor.ipm_products', 'low_stock_count') | default(0) }}"
+          products: "{{ state_attr('sensor.ipm_products', 'low_stock_products') | default([]) }}"
 
 #=============================================================================
 # AUTOMATIONS - Keep dropdowns in sync
@@ -1888,6 +2090,29 @@ automation:
           entity_id: input_number.ipm_quantity
         data:
           value: 0
+
+  #---------------------------------------------------------------------------
+  # Sync report season dropdown with registry seasons
+  #---------------------------------------------------------------------------
+  - id: ipm_sync_report_seasons
+    alias: "IPM: Sync Report Season Options"
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: sensor.farm_registry_data
+      - platform: homeassistant
+        event: start
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.farm_registry_data', 'season_names') is not none }}"
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_report_season
+        data:
+          options: >
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Custom Date Range'] + seasons }}
 
 #=============================================================================
 # SCRIPTS - User actions
@@ -3195,6 +3420,451 @@ script:
           message: "Active constituent '{{ active_name }}' removed successfully."
 
   #---------------------------------------------------------------------------
+  # Category Management: Add Category
+  #---------------------------------------------------------------------------
+  ipm_add_new_category:
+    alias: "IPM: Add New Category"
+    mode: single
+    sequence:
+      - variables:
+          new_category: "{{ states('input_text.ipm_new_category') | trim }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ new_category == '' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please enter a category name."
+              - stop: "Empty name"
+
+      - service: shell_command.ipm_add_category
+        data:
+          name: "{{ new_category }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_new_category
+        data:
+          value: ""
+
+      - service: script.ipm_refresh_category_dropdowns
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Category '{{ new_category }}' added successfully."
+
+  #---------------------------------------------------------------------------
+  # Category Management: Remove Category
+  #---------------------------------------------------------------------------
+  ipm_remove_selected_category:
+    alias: "IPM: Remove Selected Category"
+    mode: single
+    sequence:
+      - variables:
+          category: "{{ states('input_select.ipm_manage_category') }}"
+          products: "{{ state_attr('sensor.ipm_products', 'products') | default({}) | dict2items | selectattr('value.category', 'eq', category) | list }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ category in ['Select Category', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please select a category to remove."
+              - stop: "No category selected"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ products | length > 0 }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Cannot remove '{{ category }}' - {{ products | length }} product(s) are using it."
+              - stop: "Category in use"
+
+      - service: shell_command.ipm_remove_category
+        data:
+          name: "{{ category }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: script.ipm_refresh_category_dropdowns
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Category '{{ category }}' removed successfully."
+
+  #---------------------------------------------------------------------------
+  # Subcategory Management: Add Subcategory
+  #---------------------------------------------------------------------------
+  ipm_add_new_subcategory:
+    alias: "IPM: Add New Subcategory"
+    mode: single
+    sequence:
+      - variables:
+          parent: "{{ states('input_select.ipm_manage_subcategory_parent') }}"
+          new_subcategory: "{{ states('input_text.ipm_new_subcategory') | trim }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ parent in ['Select Category', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please select a parent category."
+              - stop: "No parent selected"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ new_subcategory == '' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please enter a subcategory name."
+              - stop: "Empty name"
+
+      - service: shell_command.ipm_add_subcategory
+        data:
+          category: "{{ parent }}"
+          name: "{{ new_subcategory }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_new_subcategory
+        data:
+          value: ""
+
+      - service: script.ipm_refresh_subcategory_dropdown
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Subcategory '{{ new_subcategory }}' added to '{{ parent }}'."
+
+  #---------------------------------------------------------------------------
+  # Subcategory Management: Remove Subcategory
+  #---------------------------------------------------------------------------
+  ipm_remove_selected_subcategory:
+    alias: "IPM: Remove Selected Subcategory"
+    mode: single
+    sequence:
+      - variables:
+          parent: "{{ states('input_select.ipm_manage_subcategory_parent') }}"
+          subcategory: "{{ states('input_select.ipm_manage_subcategory') }}"
+          products: "{{ state_attr('sensor.ipm_products', 'products') | default({}) | dict2items | selectattr('value.subcategory', 'eq', subcategory) | list }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ subcategory in ['Select Subcategory', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please select a subcategory to remove."
+              - stop: "No subcategory selected"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ products | length > 0 }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Cannot remove '{{ subcategory }}' - {{ products | length }} product(s) are using it."
+              - stop: "Subcategory in use"
+
+      - service: shell_command.ipm_remove_subcategory
+        data:
+          category: "{{ parent }}"
+          name: "{{ subcategory }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: script.ipm_refresh_subcategory_dropdown
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Subcategory '{{ subcategory }}' removed from '{{ parent }}'."
+
+  #---------------------------------------------------------------------------
+  # Chemical Group Management: Add Chemical Group
+  #---------------------------------------------------------------------------
+  ipm_add_new_chemical_group:
+    alias: "IPM: Add New Chemical Group"
+    mode: single
+    sequence:
+      - variables:
+          new_group: "{{ states('input_text.ipm_new_chemical_group') | trim }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ new_group == '' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please enter a chemical group name."
+              - stop: "Empty name"
+
+      - service: shell_command.ipm_add_chemical_group
+        data:
+          name: "{{ new_group }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_new_chemical_group
+        data:
+          value: ""
+
+      - service: script.ipm_refresh_chemical_group_dropdown
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Chemical group '{{ new_group }}' added successfully."
+
+  #---------------------------------------------------------------------------
+  # Chemical Group Management: Remove Chemical Group
+  #---------------------------------------------------------------------------
+  ipm_remove_selected_chemical_group:
+    alias: "IPM: Remove Selected Chemical Group"
+    mode: single
+    sequence:
+      - variables:
+          group: "{{ states('input_select.ipm_manage_chemical_group') }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ group in ['Select Group', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please select a chemical group to remove."
+              - stop: "No group selected"
+
+      - service: shell_command.ipm_remove_chemical_group
+        data:
+          name: "{{ group }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: script.ipm_refresh_chemical_group_dropdown
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Chemical group '{{ group }}' removed successfully."
+
+  #---------------------------------------------------------------------------
+  # Unit Management: Add Unit
+  #---------------------------------------------------------------------------
+  ipm_add_new_unit:
+    alias: "IPM: Add New Unit"
+    mode: single
+    sequence:
+      - variables:
+          unit_type: "{{ states('input_select.ipm_manage_unit_type') }}"
+          new_value: "{{ states('input_text.ipm_new_unit_value') | trim }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ new_value == '' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please enter a unit value."
+              - stop: "Empty value"
+
+      - service: shell_command.ipm_add_unit
+        data:
+          unit_type: "{{ unit_type }}"
+          value: "{{ new_value }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_new_unit_value
+        data:
+          value: ""
+
+      - service: script.ipm_refresh_unit_dropdown
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Unit '{{ new_value }}' added to {{ unit_type }} units."
+
+  #---------------------------------------------------------------------------
+  # Unit Management: Remove Unit
+  #---------------------------------------------------------------------------
+  ipm_remove_selected_unit:
+    alias: "IPM: Remove Selected Unit"
+    mode: single
+    sequence:
+      - variables:
+          unit_type: "{{ states('input_select.ipm_manage_unit_type') }}"
+          unit_value: "{{ states('input_select.ipm_manage_unit_value') }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ unit_value in ['Select Unit', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Settings"
+                  message: "Please select a unit to remove."
+              - stop: "No unit selected"
+
+      - service: shell_command.ipm_remove_unit
+        data:
+          unit_type: "{{ unit_type }}"
+          value: "{{ unit_value }}"
+
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      - service: script.ipm_refresh_unit_dropdown
+
+      - service: persistent_notification.create
+        data:
+          title: "IPM Settings"
+          message: "Unit '{{ unit_value }}' removed from {{ unit_type }} units."
+
+  #---------------------------------------------------------------------------
+  # Refresh Dropdowns: Categories
+  #---------------------------------------------------------------------------
+  ipm_refresh_category_dropdowns:
+    alias: "IPM: Refresh Category Dropdowns"
+    mode: single
+    sequence:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_category
+        data:
+          options: >-
+            {% set cats = state_attr('sensor.ipm_products', 'categories') or [] %}
+            {{ ['Select Category'] + cats }}
+
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_subcategory_parent
+        data:
+          options: >-
+            {% set cats = state_attr('sensor.ipm_products', 'categories') or [] %}
+            {{ ['Select Category'] + cats }}
+
+  #---------------------------------------------------------------------------
+  # Refresh Dropdowns: Subcategories (based on parent)
+  #---------------------------------------------------------------------------
+  ipm_refresh_subcategory_dropdown:
+    alias: "IPM: Refresh Subcategory Dropdown"
+    mode: single
+    sequence:
+      - variables:
+          parent: "{{ states('input_select.ipm_manage_subcategory_parent') }}"
+
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_subcategory
+        data:
+          options: >-
+            {% set cat_subs = state_attr('sensor.ipm_products', 'category_subcategories') or {} %}
+            {% if parent in cat_subs %}
+              {{ ['Select Subcategory'] + cat_subs[parent] }}
+            {% else %}
+              {{ ['Select Subcategory'] }}
+            {% endif %}
+
+  #---------------------------------------------------------------------------
+  # Refresh Dropdowns: Chemical Groups
+  #---------------------------------------------------------------------------
+  ipm_refresh_chemical_group_dropdown:
+    alias: "IPM: Refresh Chemical Group Dropdown"
+    mode: single
+    sequence:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_chemical_group
+        data:
+          options: >-
+            {% set groups = state_attr('sensor.ipm_products', 'chemical_groups') or [] %}
+            {{ ['Select Group'] + groups }}
+
+  #---------------------------------------------------------------------------
+  # Refresh Dropdowns: Units
+  #---------------------------------------------------------------------------
+  ipm_refresh_unit_dropdown:
+    alias: "IPM: Refresh Unit Dropdown"
+    mode: single
+    sequence:
+      - variables:
+          unit_type: "{{ states('input_select.ipm_manage_unit_type') }}"
+
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_unit_value
+        data:
+          options: >-
+            {% set units = state_attr('sensor.ipm_products', 'units') or {} %}
+            {% if unit_type in units %}
+              {{ ['Select Unit'] + (units[unit_type] | list) }}
+            {% else %}
+              {{ ['Select Unit'] }}
+            {% endif %}
+
+  #---------------------------------------------------------------------------
   # Settings: Refresh Actives dropdown
   #---------------------------------------------------------------------------
   ipm_refresh_actives:
@@ -3364,3 +4034,138 @@ script:
         data:
           title: "IPM Reset"
           message: "All IPM data has been reset. A pre-reset backup was created automatically."
+
+  #---------------------------------------------------------------------------
+  # Lock Management: Acquire Lock
+  #---------------------------------------------------------------------------
+  ipm_acquire_lock:
+    alias: "IPM: Acquire Lock"
+    mode: single
+    fields:
+      entity_type:
+        description: "Entity type (product, category, etc.)"
+        required: true
+        selector:
+          text:
+      entity_id:
+        description: "Entity ID"
+        required: true
+        selector:
+          text:
+      session:
+        description: "Session ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.ipm_lock_acquire
+        data:
+          entity_type: "{{ entity_type }}"
+          entity_id: "{{ entity_id }}"
+          session: "{{ session }}"
+
+  #---------------------------------------------------------------------------
+  # Lock Management: Release Lock
+  #---------------------------------------------------------------------------
+  ipm_release_lock:
+    alias: "IPM: Release Lock"
+    mode: single
+    fields:
+      entity_type:
+        description: "Entity type (product, category, etc.)"
+        required: true
+        selector:
+          text:
+      entity_id:
+        description: "Entity ID"
+        required: true
+        selector:
+          text:
+      session:
+        description: "Session ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.ipm_lock_release
+        data:
+          entity_type: "{{ entity_type }}"
+          entity_id: "{{ entity_id }}"
+          session: "{{ session }}"
+
+  #---------------------------------------------------------------------------
+  # Lock Management: Cleanup Expired Locks
+  #---------------------------------------------------------------------------
+  ipm_cleanup_locks:
+    alias: "IPM: Cleanup Expired Locks"
+    mode: single
+    sequence:
+      - service: shell_command.ipm_lock_cleanup
+
+  #---------------------------------------------------------------------------
+  # Report: Set Date Range from Season
+  #---------------------------------------------------------------------------
+  ipm_set_report_dates_from_season:
+    alias: "IPM: Set Report Dates from Season"
+    mode: single
+    sequence:
+      - variables:
+          season_name: "{{ states('input_select.ipm_report_season') }}"
+          seasons: "{{ state_attr('sensor.farm_registry_data', 'seasons') or {} }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ season_name == 'Custom Date Range' }}"
+            sequence:
+              - stop: "Custom date range selected - no auto-fill"
+        default:
+          # Find the season by name and set dates
+          - variables:
+              season_data: >
+                {% for sid, s in seasons.items() %}
+                  {% if s.name == season_name %}
+                    {{ s }}
+                  {% endif %}
+                {% endfor %}
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ season_data | length > 0 }}"
+                sequence:
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.ipm_report_start
+                    data:
+                      date: >
+                        {% for sid, s in seasons.items() %}
+                          {% if s.name == season_name %}{{ s.start_date }}{% endif %}
+                        {% endfor %}
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.ipm_report_end
+                    data:
+                      date: >
+                        {% for sid, s in seasons.items() %}
+                          {% if s.name == season_name %}{{ s.end_date }}{% endif %}
+                        {% endfor %}
+
+  #---------------------------------------------------------------------------
+  # Report: Generate Usage Report
+  #---------------------------------------------------------------------------
+  ipm_generate_report:
+    alias: "IPM: Generate Usage Report"
+    mode: single
+    sequence:
+      - variables:
+          start_date: "{{ states('input_datetime.ipm_report_start') }}"
+          end_date: "{{ states('input_datetime.ipm_report_end') }}"
+      - service: shell_command.ipm_usage_report
+        data:
+          start: "{{ start_date }}"
+          end: "{{ end_date }}"
+      - service: persistent_notification.create
+        data:
+          title: "IPM Usage Report"
+          message: >
+            Report generated for period:
+            {{ start_date }} to {{ end_date }}

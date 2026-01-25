@@ -250,6 +250,9 @@ def main():
         "last_backup": backup_info["last_backup"],
         "backup_filenames": backup_info["backup_filenames"],
         "version": version,
+        # Low stock alerts
+        "low_stock_count": 0,
+        "low_stock_products": [],
     }
 
     if not DATA_FILE.exists():
@@ -312,6 +315,25 @@ def main():
                         if name not in active_products_map[active_name]:
                             active_products_map[active_name].append(name)
 
+    # Build low stock alerts
+    low_stock_products = []
+    for product_id, product in products.items():
+        min_stock = float(product.get("min_stock", 0))
+        total_stock = product.get("total_stock", 0)
+        if min_stock > 0 and total_stock < min_stock:
+            low_stock_products.append({
+                "id": product_id,
+                "name": product.get("name", product_id),
+                "category": product.get("category", ""),
+                "total_stock": total_stock,
+                "min_stock": min_stock,
+                "unit": product.get("unit", ""),
+                "deficit": round(min_stock - total_stock, 2),
+            })
+
+    # Sort by deficit (largest first)
+    low_stock_products.sort(key=lambda x: x["deficit"], reverse=True)
+
     output = {
         "total_products": len(products),
         "products": products,
@@ -336,6 +358,9 @@ def main():
         "last_backup": backup_info["last_backup"],
         "backup_filenames": backup_info["backup_filenames"],
         "version": version,
+        # Low stock alerts
+        "low_stock_count": len(low_stock_products),
+        "low_stock_products": low_stock_products,
     }
 
     print(json.dumps(output))

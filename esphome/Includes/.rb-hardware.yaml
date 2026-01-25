@@ -1,0 +1,823 @@
+###################################################################################################
+# FILE: Includes/.rb-hardware.yaml
+#
+# 🔧 PURPOSE
+# This file defines the *hardware layer* for all RiceBoard relay boards (RB-xxx).
+# It is intended to be included by each device YAML via `includes:` and contains:
+#   ✔ ADC inputs (water depth, soil moisture, battery voltage)
+#   ✔ GPIO inputs (manual switches)
+#   ✔ Outputs (relays, buzzer)
+#   ✔ Safety logic (relay mutual exclusion, beeper alerts)
+#   ✔ Diagnostics (WiFi strength, online status)
+#   ✔ Debug mode toggle (enables raw ADC output)
+#
+# 🧱 PHILOSOPHY
+# - All hardware logic lives HERE (never repeat in each device)
+# - All device-specific calibration lives in substitutions
+# - Only API/logger/OTA/WiFi live in `.base.yaml`
+# - The config is safe-by-default (no relay starts ON after reboot)
+# - All smoothing uses a 3-stage pipeline:
+#         Stage 1: Median filter
+#         Stage 2: EMA smoothing
+#         Stage 3: delta + throttle (reduces HA noise)
+#
+# 🏷 REQUIRED SUBSTITUTIONS (each device must define)
+#   cal_1m_v0, cal_1m_d0, cal_1m_v1, cal_1m_d1
+#   cal_5m_v0, cal_5m_d0, cal_5m_v1, cal_5m_d1
+#   soil_v0, soil_kpa0, soil_v1, soil_kpa1
+#   vbat_divider_ratio
+#
+# 📝 VERSION HISTORY
+#   1.0 — Finalised production-ready hardware include:
+#         - Added 3-stage smoothing for depth sensors
+#         - Added debug mode for raw ADC voltage
+#         - Added mutual-exclusion actuator logic (Open vs Close)
+#         - Added buzzer safety feedback on Close
+#         - Added WiFi diagnostics + % strength
+#         - Added on-boot safety: force relays OFF
+#         - Added soil moisture smoothing
+#         - Added battery low-voltage alarm with beeper cancel
+#   1.1 (20-11-25)
+#         - Added OPEN and CLOSE labels on D1 and D2 manual switches names
+#   1.2 (01-12-25)
+#         - Removed OPEN and CLOSE labels on D1 and D2 manual switch names (not required)
+#         - Added project key to track version installed on a device in device info screen on home assistant
+#         - Added action on wifi disconnect to set online sensor state to false
+#   1.3 (03-12-25)
+#         - Added Ping Response functionality, where before interacting with a devices relays home assistant
+#           will ping the device to test connection. Implemented this as a devices connection sensor has some
+#           amount of delay after a disconnect to update state to disconnected.
+#   1.4 (11-12-25)
+#         - Moved Ping button to base file
+#
+#   1.5 (11-12-25)
+#         - updated sensor filter for 1m sensor
+#
+#   2.1.0 ( 19-01-26) INSERT UPDAET LOGS HERE
+##################################################################################################
+#
+# VERSION CONTROL (IMPORTANT)
+# - rb_hardware_version is the authoritative version for this include file.
+# - This version is:
+#     1) logged on boot
+#     2) published to Home Assistant as a text_sensor
+#     3) (optionally) used in esphome.project.version for device info display
+#
+# VERSIONING RULES (practical)
+# - PATCH: docs/comments/filter tuning without entity rename
+# - MINOR: add new entities/features (backwards compatible)
+# - MAJOR: breaking changes (entity rename/remove, behavior change)
+###################################################################################################
+
+substitutions:
+  rb_hardware_version: "2.1.0"   # <- Update this when you change this include
+
+# ================================================================================================
+#                                    BOOT SAFETY + PROJECT INFO
+# ================================================================================================
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - logger.log: "Boot: RB hardware include initialising"
+      - lambda: |-
+          ESP_LOGI("rb_hw", "RB hardware include version: %s", "${rb_hardware_version}");
+  project:
+    name: "PaddiSense.PWM Bay Node"
+    version: ${rb_hardware_version}
+
+###################################################################################################
+#                                           PIN MAP
+###################################################################################################
+# A1 (GPIO34): 4-20mA input            — used for 1m depth sensors
+# A2 (GPIO35): 4-20mA input            — used for 5m depth sensors
+# A3 (GPIO32): 0-5V input              — used for soil moisture (SS200/WM converter)
+# A4 (GPIO33): 0-5V input              — used for battery divider
+#
+# D1 (GPIO36): Manual switch for Relay 1 (inverted)
+# D2 (GPIO39): Manual switch for Relay 2 (inverted)
+# D3 (GPIO27): Spare
+# D4 (GPIO14): Spare
+#
+# K1 (GPIO2):  Relay 2                — close relay
+# K2 (GPIO15): Relay 1                — open relay
+# K3 (GPIO5):  Relay 3
+# K4 (GPIO4):  Relay 4
+#
+# Buzzer (GPIO18)
+###################################################################################################
+
+# ================================================================================================
+#                             GLOBAL TOGGLE: DEBUG MODE
+# ================================================================================================
+globals:
+  # Debug toggle for ADC outputs
+  - id: debug_mode
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  # ---- Motion controller state ----
+  # Current position expressed as "time to fully close" in seconds
+  - id: tfrom_s
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+  # Target "time to fully close" in seconds (only used when have_target=true)
+  - id: target_tfrom_s
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+
+  # Full open calibration point, "time to fully close" in seconds when door is fully open (position = 1.0 / 100%)
+  - id: full_travel_s
+    type: float
+    restore_value: yes
+    initial_value: '10.0'
+
+  # Whether controller is actively driving relays
+  - id: moving
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  # Whether controller is targeting a specific position (true) or "manual jog" (false)
+  - id: have_target
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  # Desired direction: +1 open, -1 close, 0 stop
+  - id: desired_dir
+    type: int8_t
+    restore_value: no
+    initial_value: '0'
+
+  # Actual drive direction (what relays are currently doing): +1 open, -1 close, 0 stop
+  - id: drive_dir
+    type: int8_t
+    restore_value: no
+    initial_value: '0'
+
+  # Timestamp for integration
+  - id: last_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+  # Relay switching deadtime (prevents instant direction slam)
+  - id: dead_until_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+  # internal flag used by interval loop to request a stop action
+  - id: relay_off_pending
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  # +1 turn on relay_1, -1 turn on relay_2, 0 none
+  - id: relay_on_pending
+    type: int8_t         
+    restore_value: no
+    initial_value: '0'
+
+  # Endstop hold (keep relay energised at full open/close) - default false for open and true for close
+  - id: hold_endstop
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  # Publish flag for clean UI updates
+  - id: publish_idle
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+# --------------------------------------------------------------------------------
+# INTERVAL CONTROL LOOP (non-blocking motion + tracking)
+# --------------------------------------------------------------------------------
+
+interval:
+  - interval: 100ms
+    then:
+      # 1) Handle safe direction switching (deadtime without blocking)
+      - lambda: |-
+          const uint32_t now = millis();
+
+          // If we're not supposed to be moving, ensure we don't request relay-on
+          if (!id(moving)) {
+            id(desired_dir) = 0;
+          }
+
+          // if desired_dir == 0 (stop requested), do immediately
+          if (id(desired_dir) == 0) {
+            id(drive_dir) = 0;
+            id(relay_on_pending) = 0;
+            id(dead_until_ms) = 0;
+          }
+
+          // If desired_dir changed, turn everything off and schedule deadtime
+          if (id(desired_dir) != id(drive_dir) && id(dead_until_ms) == 0) {
+            // turn off phase
+            id(relay_off_pending) = true;
+            id(drive_dir) = 0;
+            id(dead_until_ms) = now + 80;   // 80ms deadtime
+            // schedule relay-on after deadtime
+            id(relay_on_pending) = id(desired_dir);
+          }
+
+          // After deadtime, apply relay-on if still desired
+          if (id(relay_on_pending) != 0 && now >= id(dead_until_ms)) {
+            id(dead_until_ms) = 0;
+            // apply only if still moving and still wants this direction
+            if (id(moving) && id(relay_on_pending) == id(desired_dir)) {
+              id(drive_dir) = id(relay_on_pending);
+            }
+            id(relay_on_pending) = 0;
+          }
+
+      - if: # Stop Requested
+          condition:
+            lambda: 'return id(relay_off_pending);'
+          then:
+            - output.turn_off: relay_1
+            - output.turn_off: relay_2
+            - lambda: |-
+                id(relay_off_pending) = false;
+
+      - if: # Open Requested
+          condition:
+            lambda: 'return id(drive_dir) == +1;'
+          then:
+            - output.turn_off: relay_2
+            - output.turn_on: relay_1
+
+      - if: # Close Requested
+          condition:
+            lambda: 'return id(drive_dir) == -1;'
+          then:
+            - output.turn_off: relay_1
+            - output.turn_on: relay_2
+
+      # 2) Integrate movement only when actually driving
+      - lambda: |-
+          if (!id(moving) || id(drive_dir) == 0) return; // exit if not moving
+
+          const uint32_t now = millis(); // millis() returns number of milliseconds since boot
+          float dt = (now - id(last_ms)) / 1000.0f; // time since last compilation in ms
+          id(last_ms) = now; // set last timestamp to now
+
+          // guard dt spikes
+          if (dt < 0.0f) dt = 0.0f;
+          if (dt > 0.5f) dt = 0.5f;
+
+          float full_s = id(full_travel_s);
+          if (isnan(full_s) || full_s <= 0.0f) full_s = 150.0f; // call and clamp full open calibration point
+
+          float prev_p = id(actuator_1).position; // current position
+          float updated = id(tfrom_s) + (id(drive_dir) * dt); // new position based on movement since last tick
+
+          if (updated < 0.0f) updated = 0.0f; // clamp position to 0.0 if closed
+          updated = roundf(updated * 10.0f) / 10.0f; // quantize
+          id(tfrom_s) = updated; // set tfrom_s to new position
+
+          // Manual jog: no target -> never auto-stop
+          if (!id(have_target)) return;
+
+          float tgt = id(target_tfrom_s);
+          bool reached = (id(drive_dir) > 0) ? (updated >= tgt) : (updated <= tgt); // set test for reached
+          if (!reached) {
+            float p = updated / full_s; // calc position of actuator (0.0-1.0)
+            if (p < 0.0f) p = 0.0f; // clamp
+            if (p > 1.0f) p = 1.0f;
+
+            if (p > prev_p + 0.05 || p < prev_p - 0.05) { // only publish a new state/position if new pos has changed by at least 5%
+              id(actuator_1).position = p;
+              id(actuator_1).current_operation = (id(drive_dir) > 0) ? esphome::valve::VALVE_OPERATION_OPENING : esphome::valve::VALVE_OPERATION_CLOSING;
+              id(actuator_1).publish_state();
+            }
+            return; // exits if not reached
+          }
+
+          id(tfrom_s) = id(target_tfrom_s); // Snap to target to avoid drift
+
+          bool is_close_end = (id(target_tfrom_s) <= 0.01f); // test if at/near endstops
+          bool is_open_end  = (id(target_tfrom_s) >= (full_s - 0.01f));
+
+          if (id(hold_endstop) && (is_close_end || is_open_end)) { // position at endstop and hold endstop is true (only true on close_action)
+            id(have_target) = false; // stop targeting but keep relay energised (dirty recalibration)
+
+            auto cur_op = id(actuator_1).current_operation;
+            if (cur_op != esphome::valve::VALVE_OPERATION_IDLE) { // publish IDLE if operation isn't already
+              id(actuator_1).position = is_close_end ? 0.0f : 1.0f;
+              id(actuator_1).current_operation = esphome::valve::VALVE_OPERATION_IDLE;
+              id(actuator_1).publish_state();
+            }
+            return; // exit
+          }
+
+          // Normal stop at target
+          id(moving) = false;
+          id(desired_dir) = 0;
+          id(publish_idle) = true;
+
+      # 3) Publish IDLE/position when we stop (and only then)
+      - if:
+          condition:
+            lambda: 'return id(publish_idle);'
+          then:
+            - output.turn_off: relay_1
+            - output.turn_off: relay_2
+            - valve.template.publish:
+                id: actuator_1
+                current_operation: IDLE
+                position: !lambda |-
+                  float full_s = id(full_travel_s);
+                  if (isnan(full_s) || full_s <= 0.0f) return 0.0f;
+                  float p = id(tfrom_s) / full_s;
+                  if (p < 0.0f) p = 0.0f;
+                  if (p > 1.0f) p = 1.0f;
+                  return p;
+            - lambda: |-
+                id(publish_idle) = false;
+
+# ================================================================================================
+#                               VERSION EXPORT TO HOME ASSISTANT
+# ================================================================================================
+# Publishes the hardware include version as a HA entity so you can verify deployments remotely.
+text_sensor:
+  - platform: template
+    name: "${friendly_name} RB Hardware Config Version"
+    id: "rb_hardware_config_version"
+    icon: mdi:chip
+    entity_category: diagnostic
+    lambda: |-
+      return {"${rb_hardware_version}"};
+
+# ================================================================================================
+#                                             BUTTONS
+# ================================================================================================
+button:
+  # Door Closing Beeper - internal button not on front end
+  - platform: template
+    id: beeper_alert
+    on_press:
+      - output.turn_on: beeper
+      - delay: 0.5s
+      - output.turn_off: beeper
+      - delay: 0.5s
+      - output.turn_on: beeper
+      - delay: 0.5s
+      - output.turn_off: beeper
+      - delay: 0.5s
+  # Calibrates position tracking to fully closed position
+  - platform: template
+    id: actuator_1_close_calibrate
+    name: Close Calibration Actuator 1
+    entity_category: config
+    on_press:
+      - lambda: |-
+          id(tfrom_s) = 0.0f;
+          id(moving) = false;
+          id(desired_dir) = 0;
+          id(have_target) = false;
+          id(hold_endstop) = false;
+          id(publish_idle) = true;
+  # Calibrates position tracking to fully open position
+  - platform: template
+    id: actuator_1_open_calibrate
+    name: Open Calibration Actuator 1
+    entity_category: config
+    on_press:
+      - lambda: |-
+          id(full_travel_s) = id(tfrom_s);
+          id(moving) = false;
+          id(desired_dir) = 0;
+          id(have_target) = false;
+          id(hold_endstop) = false;
+          id(publish_idle) = true;
+
+# ================================================================================================
+#                                      DIAGNOSTIC SENSORS
+# ================================================================================================
+sensor:
+  # ----------------------------------------------------------------------------------------------
+  # WiFi Signal (dB)
+  # ----------------------------------------------------------------------------------------------
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 240s
+    entity_category: diagnostic
+
+  # Convert WiFi dB → WiFi Strength %
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "${friendly_name} WiFi Strength"
+    unit_of_measurement: "%"
+    entity_category: diagnostic
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+  #################################################################################################
+  #                                   1-METER WATER DEPTH SENSOR
+  #  ADC34 (A1) — 4-20mA → voltage via resistor (Kincony internal)
+  #  Output unit: cm
+  #
+  #  FILTER PIPELINE:
+  #     - lambda: linear calibration + clamp
+  #     - median: remove spikes
+  #     - EMA: smooth curve
+  #     - delta: reduce HA noise
+  #################################################################################################
+  - platform: adc
+    pin: 34
+    name: "${friendly_name} 1m Water Depth"
+    update_interval: 20s
+    accuracy_decimals: 1
+    attenuation: auto
+    unit_of_measurement: cm
+    filters:
+      - lambda: |-
+          const float v0 = ${cal_1m_v0};
+          const float d0 = ${cal_1m_d0};
+          const float v1 = ${cal_1m_v1};
+          const float d1 = ${cal_1m_d1};
+
+          if (id(debug_mode)) {
+            ESP_LOGD("sensor", "[RAW] 1m ADC pin volts: %.3f V", x);
+            return x;
+          }
+
+          float meters = d0 + (x - v0) * (d1 - d0) / (v1 - v0);
+          float cm = meters * 100.0f;
+
+          // Safety clamp
+          if (cm < -10.0f) cm = -10.0f;
+          return cm;
+
+      - median:
+          window_size: 15
+          send_every: 7
+          send_first_at: 1
+
+#      - exponential_moving_average:
+#          alpha: 0.18
+#          send_every: 1
+
+      #- delta: 0.1
+
+  #################################################################################################
+  #                                   5-METER WATER DEPTH SENSOR
+  #################################################################################################
+  - platform: adc
+    pin: 35
+    name: "${friendly_name} 5m Water Depth"
+    update_interval: 60s
+    accuracy_decimals: 1
+    attenuation: 12db
+    unit_of_measurement: cm
+    filters:
+      - lambda: |-
+          if (id(debug_mode)) {
+            ESP_LOGD("sensor", "[RAW] 5m ADC pin volts: %.3f V", x);
+            return x;
+          }
+
+          const float v0 = ${cal_5m_v0};
+          const float d0 = ${cal_5m_d0};
+          const float v1 = ${cal_5m_v1};
+          const float d1 = ${cal_5m_d1};
+
+          float meters = d0 + (x - v0) * (d1 - d0) / (v1 - v0);
+          float cm = meters * 100.0f;
+
+          if (cm < -10.0f) cm = -10.0f;
+          return cm;
+
+      - median:
+          window_size: 15
+          send_every: 1
+          send_first_at: 1
+
+      - exponential_moving_average:
+          alpha: 0.2
+          send_every: 1
+
+      - delta: 0.1
+      - throttle: 5s
+
+  #################################################################################################
+  #                                   SOIL MOISTURE SENSOR
+  #  ADC32 (A3) — SS200/Watermark via converter
+  #  Output: negative kPa (per your convention)
+  #################################################################################################
+  - platform: adc
+    pin: 32
+    name: "${friendly_name} Soil Moisture"
+    update_interval: 30s
+    accuracy_decimals: 1
+    attenuation: 6db
+    unit_of_measurement: kPa
+    filters:
+      - lambda: |-
+          if (id(debug_mode)) {
+            ESP_LOGD("sensor", "Raw Soil Voltage: %.3f V", x);
+            return x;
+          }
+
+          const float v0 = ${soil_v0};
+          const float k0 = ${soil_kpa0};
+          const float v1 = ${soil_v1};
+          const float k1 = ${soil_kpa1};
+
+          float kpa = k0 + (x - v0) * (k1 - k0) / (v1 - v0);
+
+          ESP_LOGD("sensor", "Calibrated moisture sensor value: %f", kpa);
+
+          float result = (kpa == 0) ? 0 : -kpa;
+          ESP_LOGD("sensor", "Soil moisture Output: %f kPa", result);
+
+          return result;
+
+      - median:
+          window_size: 15
+          send_every: 7
+          send_first_at: 1
+
+      - exponential_moving_average:
+          alpha: 0.2
+          send_every: 7
+
+      - delta: 0.5
+      - throttle: 5s
+
+  #################################################################################################
+  #                                      BATTERY VOLTAGE SENSOR
+  #  ADC33 (A4)
+  #  Uses substitution `vbat_divider_ratio` + compensation factor.
+  #################################################################################################
+  - platform: adc
+    pin: 33
+    name: "${friendly_name} Battery Voltage"
+    id: vbat_raw
+    update_interval: 300s
+    attenuation: auto
+    accuracy_decimals: 2
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    entity_category: diagnostic
+    icon: mdi:car-battery
+    filters:
+      - lambda: |-
+          if (id(debug_mode)) {
+            ESP_LOGD("sensor", "[RAW] Battery ADC pin volts: %.3f V", x);
+            return x;
+          }
+
+          float v = x * (${vbat_divider_ratio}) * 1.51515f;
+          ESP_LOGD("sensor", "Battery Final value: %f V", v);
+          return v;
+
+    on_value_range:
+      - below: 11
+        then:
+          - homeassistant.action:
+              action: notify.persistent_notification
+              data:
+                title: "ESPHome Device Low Battery Alert"
+                message: "${friendly_name} battery low"
+
+      - above: 11.1
+        then:
+          - switch.turn_off: beeper_switch
+
+# ================================================================================================
+#                                     BINARY SENSORS
+# ================================================================================================
+binary_sensor:
+  - platform: gpio
+    pin: GPIO36
+    id: manual_open
+    name: "${friendly_name} Manual Open"
+    device_class: power
+    filters:
+      - lambda: return !x;
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    on_press:
+      - lambda: |-
+          // cancel any sequence and targeting
+          id(have_target) = false;
+          id(hold_endstop) = false;
+          id(moving) = true;
+          id(desired_dir) = +1;
+          id(last_ms) = millis();
+      - valve.template.publish:
+          id: actuator_1
+          current_operation: OPENING
+          position: !lambda |-
+            float full_s = id(full_travel_s);
+            if (isnan(full_s) || full_s <= 0.0f) return 0.0f;
+            float p = id(tfrom_s) / full_s;
+            if (p < 0.0f) p = 0.0f;
+            if (p > 1.0f) p = 1.0f;
+            return p;
+    on_release:
+      - lambda: |-
+          // cancel any movement and publish idle and current position
+          id(moving) = false;
+          id(desired_dir) = 0;
+          id(publish_idle) = true;
+
+  - platform: gpio
+    pin: GPIO39
+    id: manual_close
+    name: "${friendly_name} Manual Close"
+    device_class: power
+    filters:
+      - lambda: return !x;
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    on_press:
+      - button.press: beeper_alert
+      - lambda: |-
+          // cancel any sequence and targeting
+          id(have_target) = false;
+          id(hold_endstop) = false;
+          id(moving) = true;
+          id(desired_dir) = -1;
+          id(last_ms) = millis();
+      - valve.template.publish:
+          id: actuator_1
+          current_operation: CLOSING
+          position: !lambda |-
+            float full_s = id(full_travel_s);
+            if (isnan(full_s) || full_s <= 0.0f) return 0.0f;
+            float p = id(tfrom_s) / full_s;
+            if (p < 0.0f) p = 0.0f;
+            if (p > 1.0f) p = 1.0f;
+            return p;
+    on_release:
+      - lambda: |-
+          // cancel any movement and publish idle and current position
+          id(moving) = false;
+          id(desired_dir) = 0;
+          id(publish_idle) = true;
+
+# ================================================================================================
+#                               OUTPUTS (RAW GPIO DRIVERS)
+# ================================================================================================
+output:
+  - platform: gpio
+    pin: GPIO15
+    id: relay_1
+
+  - platform: gpio
+    pin: GPIO2
+    id: relay_2
+
+  - platform: gpio
+    pin: GPIO5
+    id: relay_3
+
+  - platform: gpio
+    pin: GPIO4
+    id: relay_4
+
+  - platform: gpio
+    pin: GPIO18
+    id: beeper
+
+# ================================================================================================
+#                                       SWITCH LOGIC
+# ================================================================================================
+switch:
+  - platform: template
+    name: "${friendly_name} Debug Logging"
+    id: debug_logging
+    icon: mdi:bug
+    entity_category: config
+    lambda: |-
+      return id(debug_mode);
+    turn_on_action:
+      - lambda: |-
+          id(debug_mode) = true;
+    turn_off_action:
+      - lambda: |-
+          id(debug_mode) = false;
+
+  - platform: output
+    name: "${friendly_name} Relay 3"
+    output: relay_3
+    id: relay_3_switch
+    inverted: false
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: output
+    name: "${friendly_name} Relay 4"
+    output: relay_4
+    id: relay_4_switch
+    inverted: false
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: output
+    name: "${friendly_name} Beeper"
+    id: beeper_switch
+    output: beeper
+    inverted: false
+    restore_mode: RESTORE_DEFAULT_OFF
+
+# ================================================================================================
+#                                               VALVES
+# ================================================================================================
+valve:
+  - platform: template
+    id: actuator_1
+    name: "${friendly_name} Actuator 1"
+    device_class: water
+    optimistic: true
+    has_position: true
+    restore_mode: RESTORE
+
+    open_action:
+      - lambda: |-
+          // Full open: set target to full_travel and disable endstop hold
+          float full_s = id(full_travel_s);
+          if (isnan(full_s) || full_s <= 0.0f) full_s = 150.0f;
+
+          id(moving) = true;
+          id(last_ms) = millis();
+          id(have_target) = true;
+          id(target_tfrom_s) = roundf(full_s * 10.0f) / 10.0f;
+          id(desired_dir) = +1;
+
+          id(hold_endstop) = false;
+
+    close_action:
+      - button.press: beeper_alert
+      - lambda: |-
+          // Full close: set target 0 and enable endstop hold for recalibration
+          id(moving) = true;
+          id(last_ms) = millis();
+          id(have_target) = true;
+          id(target_tfrom_s) = 0.0f;
+          id(desired_dir) = -1;
+
+          id(hold_endstop) = true;
+
+    position_action:
+      - lambda: |-
+          float full_s = id(full_travel_s);
+          if (isnan(full_s) || full_s <= 0.0f) full_s = 150.0f;
+
+          // clamp pos
+          float p = pos;
+          if (p < 0.0f) p = 0.0f;
+          if (p > 1.0f) p = 1.0f;
+
+          float tgt = p * full_s;
+          tgt = roundf(tgt * 10.0f) / 10.0f;
+
+          id(moving) = true;
+          id(last_ms) = millis();
+          id(have_target) = true;
+          id(target_tfrom_s) = tgt;
+
+          // if commanded fully open/close via slider, enable endstop hold too
+          id(hold_endstop) = (p <= 0.001f) || (p >= 0.999f);
+
+          // decide direction based on current tfrom_s
+          float cur = id(tfrom_s);
+          float cur_p = cur / full_s;
+          if (tgt > cur + 0.05f) { // opening
+            id(desired_dir) = +1;
+            id(actuator_1).position = cur_p;
+            id(actuator_1).current_operation = esphome::valve::VALVE_OPERATION_OPENING;
+            id(actuator_1).publish_state();
+          }
+          else if (tgt < cur - 0.05f) { // closing
+            id(desired_dir) = -1;
+            id(beeper_alert).press();
+            id(actuator_1).position = cur_p;
+            id(actuator_1).current_operation = esphome::valve::VALVE_OPERATION_CLOSING;
+            id(actuator_1).publish_state();
+          } else { // already there
+            id(moving) = false;
+            id(desired_dir) = 0;
+            id(have_target) = false;
+            id(hold_endstop) = false;
+            id(publish_idle) = true;
+          }
+
+    stop_action:
+      - lambda: |-
+          id(moving) = false;
+          id(desired_dir) = 0;
+          id(have_target) = false;
+          id(hold_endstop) = false;
+          id(publish_idle) = true;
