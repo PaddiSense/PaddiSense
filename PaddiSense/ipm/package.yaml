@@ -52,6 +52,35 @@ command_line:
         - low_stock_count
         - low_stock_products
 
+  # Report data sensor - reads generated report from JSON file
+  - sensor:
+      name: IPM Report Data
+      unique_id: ipm_report_data
+      command: 'cat /config/local_data/ipm/report_data.json 2>/dev/null || echo "{\"summary\":null}"'
+      command_timeout: 10
+      scan_interval: 86400
+      value_template: >
+        {% if value_json.summary %}
+          {{ value_json.summary.total_transactions | default(0) }} transactions
+        {% else %}
+          No report
+        {% endif %}
+      json_attributes:
+        - summary
+        - by_category
+        - by_product
+        - transactions
+        - generated_at
+
+  # Lock result sensor - reads lock operation result
+  - sensor:
+      name: IPM Lock Result
+      unique_id: ipm_lock_result
+      command: 'cat /config/local_data/ipm/lock_result.json 2>/dev/null || echo "No result"'
+      command_timeout: 5
+      scan_interval: 86400
+      value_template: "{{ value }}"
+
 #=============================================================================
 # SHELL COMMANDS - Python backend calls
 #=============================================================================
@@ -199,6 +228,33 @@ shell_command:
   ipm_lock_list: >-
     python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_list
 
+  # Lock commands with file output for result checking
+  ipm_lock_acquire_movement: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_acquire
+    --type "stock_movement"
+    --id "{{ product_id }}"
+    --session "{{ session }}"
+    > /config/local_data/ipm/lock_result.json 2>&1
+
+  ipm_lock_release_movement: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_release
+    --type "stock_movement"
+    --id "{{ product_id }}"
+    --session "{{ session }}"
+
+  ipm_lock_acquire_editor: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_acquire
+    --type "product_edit"
+    --id "{{ product_id }}"
+    --session "{{ session }}"
+    > /config/local_data/ipm/lock_result.json 2>&1
+
+  ipm_lock_release_editor: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py lock_release
+    --type "product_edit"
+    --id "{{ product_id }}"
+    --session "{{ session }}"
+
   # ----- Report Commands -----
   ipm_usage_report: >-
     python3 /config/PaddiSense/ipm/python/ipm_backend.py usage_report
@@ -212,6 +268,14 @@ shell_command:
     {% if product is defined and product %}--product "{{ product }}"{% endif %}
     {% if action is defined and action %}--action "{{ action }}"{% endif %}
     {% if limit is defined and limit %}--limit "{{ limit }}"{% endif %}
+
+  # Generate report data to JSON file for dashboard
+  ipm_generate_report_file: >-
+    python3 /config/PaddiSense/ipm/python/ipm_backend.py generate_report_file
+    --output "/config/local_data/ipm/report_data.json"
+    {% if start is defined and start %}--start "{{ start }}"{% endif %}
+    {% if end is defined and end %}--end "{{ end }}"{% endif %}
+    {% if action is defined and action %}--action "{{ action }}"{% endif %}
 
 #=============================================================================
 # INPUT HELPERS - User interface controls
@@ -1495,6 +1559,33 @@ input_number:
     mode: box
 
 input_text:
+  # Session ID for multi-user locking (auto-generated)
+  ipm_session_id:
+    name: IPM Session ID
+    icon: mdi:identifier
+    max: 50
+    mode: text
+
+  # Lock holder info (who has the lock if not us)
+  ipm_locked_by:
+    name: IPM Locked By
+    icon: mdi:account-lock
+    max: 100
+    mode: text
+
+  # Currently locked product ID (for tracking)
+  ipm_movement_locked_product:
+    name: IPM Movement Locked Product
+    icon: mdi:package-variant-closed
+    max: 50
+    mode: text
+
+  ipm_editor_locked_product:
+    name: IPM Editor Locked Product
+    icon: mdi:package-variant-closed
+    max: 50
+    mode: text
+
   # Search filter
   ipm_search:
     name: IPM Search
@@ -1600,6 +1691,22 @@ input_boolean:
   ipm_loading_product:
     name: IPM Loading Product
     icon: mdi:loading
+    initial: false
+
+  # Multi-user locking flags
+  ipm_product_locked:
+    name: IPM Product Locked
+    icon: mdi:lock
+    initial: false
+
+  ipm_has_movement_lock:
+    name: IPM Has Movement Lock
+    icon: mdi:lock-check
+    initial: false
+
+  ipm_has_editor_lock:
+    name: IPM Has Editor Lock
+    icon: mdi:lock-check
     initial: false
 
 #=============================================================================
@@ -1864,6 +1971,159 @@ template:
 #=============================================================================
 automation:
   #---------------------------------------------------------------------------
+  # Generate session ID on HA start (for multi-user locking)
+  #---------------------------------------------------------------------------
+  - id: ipm_generate_session_id
+    alias: "IPM: Generate Session ID"
+    mode: single
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_session_id
+        data:
+          value: "ha_{{ now().strftime('%Y%m%d%H%M%S') }}_{{ range(1000, 9999) | random }}"
+      # Cleanup any expired locks
+      - service: shell_command.ipm_lock_cleanup
+
+  #---------------------------------------------------------------------------
+  # Acquire movement lock when product is selected
+  #---------------------------------------------------------------------------
+  - id: ipm_acquire_movement_lock_on_select
+    alias: "IPM: Acquire Movement Lock on Product Select"
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: input_select.ipm_product
+    condition:
+      - condition: template
+        value_template: >
+          {{ states('input_select.ipm_product') not in ['Select Product', 'unknown', 'unavailable', ''] }}
+    action:
+      - variables:
+          product_id: "{{ states('sensor.ipm_selected_product') }}"
+          session: "{{ states('input_text.ipm_session_id') }}"
+          old_product: "{{ states('input_text.ipm_movement_locked_product') }}"
+
+      # Wait for sensor to update
+      - delay: "00:00:00.5"
+
+      - variables:
+          product_id: "{{ states('sensor.ipm_selected_product') }}"
+
+      # Release lock on previous product if we had one
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ old_product not in ['', 'unknown', 'unavailable'] and old_product != product_id }}"
+            sequence:
+              - service: shell_command.ipm_lock_release_movement
+                data:
+                  product_id: "{{ old_product }}"
+                  session: "{{ session }}"
+
+      # Skip if no valid product
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ product_id in ['none', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ipm_has_movement_lock
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ipm_movement_locked_product
+                data:
+                  value: ""
+              - stop: "No product"
+
+      # Try to acquire lock
+      - service: shell_command.ipm_lock_acquire_movement
+        data:
+          product_id: "{{ product_id }}"
+          session: "{{ session }}"
+
+      - delay: "00:00:00.5"
+
+      # Check if lock was acquired (read result file)
+      - variables:
+          lock_result: >
+            {% set result = states('sensor.ipm_lock_result') | default('') %}
+            {{ 'Lock acquired' in result or result == '' }}
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ lock_result }}"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.ipm_has_movement_lock
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ipm_product_locked
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ipm_movement_locked_product
+                data:
+                  value: "{{ product_id }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ipm_locked_by
+                data:
+                  value: ""
+        default:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ipm_has_movement_lock
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ipm_product_locked
+          - service: persistent_notification.create
+            data:
+              title: "IPM - Product Locked"
+              message: "This product is currently being edited by another user. Your changes may conflict."
+
+  #---------------------------------------------------------------------------
+  # Release movement lock when product is deselected
+  #---------------------------------------------------------------------------
+  - id: ipm_release_movement_lock_on_deselect
+    alias: "IPM: Release Movement Lock on Deselect"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_select.ipm_product
+        to: "Select Product"
+    action:
+      - variables:
+          old_product: "{{ states('input_text.ipm_movement_locked_product') }}"
+          session: "{{ states('input_text.ipm_session_id') }}"
+
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ old_product not in ['', 'unknown', 'unavailable'] }}"
+            sequence:
+              - service: shell_command.ipm_lock_release_movement
+                data:
+                  product_id: "{{ old_product }}"
+                  session: "{{ session }}"
+
+      - service: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.ipm_has_movement_lock
+            - input_boolean.ipm_product_locked
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_movement_locked_product
+        data:
+          value: ""
+
+  #---------------------------------------------------------------------------
   # Update product dropdown when filters change
   #---------------------------------------------------------------------------
   - id: ipm_update_product_options
@@ -2114,6 +2374,156 @@ automation:
             {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
             {{ ['Custom Date Range'] + seasons }}
 
+  #---------------------------------------------------------------------------
+  # Sync config-based dropdowns (locations, units, chemical groups)
+  #---------------------------------------------------------------------------
+  - id: ipm_sync_config_dropdowns
+    alias: "IPM: Sync Config Dropdowns"
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: sensor.ipm_products
+      - platform: homeassistant
+        event: start
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.ipm_products', 'locations') is not none }}"
+    action:
+      - delay: "00:00:02"
+
+      # Sync locations to ipm_location (movement view)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_location
+        data:
+          options: >
+            {% set locs = state_attr('sensor.ipm_products', 'locations') or [] %}
+            {{ ['Select Location'] + locs }}
+
+      # Sync locations to ipm_edit_location (editor view)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_edit_location
+        data:
+          options: >
+            {% set locs = state_attr('sensor.ipm_products', 'locations') or [] %}
+            {{ locs if locs | length > 0 else ['Chem Shed'] }}
+
+      # Sync product units
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_edit_unit
+        data:
+          options: >
+            {% set units = state_attr('sensor.ipm_products', 'units') or {} %}
+            {% set product_units = units.get('product', ['L', 'kg', 'ea']) if units is mapping else ['L', 'kg', 'ea'] %}
+            {{ product_units if product_units | length > 0 else ['L', 'kg', 'ea'] }}
+
+      # Sync container sizes
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_edit_container
+        data:
+          options: >
+            {% set units = state_attr('sensor.ipm_products', 'units') or {} %}
+            {% set containers = units.get('container', ['1', '5', '10', '20', '110', '200', '1000', 'bulk']) if units is mapping else ['1', '5', '10', '20', '110', '200', '1000', 'bulk'] %}
+            {{ containers if containers | length > 0 else ['1', '5', '10', '20', '110', '200', '1000', 'bulk'] }}
+
+      # Sync application units
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_edit_app_unit
+        data:
+          options: >
+            {% set units = state_attr('sensor.ipm_products', 'units') or {} %}
+            {% set app_units = units.get('application', ['L/ha', 'mL/ha', 'kg/ha', 'g/ha', 't/ha', 'mL/100L', 'g/100L']) if units is mapping else ['L/ha', 'mL/ha', 'kg/ha', 'g/ha', 't/ha', 'mL/100L', 'g/100L'] %}
+            {{ app_units if app_units | length > 0 else ['L/ha', 'mL/ha', 'kg/ha', 'g/ha', 't/ha', 'mL/100L', 'g/100L'] }}
+
+      # Sync concentration units for all 6 active dropdowns
+      - service: input_select.set_options
+        target:
+          entity_id:
+            - input_select.ipm_active_1_unit
+            - input_select.ipm_active_2_unit
+            - input_select.ipm_active_3_unit
+            - input_select.ipm_active_4_unit
+            - input_select.ipm_active_5_unit
+            - input_select.ipm_active_6_unit
+        data:
+          options: >
+            {% set units = state_attr('sensor.ipm_products', 'units') or {} %}
+            {% set conc_units = units.get('concentration', ['g/L', 'g/kg', 'ml/L', '%']) if units is mapping else ['g/L', 'g/kg', 'ml/L', '%'] %}
+            {{ conc_units if conc_units | length > 0 else ['g/L', 'g/kg', 'ml/L', '%'] }}
+
+      # Sync chemical groups for all 6 active dropdowns
+      - service: input_select.set_options
+        target:
+          entity_id:
+            - input_select.ipm_active_1_group
+            - input_select.ipm_active_2_group
+            - input_select.ipm_active_3_group
+            - input_select.ipm_active_4_group
+            - input_select.ipm_active_5_group
+            - input_select.ipm_active_6_group
+        data:
+          options: >
+            {% set groups = state_attr('sensor.ipm_products', 'chemical_groups') or [] %}
+            {{ ['None'] + groups if groups | length > 0 else ['None', 'N/A', '1', '2', '3', '4', '5', '6', '7', '8', '9', '11', '12', '13', '14', '15', '22', 'M'] }}
+
+      # Sync manage location dropdown (settings)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_location
+        data:
+          options: >
+            {% set locs = state_attr('sensor.ipm_products', 'locations') or [] %}
+            {{ ['Select Location'] + locs }}
+
+      # Sync manage chemical group dropdown (settings)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_chemical_group
+        data:
+          options: >
+            {% set groups = state_attr('sensor.ipm_products', 'chemical_groups') or [] %}
+            {{ ['Select Group'] + groups }}
+
+      # Sync manage category dropdown (settings)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_category
+        data:
+          options: >
+            {% set cats = state_attr('sensor.ipm_products', 'categories') or [] %}
+            {{ ['Select Category'] + cats }}
+
+      # Sync manage subcategory parent dropdown (settings)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_manage_subcategory_parent
+        data:
+          options: >
+            {% set cats = state_attr('sensor.ipm_products', 'categories') or [] %}
+            {{ ['Select Category'] + cats }}
+
+      # Sync category filter dropdown (movement view)
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_category
+        data:
+          options: >
+            {% set cats = state_attr('sensor.ipm_products', 'categories') or [] %}
+            {{ ['All'] + cats }}
+
+      # Sync editor category dropdown
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.ipm_edit_category
+        data:
+          options: >
+            {% set cats = state_attr('sensor.ipm_products', 'categories') or [] %}
+            {{ cats if cats | length > 0 else ['Chemical', 'Fertiliser', 'Seed', 'Lubricant', 'Hay'] }}
+
 #=============================================================================
 # SCRIPTS - User actions
 #=============================================================================
@@ -2130,6 +2540,20 @@ script:
           location: "{{ states('input_select.ipm_location') }}"
           delta: "{{ states('input_number.ipm_quantity') | float(0) }}"
           products: "{{ state_attr('sensor.ipm_products', 'products') or {} }}"
+          session: "{{ states('input_text.ipm_session_id') }}"
+          has_lock: "{{ is_state('input_boolean.ipm_has_movement_lock', 'on') }}"
+
+      # Warn if locked by another user (but allow save with warning)
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.ipm_product_locked
+                state: "on"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Warning"
+                  message: "This product may be locked by another user. Your changes might conflict."
 
       # Validate product selected
       - choose:
@@ -2199,6 +2623,25 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.ipm_products
+
+      # Release lock after successful save
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ has_lock }}"
+            sequence:
+              - service: shell_command.ipm_lock_release_movement
+                data:
+                  product_id: "{{ product_id }}"
+                  session: "{{ session }}"
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ipm_has_movement_lock
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ipm_movement_locked_product
+                data:
+                  value: ""
 
       # Confirmation
       - service: persistent_notification.create
@@ -2330,6 +2773,8 @@ script:
           product_id: "{{ states('sensor.ipm_selected_product') }}"
           products: "{{ state_attr('sensor.ipm_products', 'products') | default({}, true) }}"
           mapping: "{{ state_attr('sensor.ipm_products', 'category_subcategories') | default({}, true) }}"
+          session: "{{ states('input_text.ipm_session_id') }}"
+          old_locked_product: "{{ states('input_text.ipm_editor_locked_product') }}"
 
           # Force every options attr into a real list (never None)
           mode_opts: "{{ state_attr('input_select.ipm_editor_mode', 'options') | default([], true) }}"
@@ -2352,6 +2797,35 @@ script:
                   title: "IPM Load Product"
                   message: "Please select a product first."
               - stop: "No product selected"
+
+      # Release lock on previously edited product if different
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ old_locked_product not in ['', 'unknown', 'unavailable'] and old_locked_product != product_id }}"
+            sequence:
+              - service: shell_command.ipm_lock_release_editor
+                data:
+                  product_id: "{{ old_locked_product }}"
+                  session: "{{ session }}"
+
+      # Try to acquire editor lock
+      - service: shell_command.ipm_lock_acquire_editor
+        data:
+          product_id: "{{ product_id }}"
+          session: "{{ session }}"
+
+      - delay: "00:00:00.5"
+
+      # Update lock status
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ipm_editor_locked_product
+        data:
+          value: "{{ product_id }}"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.ipm_has_editor_lock
 
       # Pull record safely
       - variables:
@@ -2842,6 +3316,28 @@ script:
     alias: "IPM: Clear Editor Form"
     mode: single
     sequence:
+      # Release editor lock if held
+      - variables:
+          locked_product: "{{ states('input_text.ipm_editor_locked_product') }}"
+          session: "{{ states('input_text.ipm_session_id') }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ locked_product not in ['', 'unknown', 'unavailable'] }}"
+            sequence:
+              - service: shell_command.ipm_lock_release_editor
+                data:
+                  product_id: "{{ locked_product }}"
+                  session: "{{ session }}"
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ipm_has_editor_lock
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ipm_editor_locked_product
+                data:
+                  value: ""
+
       - service: input_text.set_value
         target:
           entity_id: input_text.ipm_edit_name
@@ -3092,6 +3588,62 @@ script:
       - service: input_boolean.turn_off
         target:
           entity_id: input_boolean.ipm_show_active_6
+
+  #---------------------------------------------------------------------------
+  # Delete selected product
+  #---------------------------------------------------------------------------
+  ipm_delete_selected_product:
+    alias: "IPM: Delete Selected Product"
+    mode: single
+    sequence:
+      - variables:
+          product_id: "{{ states('sensor.ipm_selected_product') }}"
+          products: "{{ state_attr('sensor.ipm_products', 'products') | default({}, true) }}"
+
+      # Validate product selected
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ product_id in ['none', 'unknown', 'unavailable', ''] }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "IPM Delete Product"
+                  message: "No product selected. Please load a product first."
+              - stop: "No product selected"
+
+      # Get product name for confirmation message
+      - variables:
+          product_name: >-
+            {% set p = products.get(product_id, {}) if products is mapping else {} %}
+            {{ p.get('name', product_id) | default(product_id, true) }}
+
+      # Execute delete
+      - service: shell_command.ipm_delete_product
+        data:
+          product_id: "{{ product_id }}"
+
+      # Clear the editor form
+      - service: script.ipm_clear_form
+
+      # Refresh data
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_products
+
+      # Reset product dropdown
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.ipm_product
+        data:
+          option: "Select Product"
+
+      # Confirmation
+      - service: persistent_notification.create
+        data:
+          title: "IPM Delete Product"
+          message: "Product '{{ product_name }}' has been deleted."
 
   #---------------------------------------------------------------------------
   # Settings: Initialize System
@@ -4159,13 +4711,28 @@ script:
       - variables:
           start_date: "{{ states('input_datetime.ipm_report_start') }}"
           end_date: "{{ states('input_datetime.ipm_report_end') }}"
-      - service: shell_command.ipm_usage_report
+          action_filter: "{{ states('input_select.ipm_report_action') }}"
+
+      # Generate report data to JSON file
+      - service: shell_command.ipm_generate_report_file
         data:
           start: "{{ start_date }}"
           end: "{{ end_date }}"
+          action: "{{ action_filter if action_filter != 'All' else '' }}"
+
+      # Wait for file to be written
+      - delay: "00:00:01"
+
+      # Refresh the report data sensor
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.ipm_report_data
+
+      # Notify user
       - service: persistent_notification.create
         data:
           title: "IPM Usage Report"
           message: >
             Report generated for period:
             {{ start_date }} to {{ end_date }}
+            {% if action_filter != 'All' %}({{ action_filter }} only){% endif %}

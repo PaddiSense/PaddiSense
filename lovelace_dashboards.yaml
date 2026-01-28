@@ -2,6 +2,13 @@
 # Do not edit manually - changes will be overwritten
 # To add/remove dashboards, edit server.yaml and run ./PaddiSense/install.sh
 
+registry-config:
+  mode: yaml
+  title: Farm Registry
+  icon: mdi:barn
+  show_in_sidebar: true
+  filename: PaddiSense/registry/dashboards/config.yaml
+
 ipm-inventory:
   mode: yaml
   title: Inventory Manager
@@ -29,3 +36,13 @@ pwm-irrigation:
   icon: mdi:water
   show_in_sidebar: true
   filename: PaddiSense/pwm/dashboards/views.yaml
+
+# PWM Extra Data - Custom graphs/sensors per paddock
+# Hidden from sidebar, accessed via paddock view buttons
+# Edit the YAML file directly to customize views
+pwm-extra:
+  mode: yaml
+  title: PWM Extra Data
+  icon: mdi:chart-line
+  show_in_sidebar: false
+  filename: PaddiSense/pwm/dashboards/extra_data.yaml

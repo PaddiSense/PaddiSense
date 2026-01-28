@@ -18,8 +18,11 @@ Usage:
   python3 pwm_backend.py status
   python3 pwm_backend.py add_paddock --farm farm_1 --name "SW6" --bay_prefix "B-" --bay_count 5
   python3 pwm_backend.py edit_paddock --id sw6 --name "Sheepwash 6"
+  python3 pwm_backend.py edit_paddock --id sw6 --image_url "/local/paddock_images/sw6.jpg"
+  python3 pwm_backend.py edit_paddock --id sw6 --enabled true
   python3 pwm_backend.py enable_paddock --id sw6
   python3 pwm_backend.py edit_bay --id sw6_b_01 --level_sensor rb_040
+  python3 pwm_backend.py edit_bay --id sw6_b_01 --badge_top 30 --badge_left 45
   python3 pwm_backend.py assign_device --bay sw6_b_01 --slot supply_1 --device rb_040 --type door
   python3 pwm_backend.py export
 """
@@ -148,21 +151,27 @@ def cmd_add_paddock(args: argparse.Namespace) -> int:
         "automation_state_individual": args.individual or False,
         "bay_prefix": args.bay_prefix or "B-",
         "bay_count": args.bay_count,
+        "image_url": None,  # Set via edit_paddock later
         "created": now,
         "modified": now,
     }
 
-    # Create bays
+    # Create bays with auto-calculated badge positions
     bay_prefix = args.bay_prefix or "B-"
     for i in range(1, args.bay_count + 1):
         bay_name = f"{bay_prefix}{i:02d}"
         bay_id = f"{paddock_id}_{generate_id(bay_name)}"
         is_last = i == args.bay_count
 
+        # Auto-calculate badge position: evenly spaced vertically
+        # Formula: top = 15 + (bay_order * 70 / (bay_count + 1))
+        badge_top = int(15 + (i * 70 / (args.bay_count + 1)))
+
         bays[bay_id] = {
             "paddock_id": paddock_id,
             "name": bay_name,
             "order": i,
+            "badge_position": {"top": badge_top, "left": 40},
             "supply_1": {"device": None, "type": None},
             "supply_2": {"device": None, "type": None},
             "drain_1": {"device": None, "type": None} if is_last else {"device": None, "type": None},
@@ -211,6 +220,14 @@ def cmd_edit_paddock(args: argparse.Namespace) -> int:
     if args.individual is not None:
         paddock["automation_state_individual"] = args.individual
         changes.append(f"individual={args.individual}")
+
+    if args.image_url is not None:
+        paddock["image_url"] = args.image_url if args.image_url not in ("null", "") else None
+        changes.append(f"image_url={args.image_url}")
+
+    if args.enabled is not None:
+        paddock["enabled"] = args.enabled
+        changes.append(f"enabled={args.enabled}")
 
     paddock["modified"] = datetime.now().isoformat(timespec="seconds")
 
@@ -351,6 +368,16 @@ def cmd_edit_bay(args: argparse.Namespace) -> int:
     if args.flush_time is not None:
         settings["flush_time_on_water"] = args.flush_time
         changes.append(f"flush_time={args.flush_time}")
+
+    # Badge position updates
+    if args.badge_top is not None or args.badge_left is not None:
+        bay.setdefault("badge_position", {"top": 50, "left": 40})
+        if args.badge_top is not None:
+            bay["badge_position"]["top"] = args.badge_top
+            changes.append(f"badge_top={args.badge_top}")
+        if args.badge_left is not None:
+            bay["badge_position"]["left"] = args.badge_left
+            changes.append(f"badge_left={args.badge_left}")
 
     log_transaction(
         config, "edit", "bay", args.id, bay["name"],
@@ -587,6 +614,175 @@ def cmd_backup_list(args: argparse.Namespace) -> int:
 
 
 # =============================================================================
+# SYNC COMMANDS
+# =============================================================================
+
+REGISTRY_FILE = Path("/config/local_data/registry/config.json")
+
+
+def load_registry() -> dict[str, Any]:
+    """Load Farm Registry (paddock/bay structure)."""
+    if not REGISTRY_FILE.exists():
+        return {"initialized": False, "paddocks": {}, "bays": {}}
+    try:
+        return json.loads(REGISTRY_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, IOError):
+        return {"initialized": False, "paddocks": {}, "bays": {}}
+
+
+def cmd_sync_from_registry(args: argparse.Namespace) -> int:
+    """
+    Sync paddock/bay structure from Farm Registry.
+
+    This ensures PWM has settings entries for all Registry paddocks/bays.
+    Does NOT overwrite existing PWM settings - only adds missing entries.
+    """
+    registry = load_registry()
+    config = load_config()
+
+    if not registry.get("initialized"):
+        print(json.dumps({"error": "Registry not initialized"}))
+        return 1
+
+    reg_paddocks = registry.get("paddocks", {})
+    reg_bays = registry.get("bays", {})
+
+    if not reg_paddocks:
+        print(json.dumps({"error": "No paddocks in Registry"}))
+        return 1
+
+    # Get existing PWM data
+    pwm_paddocks = config.get("paddocks", {})
+    pwm_bays = config.get("bays", {})
+
+    added_paddocks = 0
+    added_bays = 0
+    updated_paddocks = 0
+    updated_bays = 0
+
+    # Filter by paddock_id if specified
+    paddock_filter = args.paddock if hasattr(args, 'paddock') and args.paddock else None
+
+    # Sync paddocks: ensure PWM has entry for each Registry paddock
+    for pid, reg_p in reg_paddocks.items():
+        if paddock_filter and pid != paddock_filter:
+            continue
+
+        if pid not in pwm_paddocks:
+            # Create new PWM paddock entry with defaults
+            pwm_paddocks[pid] = {
+                "farm_id": reg_p.get("farm_id", "farm_1"),
+                "name": reg_p.get("name", pid),
+                "enabled": False,  # Start disabled
+                "automation_state_individual": False,
+                "bay_prefix": reg_p.get("bay_prefix", "B-"),
+                "bay_count": reg_p.get("bay_count", 0),
+                "image_url": None,
+                "created": datetime.now().isoformat(timespec="seconds"),
+                "modified": datetime.now().isoformat(timespec="seconds"),
+            }
+            added_paddocks += 1
+        else:
+            # Update structure fields from Registry (keep PWM settings)
+            pwm_p = pwm_paddocks[pid]
+            pwm_p["name"] = reg_p.get("name", pwm_p.get("name", pid))
+            pwm_p["farm_id"] = reg_p.get("farm_id", pwm_p.get("farm_id", "farm_1"))
+            pwm_p["bay_prefix"] = reg_p.get("bay_prefix", pwm_p.get("bay_prefix", "B-"))
+            pwm_p["bay_count"] = reg_p.get("bay_count", pwm_p.get("bay_count", 0))
+            pwm_p["modified"] = datetime.now().isoformat(timespec="seconds")
+            updated_paddocks += 1
+
+    # Sync bays: ensure PWM has entry for each Registry bay
+    for bid, reg_b in reg_bays.items():
+        paddock_id = reg_b.get("paddock_id", "")
+        if paddock_filter and paddock_id != paddock_filter:
+            continue
+
+        if bid not in pwm_bays:
+            # Create new PWM bay entry with defaults
+            pwm_bays[bid] = {
+                "paddock_id": paddock_id,
+                "name": reg_b.get("name", bid),
+                "order": reg_b.get("order", 0),
+                "is_last_bay": reg_b.get("is_last_bay", False),
+                "badge_position": {"top": 50, "left": 40},
+                "supply_1": {"device": None, "type": None},
+                "supply_2": {"device": None, "type": None},
+                "drain_1": {"device": None, "type": None},
+                "drain_2": {"device": None, "type": None},
+                "level_sensor": None,
+                "settings": DEFAULT_BAY_SETTINGS.copy(),
+            }
+            added_bays += 1
+        else:
+            # Update structure fields from Registry (keep PWM settings)
+            pwm_b = pwm_bays[bid]
+            pwm_b["paddock_id"] = paddock_id
+            pwm_b["name"] = reg_b.get("name", pwm_b.get("name", bid))
+            pwm_b["order"] = reg_b.get("order", pwm_b.get("order", 0))
+            pwm_b["is_last_bay"] = reg_b.get("is_last_bay", pwm_b.get("is_last_bay", False))
+            updated_bays += 1
+
+    config["paddocks"] = pwm_paddocks
+    config["bays"] = pwm_bays
+
+    log_transaction(
+        config, "sync", "system", "registry",
+        f"Synced from Registry",
+        f"Added {added_paddocks} paddocks, {added_bays} bays; Updated {updated_paddocks} paddocks, {updated_bays} bays"
+    )
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "added_paddocks": added_paddocks,
+        "added_bays": added_bays,
+        "updated_paddocks": updated_paddocks,
+        "updated_bays": updated_bays,
+        "message": f"Synced from Registry: {added_paddocks} new paddocks, {added_bays} new bays"
+    }))
+    return 0
+
+
+def cmd_list_paddocks(args: argparse.Namespace) -> int:
+    """List all paddocks with their PWM status."""
+    registry = load_registry()
+    config = load_config()
+
+    reg_paddocks = registry.get("paddocks", {})
+    pwm_paddocks = config.get("paddocks", {})
+
+    paddock_list = []
+    for pid, reg_p in reg_paddocks.items():
+        pwm_p = pwm_paddocks.get(pid, {})
+        paddock_list.append({
+            "id": pid,
+            "name": reg_p.get("name", pid),
+            "in_registry": True,
+            "in_pwm": pid in pwm_paddocks,
+            "enabled": pwm_p.get("enabled", False),
+            "bay_count": reg_p.get("bay_count", 0),
+            "current_season": reg_p.get("current_season", True),
+        })
+
+    # Also list PWM-only paddocks (not in registry)
+    for pid, pwm_p in pwm_paddocks.items():
+        if pid not in reg_paddocks:
+            paddock_list.append({
+                "id": pid,
+                "name": pwm_p.get("name", pid),
+                "in_registry": False,
+                "in_pwm": True,
+                "enabled": pwm_p.get("enabled", False),
+                "bay_count": pwm_p.get("bay_count", 0),
+                "current_season": False,
+            })
+
+    print(json.dumps({"paddocks": sorted(paddock_list, key=lambda x: x["name"])}))
+    return 0
+
+
+# =============================================================================
 # MAIN
 # =============================================================================
 
@@ -608,6 +804,8 @@ def main() -> int:
     p_edit.add_argument("--name", help="New name")
     p_edit.add_argument("--farm", help="Farm ID")
     p_edit.add_argument("--individual", type=lambda x: x.lower() == "true", help="Individual mode (true/false)")
+    p_edit.add_argument("--image_url", help="Paddock image URL (e.g., /local/paddock_images/sw5.jpg)")
+    p_edit.add_argument("--enabled", type=lambda x: x.lower() == "true", help="Enable/disable paddock (true/false)")
 
     p_del = subparsers.add_parser("delete_paddock", help="Delete a paddock")
     p_del.add_argument("--id", required=True, help="Paddock ID")
@@ -626,6 +824,8 @@ def main() -> int:
     b_edit.add_argument("--water_level_max", type=int, help="Max water level (cm)")
     b_edit.add_argument("--water_level_offset", type=float, help="Water level offset (cm)")
     b_edit.add_argument("--flush_time", type=int, help="Flush time on water (seconds)")
+    b_edit.add_argument("--badge_top", type=int, help="Badge position top (0-100 percent)")
+    b_edit.add_argument("--badge_left", type=int, help="Badge position left (0-100 percent)")
 
     b_assign = subparsers.add_parser("assign_device", help="Assign device to bay slot")
     b_assign.add_argument("--bay", required=True, help="Bay ID")
@@ -647,6 +847,12 @@ def main() -> int:
 
     subparsers.add_parser("backup_list", help="List backup files")
 
+    # Sync commands
+    p_sync = subparsers.add_parser("sync_from_registry", help="Sync paddock/bay structure from Registry")
+    p_sync.add_argument("--paddock", "-p", help="Only sync specific paddock ID")
+
+    subparsers.add_parser("list_paddocks", help="List all paddocks with PWM status")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -667,6 +873,8 @@ def main() -> int:
         "import_backup": cmd_import_backup,
         "reset": cmd_reset,
         "backup_list": cmd_backup_list,
+        "sync_from_registry": cmd_sync_from_registry,
+        "list_paddocks": cmd_list_paddocks,
     }
 
     cmd_func = commands.get(args.command)

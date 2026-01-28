@@ -4,11 +4,14 @@ PWM Sensor - Precision Water Management
 PaddiSense Farm Management System
 
 This script provides read-only JSON output for the Home Assistant sensor.
-It reads the config file and server.yaml, outputting data for template sensors.
+It merges:
+  - Farm Registry (structure): paddocks, bays
+  - PWM Config (settings): enabled, device assignments, water levels
+  - server.yaml: farm definitions
 
 Output includes:
-  - paddocks: All paddock configurations
-  - bays: All bay configurations with device assignments
+  - paddocks: Merged paddock data (structure + settings)
+  - bays: Merged bay data (structure + settings)
   - farms: Farm definitions from server.yaml
   - paddock_names: List of paddock names for dropdowns
   - enabled_paddocks: List of enabled paddock IDs
@@ -24,9 +27,10 @@ from typing import Any
 import yaml
 
 # Paths
-DATA_DIR = Path("/config/local_data/pwm")
-CONFIG_FILE = DATA_DIR / "config.json"
-BACKUP_DIR = DATA_DIR / "backups"
+REGISTRY_FILE = Path("/config/local_data/registry/config.json")
+PWM_DATA_DIR = Path("/config/local_data/pwm")
+PWM_CONFIG_FILE = PWM_DATA_DIR / "config.json"
+BACKUP_DIR = PWM_DATA_DIR / "backups"
 SERVER_YAML = Path("/config/server.yaml")
 VERSION_FILE = Path("/config/PaddiSense/pwm/VERSION")
 
@@ -41,24 +45,103 @@ def get_version() -> str:
     return "unknown"
 
 
-def load_config() -> dict[str, Any]:
-    """Load PWM config from JSON file."""
-    if not CONFIG_FILE.exists():
-        return {
-            "initialized": False,
-            "paddocks": {},
-            "bays": {},
-            "version": "1.0.0",
-        }
+def load_registry() -> dict[str, Any]:
+    """Load Farm Registry (paddock/bay structure)."""
+    if not REGISTRY_FILE.exists():
+        return {"initialized": False, "paddocks": {}, "bays": {}}
     try:
-        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        return json.loads(REGISTRY_FILE.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, IOError):
-        return {
-            "initialized": False,
-            "paddocks": {},
-            "bays": {},
-            "version": "1.0.0",
+        return {"initialized": False, "paddocks": {}, "bays": {}}
+
+
+def load_pwm_config() -> dict[str, Any]:
+    """Load PWM-specific settings (enabled, devices, water levels)."""
+    if not PWM_CONFIG_FILE.exists():
+        return {"paddock_settings": {}, "bay_settings": {}}
+    try:
+        return json.loads(PWM_CONFIG_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, IOError):
+        return {"paddock_settings": {}, "bay_settings": {}}
+
+
+def load_merged_config() -> dict[str, Any]:
+    """
+    Merge Registry structure with PWM settings.
+
+    Registry provides: paddock/bay structure (id, name, order, farm_id)
+    PWM provides: enabled, automation_state_individual, device assignments, water levels
+    """
+    registry = load_registry()
+    pwm = load_pwm_config()
+
+    # Support both old and new PWM config format
+    # Old format: paddocks/bays directly in config
+    # New format: paddock_settings/bay_settings
+    pwm_paddock_settings = pwm.get("paddock_settings", {})
+    pwm_bay_settings = pwm.get("bay_settings", {})
+
+    # Fall back to old format if new format is empty
+    if not pwm_paddock_settings and "paddocks" in pwm:
+        pwm_paddock_settings = {
+            pid: {
+                "enabled": p.get("enabled", True),
+                "automation_state_individual": p.get("automation_state_individual", False),
+                "image_url": p.get("image_url"),
+            }
+            for pid, p in pwm.get("paddocks", {}).items()
         }
+
+    if not pwm_bay_settings and "bays" in pwm:
+        pwm_bay_settings = {
+            bid: {
+                "supply_1": b.get("supply_1"),
+                "supply_2": b.get("supply_2"),
+                "drain_1": b.get("drain_1"),
+                "drain_2": b.get("drain_2"),
+                "level_sensor": b.get("level_sensor"),
+                "settings": b.get("settings", {}),
+                "badge_position": b.get("badge_position", {"top": 50, "left": 40}),
+            }
+            for bid, b in pwm.get("bays", {}).items()
+        }
+
+    # Merge paddocks: structure from registry + settings from PWM
+    merged_paddocks = {}
+    for pid, p in registry.get("paddocks", {}).items():
+        pwm_settings = pwm_paddock_settings.get(pid, {})
+        merged_paddocks[pid] = {
+            **p,
+            "enabled": pwm_settings.get("enabled", True),
+            "automation_state_individual": pwm_settings.get("automation_state_individual", False),
+            "image_url": pwm_settings.get("image_url"),
+        }
+
+    # Merge bays: structure from registry + settings from PWM
+    merged_bays = {}
+    for bid, b in registry.get("bays", {}).items():
+        pwm_settings = pwm_bay_settings.get(bid, {})
+        merged_bays[bid] = {
+            **b,
+            "supply_1": pwm_settings.get("supply_1"),
+            "supply_2": pwm_settings.get("supply_2"),
+            "drain_1": pwm_settings.get("drain_1"),
+            "drain_2": pwm_settings.get("drain_2"),
+            "level_sensor": pwm_settings.get("level_sensor"),
+            "settings": pwm_settings.get("settings", {
+                "water_level_min": 5,
+                "water_level_max": 15,
+                "water_level_offset": 0,
+                "flush_time_on_water": 3600
+            }),
+            "badge_position": pwm_settings.get("badge_position", {"top": 50, "left": 40}),
+        }
+
+    return {
+        "paddocks": merged_paddocks,
+        "bays": merged_bays,
+        "initialized": registry.get("initialized", False)
+    }
 
 
 def load_server_yaml() -> dict[str, Any]:
@@ -124,6 +207,7 @@ def build_paddock_summary(
                 "individual_mode": paddock.get("automation_state_individual", False),
                 "bay_count": bay_count,
                 "configured_bays": configured_bays,
+                "image_url": paddock.get("image_url"),
             }
         )
     return sorted(summary, key=lambda x: x["name"])
@@ -143,6 +227,9 @@ def build_bay_summary(bays: dict[str, Any], paddocks: dict[str, Any]) -> list[di
         drain_2 = (bay.get("drain_2", {}) or {}).get("device")
         level = bay.get("level_sensor")
 
+        # Get badge position with defaults
+        badge_pos = bay.get("badge_position", {"top": 50, "left": 40})
+
         summary.append(
             {
                 "id": bid,
@@ -158,13 +245,15 @@ def build_bay_summary(bays: dict[str, Any], paddocks: dict[str, Any]) -> list[di
                 "level_sensor": level,
                 "has_device": bool(level or supply_1),
                 "settings": bay.get("settings", {}),
+                "badge_position": badge_pos,
             }
         )
     return sorted(summary, key=lambda x: (x["paddock_name"], x["order"]))
 
 
 def main() -> int:
-    config = load_config()
+    # Load merged config (Registry structure + PWM settings)
+    config = load_merged_config()
     server = load_server_yaml()
 
     # Check if PWM is enabled in server.yaml
@@ -178,7 +267,7 @@ def main() -> int:
 
     # System status
     initialized = config.get("initialized", False)
-    config_ok = CONFIG_FILE.exists()
+    config_ok = REGISTRY_FILE.exists()
 
     # Build lists for dropdowns
     paddock_names = sorted([p.get("name", pid) for pid, p in paddocks.items()])

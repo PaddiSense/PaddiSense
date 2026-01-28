@@ -1,0 +1,39 @@
+# PWM Generated Entities Master Include
+# Generated: 2026-01-26T21:12:17
+# Version: 2026.01.1
+#
+# These files are automatically loaded via symlinks in PaddiSense/packages/
+# Symlinks are prefixed with pwm_gen_*
+#
+# Generated files:
+#   - pwm_bay_sw4_e_b_01.yaml
+#   - pwm_bay_sw4_e_b_02.yaml
+#   - pwm_bay_sw4_e_b_03.yaml
+#   - pwm_bay_sw4_w_b_01.yaml
+#   - pwm_bay_sw4_w_b_02.yaml
+#   - pwm_bay_sw4_w_b_03.yaml
+#   - pwm_bay_sw5_b_01.yaml
+#   - pwm_bay_sw5_b_02.yaml
+#   - pwm_bay_sw5_b_03.yaml
+#   - pwm_bay_sw5_b_04.yaml
+#   - pwm_bay_sw5_b_05.yaml
+#   - pwm_bay_w17_b_01.yaml
+#   - pwm_bay_w17_b_02.yaml
+#   - pwm_bay_w17_b_03.yaml
+#   - pwm_bay_w17_b_04.yaml
+#   - pwm_bay_w17_b_05.yaml
+#   - pwm_bay_w18_b_01.yaml
+#   - pwm_bay_w18_b_02.yaml
+#   - pwm_bay_w18_b_03.yaml
+#   - pwm_bay_w18_b_04.yaml
+#   - pwm_bay_w18_b_05.yaml
+#   - pwm_bay_w19_b_01.yaml
+#   - pwm_bay_w19_b_02.yaml
+#   - pwm_bay_w19_b_03.yaml
+#   - pwm_bay_w19_b_04.yaml
+#   - pwm_paddock_sw4_e.yaml
+#   - pwm_paddock_sw4_w.yaml
+#   - pwm_paddock_sw5.yaml
+#   - pwm_paddock_w17.yaml
+#   - pwm_paddock_w18.yaml
+#   - pwm_paddock_w19.yaml

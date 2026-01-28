@@ -136,6 +136,7 @@ def cmd_add_paddock(args: argparse.Namespace) -> int:
         "name": args.name,
         "bay_prefix": bay_prefix,
         "bay_count": args.bay_count,
+        "current_season": args.current_season if args.current_season is not None else True,
         "created": now,
         "modified": now,
     }
@@ -190,6 +191,10 @@ def cmd_edit_paddock(args: argparse.Namespace) -> int:
         paddock["farm_id"] = args.farm
         changes.append(f"farm={args.farm}")
 
+    if args.current_season is not None:
+        paddock["current_season"] = args.current_season
+        changes.append(f"current_season={args.current_season}")
+
     paddock["modified"] = datetime.now().isoformat(timespec="seconds")
 
     log_transaction(
@@ -202,6 +207,41 @@ def cmd_edit_paddock(args: argparse.Namespace) -> int:
         "success": True,
         "paddock_id": args.id,
         "message": f"Updated paddock '{paddock['name']}'"
+    }))
+    return 0
+
+
+def cmd_set_current_season(args: argparse.Namespace) -> int:
+    """Set paddock current_season flag."""
+    config = load_config()
+    paddocks = config.get("paddocks", {})
+
+    if args.id not in paddocks:
+        print(json.dumps({"error": f"Paddock '{args.id}' not found"}))
+        return 1
+
+    paddock = paddocks[args.id]
+
+    # Toggle if no value specified, otherwise set to specified value
+    if args.value is not None:
+        new_value = args.value
+    else:
+        new_value = not paddock.get("current_season", True)
+
+    paddock["current_season"] = new_value
+    paddock["modified"] = datetime.now().isoformat(timespec="seconds")
+
+    log_transaction(
+        config, "set_current_season", "paddock", args.id, paddock["name"],
+        f"current_season={new_value}"
+    )
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "paddock_id": args.id,
+        "current_season": new_value,
+        "message": f"Set {paddock['name']} current_season to {new_value}"
     }))
     return 0
 
@@ -496,6 +536,102 @@ def cmd_set_active_season(args: argparse.Namespace) -> int:
 
 
 # =============================================================================
+# FARM COMMANDS
+# =============================================================================
+
+
+def cmd_add_farm(args: argparse.Namespace) -> int:
+    """Add a new farm."""
+    config = load_config()
+    farms = config.setdefault("farms", {})
+
+    farm_id = generate_id(args.name)
+
+    if farm_id in farms:
+        print(json.dumps({"error": f"Farm '{farm_id}' already exists"}))
+        return 1
+
+    now = datetime.now().isoformat(timespec="seconds")
+    farms[farm_id] = {
+        "name": args.name,
+        "created": now,
+        "modified": now,
+    }
+
+    log_transaction(config, "add", "farm", farm_id, args.name, "")
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "farm_id": farm_id,
+        "message": f"Created farm '{args.name}'"
+    }))
+    return 0
+
+
+def cmd_edit_farm(args: argparse.Namespace) -> int:
+    """Edit an existing farm."""
+    config = load_config()
+    farms = config.get("farms", {})
+
+    if args.id not in farms:
+        print(json.dumps({"error": f"Farm '{args.id}' not found"}))
+        return 1
+
+    farm = farms[args.id]
+    changes = []
+
+    if args.name is not None:
+        farm["name"] = args.name
+        changes.append(f"name={args.name}")
+
+    farm["modified"] = datetime.now().isoformat(timespec="seconds")
+
+    log_transaction(config, "edit", "farm", args.id, farm["name"], ", ".join(changes))
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "farm_id": args.id,
+        "message": f"Updated farm '{farm['name']}'"
+    }))
+    return 0
+
+
+def cmd_delete_farm(args: argparse.Namespace) -> int:
+    """Delete a farm (only if no paddocks assigned)."""
+    config = load_config()
+    farms = config.get("farms", {})
+    paddocks = config.get("paddocks", {})
+
+    if args.id not in farms:
+        print(json.dumps({"error": f"Farm '{args.id}' not found"}))
+        return 1
+
+    # Check for assigned paddocks
+    assigned_paddocks = [p for p in paddocks.values() if p.get("farm_id") == args.id]
+    if assigned_paddocks:
+        print(json.dumps({
+            "error": f"Cannot delete farm with {len(assigned_paddocks)} assigned paddocks",
+            "paddock_count": len(assigned_paddocks)
+        }))
+        return 1
+
+    farm_name = farms[args.id].get("name", args.id)
+    del farms[args.id]
+
+    log_transaction(config, "delete", "farm", args.id, farm_name, "")
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "farm_id": args.id,
+        "message": f"Deleted farm '{farm_name}'"
+    }))
+    return 0
+
+
+# =============================================================================
 # SYSTEM COMMANDS
 # =============================================================================
 
@@ -605,6 +741,7 @@ def cmd_migrate_from_pwm(args: argparse.Namespace) -> int:
                 "name": paddock.get("name", pid),
                 "bay_prefix": paddock.get("bay_prefix", "B-"),
                 "bay_count": paddock.get("bay_count", 0),
+                "current_season": paddock.get("current_season", True),
                 "created": paddock.get("created", now),
                 "modified": now,
             }
@@ -762,14 +899,23 @@ def main() -> int:
     p_add.add_argument("--name", required=True, help="Paddock name")
     p_add.add_argument("--bay_prefix", default="B-", help="Bay prefix (e.g., B-)")
     p_add.add_argument("--bay_count", type=int, required=True, help="Number of bays")
+    p_add.add_argument("--current_season", type=lambda x: x.lower() == "true",
+                       help="Is paddock in current season (true/false)")
 
     p_edit = subparsers.add_parser("edit_paddock", help="Edit a paddock")
     p_edit.add_argument("--id", required=True, help="Paddock ID")
     p_edit.add_argument("--name", help="New name")
     p_edit.add_argument("--farm", help="Farm ID")
+    p_edit.add_argument("--current_season", type=lambda x: x.lower() == "true",
+                        help="Is paddock in current season (true/false)")
 
     p_del = subparsers.add_parser("delete_paddock", help="Delete a paddock")
     p_del.add_argument("--id", required=True, help="Paddock ID")
+
+    p_season = subparsers.add_parser("set_current_season", help="Set paddock current_season flag")
+    p_season.add_argument("--id", required=True, help="Paddock ID")
+    p_season.add_argument("--value", type=lambda x: x.lower() == "true",
+                          help="Current season value (true/false); omit to toggle")
 
     # Bay commands
     b_add = subparsers.add_parser("add_bay", help="Add a bay to a paddock")
@@ -806,6 +952,17 @@ def main() -> int:
     s_active = subparsers.add_parser("set_active_season", help="Set active season")
     s_active.add_argument("--id", required=True, help="Season ID")
 
+    # Farm commands
+    f_add = subparsers.add_parser("add_farm", help="Add a new farm")
+    f_add.add_argument("--name", required=True, help="Farm name")
+
+    f_edit = subparsers.add_parser("edit_farm", help="Edit a farm")
+    f_edit.add_argument("--id", required=True, help="Farm ID")
+    f_edit.add_argument("--name", help="New name")
+
+    f_del = subparsers.add_parser("delete_farm", help="Delete a farm")
+    f_del.add_argument("--id", required=True, help="Farm ID")
+
     # System commands
     subparsers.add_parser("init", help="Initialize the system")
     subparsers.add_parser("status", help="Get system status")
@@ -830,6 +987,7 @@ def main() -> int:
         "add_paddock": cmd_add_paddock,
         "edit_paddock": cmd_edit_paddock,
         "delete_paddock": cmd_delete_paddock,
+        "set_current_season": cmd_set_current_season,
         "add_bay": cmd_add_bay,
         "edit_bay": cmd_edit_bay,
         "delete_bay": cmd_delete_bay,
@@ -837,6 +995,9 @@ def main() -> int:
         "edit_season": cmd_edit_season,
         "delete_season": cmd_delete_season,
         "set_active_season": cmd_set_active_season,
+        "add_farm": cmd_add_farm,
+        "edit_farm": cmd_edit_farm,
+        "delete_farm": cmd_delete_farm,
         "init": cmd_init,
         "status": cmd_status,
         "migrate_from_pwm": cmd_migrate_from_pwm,

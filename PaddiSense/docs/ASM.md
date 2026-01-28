@@ -1,7 +1,10 @@
 # ASM — Asset Service Manager
 
+> **UI Note:** Dashboard cards should follow the **IPM card style** for consistency. See `docs/ARCHITECTURE.md` and `reference/UI_STYLE_GUIDE.md`.
+
 ## Scope
 - Assets, parts, service/inspection events.
+- pre-start check major focus
 - Offline-first; local JSON backing store.
 
 ## Data
@@ -14,6 +17,7 @@
 - Add/edit assets
 - Add/edit parts, adjust stock
 - Record service events (with optional parts consumption)
+- record pre-start check for an asset
 - View history, reports
 - Export/backup/restore/reset
 

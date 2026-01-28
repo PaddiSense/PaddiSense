@@ -83,19 +83,29 @@ def extract_grower(server_config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def extract_farms(server_config: dict[str, Any]) -> dict[str, Any]:
-    """Extract farm definitions from server.yaml (PWM section for now)."""
-    # Farms are defined in pwm.farms in server.yaml
-    # In future, they may move to a dedicated registry section
-    pwm_config = server_config.get("pwm", {})
-    farms = pwm_config.get("farms", {})
+def extract_farms(server_config: dict[str, Any], registry_farms: dict[str, Any]) -> dict[str, Any]:
+    """
+    Merge farm definitions from server.yaml (read-only legacy) and config.json (editable).
 
-    # Also check for a dedicated registry.farms section
+    Priority: config.json farms override server.yaml farms if same ID.
+    This allows editing farms via UI while preserving backward compatibility.
+    """
+    # Start with farms from server.yaml (pwm.farms or registry.farms)
+    pwm_config = server_config.get("pwm", {})
+    server_farms = dict(pwm_config.get("farms", {}))
+
+    # Check for dedicated registry.farms section in server.yaml
     registry_config = server_config.get("registry", {})
     if "farms" in registry_config:
-        farms = registry_config.get("farms", farms)
+        server_farms.update(registry_config.get("farms", {}))
 
-    return farms
+    # Merge in farms from config.json (these take precedence)
+    # This allows farms to be edited via the UI
+    merged = dict(server_farms)
+    for farm_id, farm_data in registry_farms.items():
+        merged[farm_id] = farm_data
+
+    return merged
 
 
 def get_active_season(seasons: dict[str, Any]) -> str | None:
@@ -150,7 +160,8 @@ def main() -> int:
 
     # Extract data
     grower = extract_grower(server)
-    farms = extract_farms(server)
+    registry_farms = config.get("farms", {})  # Farms stored in config.json (editable)
+    farms = extract_farms(server, registry_farms)  # Merge with server.yaml farms
     paddocks = config.get("paddocks", {})
     bays = config.get("bays", {})
     seasons = config.get("seasons", {})

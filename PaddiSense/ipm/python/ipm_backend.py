@@ -1912,6 +1912,147 @@ def cmd_transaction_history(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_generate_report_file(args: argparse.Namespace) -> int:
+    """Generate comprehensive report data to a JSON file for dashboard display."""
+    data = load_inventory()
+    transactions = data.get("transactions", [])
+    products = data.get("products", {})
+
+    # Parse date filters
+    start_date = None
+    end_date = None
+
+    if args.start:
+        try:
+            start_date = datetime.fromisoformat(args.start.strip())
+        except ValueError:
+            print(f"ERROR: Invalid start date format: {args.start}", file=sys.stderr)
+            return 1
+
+    if args.end:
+        try:
+            end_date = datetime.fromisoformat(args.end.strip())
+            end_date = end_date.replace(hour=23, minute=59, second=59)
+        except ValueError:
+            print(f"ERROR: Invalid end date format: {args.end}", file=sys.stderr)
+            return 1
+
+    # Parse action filter
+    action_filter = args.action.strip() if args.action else None
+
+    # Filter transactions by date and action
+    filtered_txns = []
+    for txn in transactions:
+        try:
+            txn_date = datetime.fromisoformat(txn.get("timestamp", ""))
+            if start_date and txn_date < start_date:
+                continue
+            if end_date and txn_date > end_date:
+                continue
+        except ValueError:
+            continue
+
+        if action_filter and txn.get("action") != action_filter:
+            continue
+
+        filtered_txns.append(txn)
+
+    # Build usage summary by product
+    usage_by_product: dict[str, dict] = {}
+    total_stock_in = 0.0
+    total_stock_out = 0.0
+
+    for txn in filtered_txns:
+        product_id = txn.get("product_id", "")
+        product_name = txn.get("product_name", product_id)
+        action = txn.get("action", "")
+        delta = float(txn.get("delta", 0))
+
+        # Get category from product data
+        product = products.get(product_id, {})
+        category = product.get("category", "Unknown")
+
+        if product_id not in usage_by_product:
+            usage_by_product[product_id] = {
+                "id": product_id,
+                "name": product_name,
+                "category": category,
+                "stock_in": 0.0,
+                "stock_out": 0.0,
+                "net": 0.0,
+                "transactions": 0,
+            }
+
+        usage_by_product[product_id]["transactions"] += 1
+        usage_by_product[product_id]["net"] += delta
+
+        if action == "stock_in" or delta > 0:
+            usage_by_product[product_id]["stock_in"] += abs(delta)
+            total_stock_in += abs(delta)
+        elif action == "stock_out" or delta < 0:
+            usage_by_product[product_id]["stock_out"] += abs(delta)
+            total_stock_out += abs(delta)
+
+    # Build category summary
+    category_summary: dict[str, dict] = {}
+    for item in usage_by_product.values():
+        category = item["category"]
+        if category not in category_summary:
+            category_summary[category] = {
+                "category": category,
+                "stock_in": 0.0,
+                "stock_out": 0.0,
+                "net": 0.0,
+                "products": 0,
+            }
+        category_summary[category]["stock_in"] += item["stock_in"]
+        category_summary[category]["stock_out"] += item["stock_out"]
+        category_summary[category]["net"] += item["net"]
+        category_summary[category]["products"] += 1
+
+    # Get recent transactions (most recent first, limited to 50)
+    recent_txns = sorted(
+        filtered_txns,
+        key=lambda x: x.get("timestamp", ""),
+        reverse=True
+    )[:50]
+
+    # Build result structure
+    result = {
+        "summary": {
+            "start_date": start_date.strftime("%Y-%m-%d") if start_date else None,
+            "end_date": end_date.strftime("%Y-%m-%d") if end_date else None,
+            "total_transactions": len(filtered_txns),
+            "products_affected": len(usage_by_product),
+            "total_stock_in": round(total_stock_in, 2),
+            "total_stock_out": round(total_stock_out, 2),
+            "net_change": round(total_stock_in - total_stock_out, 2),
+        },
+        "by_category": sorted(
+            category_summary.values(),
+            key=lambda x: x["stock_out"],
+            reverse=True
+        ),
+        "by_product": sorted(
+            usage_by_product.values(),
+            key=lambda x: x["stock_out"],
+            reverse=True
+        ),
+        "transactions": recent_txns,
+        "generated_at": datetime.now().isoformat(),
+    }
+
+    # Write to output file
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+
+    print(f"OK: Report generated to {output_path}")
+    return 0
+
+
 # =========================================================================
 # ARGUMENT PARSER
 # =========================================================================
@@ -2061,6 +2202,13 @@ def build_parser() -> argparse.ArgumentParser:
     txn_history_p.add_argument("--action", help="Filter by action (stock_in, stock_out, etc.)")
     txn_history_p.add_argument("--limit", type=int, default=100, help="Max records to return")
     txn_history_p.set_defaults(func=cmd_transaction_history)
+
+    gen_report_p = subparsers.add_parser("generate_report_file", help="Generate report data to JSON file")
+    gen_report_p.add_argument("--output", required=True, help="Output file path")
+    gen_report_p.add_argument("--start", help="Start date (YYYY-MM-DD)")
+    gen_report_p.add_argument("--end", help="End date (YYYY-MM-DD)")
+    gen_report_p.add_argument("--action", help="Filter by action type")
+    gen_report_p.set_defaults(func=cmd_generate_report_file)
 
     # ----- Lock Commands -----
     lock_acquire_p = subparsers.add_parser("lock_acquire", help="Acquire a lock on an entity")

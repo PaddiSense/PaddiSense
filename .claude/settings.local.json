@@ -23,7 +23,23 @@
       "Bash(git rm:*)",
       "Bash(git reset:*)",
       "Bash(ln:*)",
-      "Bash(bash -n:*)"
+      "Bash(bash -n:*)",
+      "Bash(tree:*)",
+      "Bash(xargs:*)",
+      "Bash(for script in \"registry_save_paddock_edit\" \"registry_export_data\" \"registry_init_system\" \"registry_refresh_data\" \"registry_open_edit_paddock\" \"registry_add_paddock\" \"registry_delete_paddock\" \"registry_toggle_current_season\")",
+      "Bash(do)",
+      "Bash(if grep:*)",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(grep:*)",
+      "Bash(git -C /config diff PaddiSense/docs PaddiSense/reference)",
+      "WebSearch",
+      "Bash(cat:*)",
+      "WebFetch(domain:developers.home-assistant.io)",
+      "WebFetch(domain:hacs.xyz)"
     ]
   }
 }

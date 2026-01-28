@@ -1,0 +1,200 @@
+##############################################################################
+# PWM Extra Data Dashboard - User Editable
+# PaddiSense Farm Management System
+#
+# This dashboard is in STORAGE mode - users can edit via the UI.
+# Access via paddock view "Extra Data" buttons (hidden from sidebar).
+#
+# Initial views are created for each paddock. Users can add:
+#   - ApexCharts graphs
+#   - History graphs
+#   - Sensor cards
+#   - Any custom cards
+#
+# URL: /pwm-extra/<paddock-path>
+##############################################################################
+
+title: PWM Extra Data
+views:
+  #============================================================================
+  # SW4 EAST - Extra Data
+  #============================================================================
+  - title: SW4 East Extra
+    path: sw4-e
+    icon: mdi:chart-line
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## SW4 East - Extra Data
+
+              Add custom graphs by editing:
+              `PaddiSense/pwm/dashboards/extra_data.yaml`
+
+              **Useful entities:**
+              - `sensor.pwm_sw4_e_b_01_water_depth`
+              - `sensor.pwm_sw4_e_b_02_water_depth`
+              - `sensor.pwm_sw4_e_b_03_water_depth`
+              - `input_select.sw4_e_automation_state`
+          - type: history-graph
+            title: Bay Water Depths (24h)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pwm_sw4_e_b_01_water_depth
+                name: B-01
+              - entity: sensor.pwm_sw4_e_b_02_water_depth
+                name: B-02
+              - entity: sensor.pwm_sw4_e_b_03_water_depth
+                name: B-03
+
+  #============================================================================
+  # SW4 WEST - Extra Data
+  #============================================================================
+  - title: SW4 West Extra
+    path: sw4-w
+    icon: mdi:chart-line
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## SW4 West - Extra Data
+
+              Edit `extra_data.yaml` to add custom cards.
+          - type: history-graph
+            title: Bay Water Depths (24h)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pwm_sw4_w_b_01_water_depth
+                name: B-01
+              - entity: sensor.pwm_sw4_w_b_02_water_depth
+                name: B-02
+              - entity: sensor.pwm_sw4_w_b_03_water_depth
+                name: B-03
+
+  #============================================================================
+  # SW5 - Extra Data
+  #============================================================================
+  - title: SW5 Extra
+    path: sw5
+    icon: mdi:chart-line
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## SW5 - Extra Data
+
+              Edit `extra_data.yaml` to add custom cards.
+          - type: history-graph
+            title: Bay Water Depths (24h)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pwm_sw5_b_01_water_depth
+                name: B-01
+              - entity: sensor.pwm_sw5_b_02_water_depth
+                name: B-02
+              - entity: sensor.pwm_sw5_b_03_water_depth
+                name: B-03
+              - entity: sensor.pwm_sw5_b_04_water_depth
+                name: B-04
+              - entity: sensor.pwm_sw5_b_05_water_depth
+                name: B-05
+
+  #============================================================================
+  # W17 - Extra Data
+  #============================================================================
+  - title: W17 Extra
+    path: w17
+    icon: mdi:chart-line
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## W17 - Extra Data
+
+              Edit `extra_data.yaml` to add custom cards.
+          - type: history-graph
+            title: Bay Water Depths (24h)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pwm_w17_b_01_water_depth
+                name: B-01
+              - entity: sensor.pwm_w17_b_02_water_depth
+                name: B-02
+              - entity: sensor.pwm_w17_b_03_water_depth
+                name: B-03
+              - entity: sensor.pwm_w17_b_04_water_depth
+                name: B-04
+              - entity: sensor.pwm_w17_b_05_water_depth
+                name: B-05
+
+  #============================================================================
+  # W18 - Extra Data
+  #============================================================================
+  - title: W18 Extra
+    path: w18
+    icon: mdi:chart-line
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## W18 - Extra Data
+
+              Edit `extra_data.yaml` to add custom cards.
+          - type: history-graph
+            title: Bay Water Depths (24h)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pwm_w18_b_01_water_depth
+                name: B-01
+              - entity: sensor.pwm_w18_b_02_water_depth
+                name: B-02
+              - entity: sensor.pwm_w18_b_03_water_depth
+                name: B-03
+              - entity: sensor.pwm_w18_b_04_water_depth
+                name: B-04
+              - entity: sensor.pwm_w18_b_05_water_depth
+                name: B-05
+
+  #============================================================================
+  # W19 - Extra Data
+  #============================================================================
+  - title: W19 Extra
+    path: w19
+    icon: mdi:chart-line
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |
+              ## W19 - Extra Data
+
+              Edit `extra_data.yaml` to add custom cards.
+          - type: history-graph
+            title: Bay Water Depths (24h)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.pwm_w19_b_01_water_depth
+                name: B-01
+              - entity: sensor.pwm_w19_b_02_water_depth
+                name: B-02
+              - entity: sensor.pwm_w19_b_03_water_depth
+                name: B-03
+              - entity: sensor.pwm_w19_b_04_water_depth
+                name: B-04

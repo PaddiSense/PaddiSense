@@ -71,8 +71,14 @@ shell_command:
     --id '{{ id }}'
     {% if name is defined %}--name '{{ name }}'{% endif %}
     {% if farm is defined %}--farm '{{ farm }}'{% endif %}
+    {% if current_season is defined %}--current_season {{ current_season }}{% endif %}
 
   registry_delete_paddock: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_paddock --id '{{ id }}'"
+
+  registry_set_current_season: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py set_current_season
+    --id '{{ id }}'
+    {% if value is defined %}--value {{ value }}{% endif %}
 
   # Bay commands
   registry_add_bay: >-
@@ -109,6 +115,16 @@ shell_command:
   registry_delete_season: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_season --id '{{ id }}'"
   registry_set_active_season: "python3 /config/PaddiSense/registry/python/registry_backend.py set_active_season --id '{{ id }}'"
 
+  # Farm commands
+  registry_add_farm: "python3 /config/PaddiSense/registry/python/registry_backend.py add_farm --name '{{ name }}'"
+
+  registry_edit_farm: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_farm
+    --id '{{ id }}'
+    {% if name is defined %}--name '{{ name }}'{% endif %}
+
+  registry_delete_farm: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_farm --id '{{ id }}'"
+
 # -----------------------------------------------------------------------------
 # TEMPLATE SENSORS
 # -----------------------------------------------------------------------------
@@ -125,7 +141,7 @@ template:
         unique_id: farm_registry_grower
         state: >-
           {% set grower = state_attr('sensor.farm_registry_data', 'grower') or {} %}
-          {{ grower.get('name', 'PaddiSense Farm') }}
+          {{ grower.name | default('PaddiSense Farm') }}
         icon: mdi:account-tie
 
       # Active season
@@ -160,18 +176,40 @@ template:
 # INPUT HELPERS
 # -----------------------------------------------------------------------------
 input_select:
+  # Editor mode selectors (IPM-style pattern)
+  registry_farm_editor_mode:
+    name: "Farm Editor Mode"
+    options:
+      - "Add New Farm"
+      - "Edit Existing Farm"
+    icon: mdi:barn
+
+  registry_paddock_editor_mode:
+    name: "Paddock Editor Mode"
+    options:
+      - "Add New Paddock"
+      - "Edit Existing Paddock"
+    icon: mdi:view-grid
+
+  registry_season_editor_mode:
+    name: "Season Editor Mode"
+    options:
+      - "Add New Season"
+      - "Edit Existing Season"
+    icon: mdi:calendar-range
+
   # Season selector
   registry_season:
     name: "Registry Season"
     options:
-      - "None"
+      - "Select..."
     icon: mdi:calendar-range
 
   # Farm selector (for filtering)
   registry_farm:
     name: "Registry Farm"
     options:
-      - "All Farms"
+      - "Select..."
     icon: mdi:barn
 
   # Paddock selector (for operations)
@@ -180,6 +218,20 @@ input_select:
     options:
       - "Select..."
     icon: mdi:view-grid
+
+  # Paddock filter by farm
+  registry_paddock_farm_filter:
+    name: "Filter by Farm"
+    options:
+      - "All Farms"
+    icon: mdi:filter
+
+  # Farm assignment for new paddock (separate from edit selector)
+  registry_new_paddock_farm:
+    name: "Assign to Farm"
+    options:
+      - "Select..."
+    icon: mdi:barn
 
 # -----------------------------------------------------------------------------
 # INPUT TEXT (for add/edit forms)
@@ -195,6 +247,49 @@ input_text:
     icon: mdi:calendar
     max: 20
 
+  # Edit paddock helpers
+  registry_edit_paddock_pointer:
+    name: "Edit Paddock Pointer"
+    icon: mdi:target
+    max: 50
+
+  registry_edit_paddock_name:
+    name: "Paddock Name"
+    icon: mdi:view-grid
+    max: 50
+
+  # Farm helpers
+  registry_new_farm_name:
+    name: "New Farm Name"
+    icon: mdi:barn
+    max: 50
+
+  registry_edit_farm_name:
+    name: "Farm Name"
+    icon: mdi:barn
+    max: 50
+
+  registry_edit_farm_pointer:
+    name: "Edit Farm Pointer"
+    icon: mdi:target
+    max: 50
+
+  registry_selected_paddock_id:
+    name: "Selected Paddock ID"
+    icon: mdi:target
+    max: 50
+
+  # Season edit helpers
+  registry_edit_season_pointer:
+    name: "Edit Season Pointer"
+    icon: mdi:target
+    max: 50
+
+  registry_edit_season_name:
+    name: "Season Name"
+    icon: mdi:calendar
+    max: 20
+
 # -----------------------------------------------------------------------------
 # INPUT NUMBER (for add paddock form)
 # -----------------------------------------------------------------------------
@@ -206,6 +301,23 @@ input_number:
     max: 20
     step: 1
     mode: box
+
+  registry_edit_paddock_bay_count:
+    name: "Bay Count"
+    icon: mdi:numeric
+    min: 1
+    max: 20
+    step: 1
+    mode: box
+
+
+# -----------------------------------------------------------------------------
+# INPUT BOOLEAN (for edit forms)
+# -----------------------------------------------------------------------------
+input_boolean:
+  registry_edit_current_season:
+    name: "Current Season"
+    icon: mdi:calendar-check
 
 # -----------------------------------------------------------------------------
 # INPUT DATETIME (for season dates)
@@ -219,6 +331,18 @@ input_datetime:
 
   registry_season_end:
     name: "Season End Date"
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-end
+
+  registry_edit_season_start:
+    name: "Edit Season Start"
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-start
+
+  registry_edit_season_end:
+    name: "Edit Season End"
     has_date: true
     has_time: false
     icon: mdi:calendar-end
@@ -309,6 +433,22 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_paddock_name
+        data:
+          value: ""
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_new_paddock_bay_count
+        data:
+          value: 1
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_new_paddock_farm
+        data:
+          option: "Select..."
 
   # Delete paddock
   registry_delete_paddock:
@@ -366,6 +506,12 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_season_name
+        data:
+          value: ""
 
   # Set active season
   registry_set_active_season:
@@ -379,6 +525,306 @@ script:
           text:
     sequence:
       - service: shell_command.registry_set_active_season
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Toggle paddock current_season
+  registry_toggle_current_season:
+    alias: "Registry - Toggle Paddock Current Season"
+    icon: mdi:calendar-sync
+    fields:
+      id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_set_current_season
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Open edit paddock popup (loads values into helpers)
+  registry_open_edit_paddock:
+    alias: "Registry - Open Edit Paddock"
+    icon: mdi:pencil
+    fields:
+      id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      # Set pointer
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_pointer
+        data:
+          value: "{{ id }}"
+      # Load current values
+      - variables:
+          paddock: "{{ state_attr('sensor.farm_registry_data', 'paddocks')[id] | default({}) }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_name
+        data:
+          value: "{{ paddock.name | default('') }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_edit_paddock_bay_count
+        data:
+          value: "{{ paddock.bay_count | default(1) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ paddock.current_season | default(true) }}"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.registry_edit_current_season
+        default:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.registry_edit_current_season
+
+  # Save paddock edit
+  registry_save_paddock_edit:
+    alias: "Registry - Save Paddock Edit"
+    icon: mdi:content-save
+    sequence:
+      - variables:
+          paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
+          new_name: "{{ states('input_text.registry_edit_paddock_name') }}"
+          current_season: "{{ is_state('input_boolean.registry_edit_current_season', 'on') }}"
+      - service: shell_command.registry_edit_paddock
+        data:
+          id: "{{ paddock_id }}"
+          name: "{{ new_name }}"
+          current_season: "{{ current_season }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_pointer
+        data:
+          value: ""
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_edit_paddock_bay_count
+        data:
+          value: 1
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          option: "Select..."
+
+  # Add farm
+  registry_add_farm:
+    alias: "Registry - Add Farm"
+    icon: mdi:barn
+    fields:
+      name:
+        description: "Farm name"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_add_farm
+        data:
+          name: "{{ name }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_farm_name
+        data:
+          value: ""
+
+  # Delete farm
+  registry_delete_farm:
+    alias: "Registry - Delete Farm"
+    icon: mdi:delete
+    fields:
+      id:
+        description: "Farm ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_delete_farm
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Open edit farm (loads values into helpers)
+  registry_open_edit_farm:
+    alias: "Registry - Open Edit Farm"
+    icon: mdi:pencil
+    fields:
+      id:
+        description: "Farm ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_farm_pointer
+        data:
+          value: "{{ id }}"
+      - variables:
+          farm: "{{ state_attr('sensor.farm_registry_data', 'farms')[id] | default({}) }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_farm_name
+        data:
+          value: "{{ farm.name | default('') }}"
+
+  # Save farm edit
+  registry_save_farm_edit:
+    alias: "Registry - Save Farm Edit"
+    icon: mdi:content-save
+    sequence:
+      - variables:
+          farm_id: "{{ states('input_text.registry_edit_farm_pointer') }}"
+          new_name: "{{ states('input_text.registry_edit_farm_name') }}"
+      - service: shell_command.registry_edit_farm
+        data:
+          id: "{{ farm_id }}"
+          name: "{{ new_name }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_farm_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_farm_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          option: "Select..."
+
+  # Open edit season (loads values into helpers)
+  registry_open_edit_season:
+    alias: "Registry - Open Edit Season"
+    icon: mdi:pencil
+    fields:
+      id:
+        description: "Season ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_season_pointer
+        data:
+          value: "{{ id }}"
+      - variables:
+          season: "{{ state_attr('sensor.farm_registry_data', 'seasons')[id] | default({}) }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_season_name
+        data:
+          value: "{{ season.name | default('') }}"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.registry_edit_season_start
+        data:
+          date: "{{ season.start_date | default(now().strftime('%Y-%m-%d')) }}"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.registry_edit_season_end
+        data:
+          date: "{{ season.end_date | default(now().strftime('%Y-%m-%d')) }}"
+
+  # Save season edit
+  registry_save_season_edit:
+    alias: "Registry - Save Season Edit"
+    icon: mdi:content-save
+    sequence:
+      - variables:
+          season_id: "{{ states('input_text.registry_edit_season_pointer') }}"
+          new_name: "{{ states('input_text.registry_edit_season_name') }}"
+          new_start: "{{ states('input_datetime.registry_edit_season_start') }}"
+          new_end: "{{ states('input_datetime.registry_edit_season_end') }}"
+      - service: shell_command.registry_edit_season
+        data:
+          id: "{{ season_id }}"
+          name: "{{ new_name }}"
+          start: "{{ new_start }}"
+          end: "{{ new_end }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_season_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_season_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_season
+        data:
+          option: "Select..."
+
+  # Delete season
+  registry_delete_season:
+    alias: "Registry - Delete Season"
+    icon: mdi:delete
+    fields:
+      id:
+        description: "Season ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_delete_season
         data:
           id: "{{ id }}"
       - delay:
@@ -407,9 +853,9 @@ automation:
         data:
           options: >-
             {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
-            {{ ['None'] + seasons if seasons else ['None'] }}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
 
-  # Update paddock dropdown when data changes
+  # Update paddock dropdown when data changes (all paddocks)
   - id: registry_update_paddock_dropdown
     alias: "Registry - Update Paddock Dropdown"
     trigger:
@@ -424,8 +870,23 @@ automation:
           entity_id: input_select.registry_paddock
         data:
           options: >-
-            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
-            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+            {% set filter_farm = states('input_select.registry_paddock_farm_filter') %}
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddocks') or {} %}
+            {% set farms = state_attr('sensor.farm_registry_data', 'farms') or {} %}
+            {% set ns = namespace(result=[]) %}
+            {% for pid, p in paddocks.items() %}
+              {% if filter_farm == 'All Farms' %}
+                {% set ns.result = ns.result + [p.name | default(pid)] %}
+              {% else %}
+                {% set farm_id = p.farm_id | default('') %}
+                {% set farm_data = farms[farm_id] | default({}) %}
+                {% set farm_name = farm_data.name | default('') %}
+                {% if farm_name == filter_farm %}
+                  {% set ns.result = ns.result + [p.name | default(pid)] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ['Select...'] + ns.result if ns.result else ['Select...'] }}
 
   # Update farm dropdown when data changes
   - id: registry_update_farm_dropdown
@@ -443,4 +904,119 @@ automation:
         data:
           options: >-
             {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
-            {{ ['All Farms'] + farms if farms else ['All Farms'] }}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_farm_filter
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['All Farms'] + (farms | list) if farms else ['All Farms'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_new_paddock_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+
+  # Filter paddocks when farm filter changes
+  - id: registry_filter_paddocks_by_farm
+    alias: "Registry - Filter Paddocks by Farm"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_paddock_farm_filter
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set filter_farm = states('input_select.registry_paddock_farm_filter') %}
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddocks') or {} %}
+            {% set farms = state_attr('sensor.farm_registry_data', 'farms') or {} %}
+            {% set ns = namespace(result=[]) %}
+            {% for pid, p in paddocks.items() %}
+              {% if filter_farm == 'All Farms' %}
+                {% set ns.result = ns.result + [p.name | default(pid)] %}
+              {% else %}
+                {% set farm_id = p.farm_id | default('') %}
+                {% set farm_data = farms[farm_id] | default({}) %}
+                {% set farm_name = farm_data.name | default('') %}
+                {% if farm_name == filter_farm %}
+                  {% set ns.result = ns.result + [p.name | default(pid)] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ['Select...'] + ns.result if ns.result else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          option: "Select..."
+
+  # Load paddock edit form when paddock is selected
+  - id: registry_load_paddock_on_select
+    alias: "Registry - Load Paddock on Select"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_paddock
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'Select...' }}"
+    action:
+      - variables:
+          paddock_name: "{{ states('input_select.registry_paddock') }}"
+          paddocks: "{{ state_attr('sensor.farm_registry_data', 'paddocks') or {} }}"
+      - variables:
+          paddock_id: >-
+            {% for pid, p in paddocks.items() if (p.name | default('')) == paddock_name %}
+            {{ pid }}
+            {% endfor %}
+      - service: script.registry_open_edit_paddock
+        data:
+          id: "{{ paddock_id | trim }}"
+
+  # Load farm edit form when farm is selected
+  - id: registry_load_farm_on_select
+    alias: "Registry - Load Farm on Select"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_farm
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'Select...' }}"
+    action:
+      - variables:
+          farm_name: "{{ states('input_select.registry_farm') }}"
+          farms: "{{ state_attr('sensor.farm_registry_data', 'farms') or {} }}"
+      - variables:
+          farm_id: >-
+            {% for fid, f in farms.items() if (f.name | default('')) == farm_name %}
+            {{ fid }}
+            {% endfor %}
+      - service: script.registry_open_edit_farm
+        data:
+          id: "{{ farm_id | trim }}"
+
+  # Load season edit form when season is selected
+  - id: registry_load_season_on_select
+    alias: "Registry - Load Season on Select"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_season
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'Select...' }}"
+    action:
+      - variables:
+          season_name: "{{ states('input_select.registry_season') }}"
+          seasons: "{{ state_attr('sensor.farm_registry_data', 'seasons') or {} }}"
+      - variables:
+          season_id: >-
+            {% for sid, s in seasons.items() if (s.name | default('')) == season_name %}
+            {{ sid }}
+            {% endfor %}
+      - service: script.registry_open_edit_season
+        data:
+          id: "{{ season_id | trim }}"

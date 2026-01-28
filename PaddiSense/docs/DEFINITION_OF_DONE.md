@@ -11,6 +11,7 @@
 ## B) UX
 - [ ] Mobile-first verified (touch targets, readability)
 - [ ] Dark mode verified (no contrast failures)
+- [ ] Card style follows IPM template (see `docs/ARCHITECTURE.md` UI section)
 - [ ] Errors surfaced cleanly (popup where possible, fallback notification)
 
 ## C) Offline & Resilience
