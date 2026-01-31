@@ -7,14 +7,18 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    AVAILABLE_MODULES,
+    CONF_GITHUB_TOKEN,
     DOMAIN,
+    EVENT_DATA_UPDATED,
+    EVENT_MODULES_CHANGED,
     PLATFORMS,
+    # Registry services
     SERVICE_ADD_BAY,
     SERVICE_ADD_FARM,
     SERVICE_ADD_PADDOCK,
@@ -31,123 +35,126 @@ from .const import (
     SERVICE_IMPORT_REGISTRY,
     SERVICE_SET_ACTIVE_SEASON,
     SERVICE_SET_CURRENT_SEASON,
+    # Installer services
+    SERVICE_CHECK_UPDATES,
+    SERVICE_CREATE_BACKUP,
+    SERVICE_INSTALL_MODULE,
+    SERVICE_REMOVE_MODULE,
+    SERVICE_RESTORE_BACKUP,
+    SERVICE_ROLLBACK,
+    SERVICE_UPDATE_PADDISENSE,
 )
+from .installer import BackupManager, ConfigWriter, GitManager, ModuleManager
 from .registry.backend import RegistryBackend
 
 _LOGGER = logging.getLogger(__name__)
 
-# Service schemas
-ADD_PADDOCK_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): cv.string,
-        vol.Required("bay_count"): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
-        vol.Optional("farm_id", default="farm_1"): cv.string,
-        vol.Optional("bay_prefix", default="B-"): cv.string,
-        vol.Optional("current_season", default=True): cv.boolean,
-    }
-)
+# =============================================================================
+# SERVICE SCHEMAS
+# =============================================================================
 
-EDIT_PADDOCK_SCHEMA = vol.Schema(
-    {
-        vol.Required("paddock_id"): cv.string,
-        vol.Optional("name"): cv.string,
-        vol.Optional("farm_id"): cv.string,
-        vol.Optional("current_season"): cv.boolean,
-    }
-)
+ADD_PADDOCK_SCHEMA = vol.Schema({
+    vol.Required("name"): cv.string,
+    vol.Required("bay_count"): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
+    vol.Optional("farm_id", default="farm_1"): cv.string,
+    vol.Optional("bay_prefix", default="B-"): cv.string,
+    vol.Optional("current_season", default=True): cv.boolean,
+})
 
-DELETE_PADDOCK_SCHEMA = vol.Schema(
-    {
-        vol.Required("paddock_id"): cv.string,
-    }
-)
+EDIT_PADDOCK_SCHEMA = vol.Schema({
+    vol.Required("paddock_id"): cv.string,
+    vol.Optional("name"): cv.string,
+    vol.Optional("farm_id"): cv.string,
+    vol.Optional("current_season"): cv.boolean,
+})
 
-SET_CURRENT_SEASON_SCHEMA = vol.Schema(
-    {
-        vol.Required("paddock_id"): cv.string,
-        vol.Optional("value"): cv.boolean,
-    }
-)
+DELETE_PADDOCK_SCHEMA = vol.Schema({
+    vol.Required("paddock_id"): cv.string,
+})
 
-ADD_BAY_SCHEMA = vol.Schema(
-    {
-        vol.Required("paddock_id"): cv.string,
-        vol.Required("name"): cv.string,
-        vol.Optional("order"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-        vol.Optional("is_last", default=False): cv.boolean,
-    }
-)
+SET_CURRENT_SEASON_SCHEMA = vol.Schema({
+    vol.Required("paddock_id"): cv.string,
+    vol.Optional("value"): cv.boolean,
+})
 
-EDIT_BAY_SCHEMA = vol.Schema(
-    {
-        vol.Required("bay_id"): cv.string,
-        vol.Optional("name"): cv.string,
-        vol.Optional("order"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-        vol.Optional("is_last"): cv.boolean,
-    }
-)
+ADD_BAY_SCHEMA = vol.Schema({
+    vol.Required("paddock_id"): cv.string,
+    vol.Required("name"): cv.string,
+    vol.Optional("order"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+    vol.Optional("is_last", default=False): cv.boolean,
+})
 
-DELETE_BAY_SCHEMA = vol.Schema(
-    {
-        vol.Required("bay_id"): cv.string,
-    }
-)
+EDIT_BAY_SCHEMA = vol.Schema({
+    vol.Required("bay_id"): cv.string,
+    vol.Optional("name"): cv.string,
+    vol.Optional("order"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+    vol.Optional("is_last"): cv.boolean,
+})
 
-ADD_SEASON_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): cv.string,
-        vol.Required("start_date"): cv.string,
-        vol.Required("end_date"): cv.string,
-        vol.Optional("active", default=False): cv.boolean,
-    }
-)
+DELETE_BAY_SCHEMA = vol.Schema({
+    vol.Required("bay_id"): cv.string,
+})
 
-EDIT_SEASON_SCHEMA = vol.Schema(
-    {
-        vol.Required("season_id"): cv.string,
-        vol.Optional("name"): cv.string,
-        vol.Optional("start_date"): cv.string,
-        vol.Optional("end_date"): cv.string,
-    }
-)
+ADD_SEASON_SCHEMA = vol.Schema({
+    vol.Required("name"): cv.string,
+    vol.Required("start_date"): cv.string,
+    vol.Required("end_date"): cv.string,
+    vol.Optional("active", default=False): cv.boolean,
+})
 
-DELETE_SEASON_SCHEMA = vol.Schema(
-    {
-        vol.Required("season_id"): cv.string,
-    }
-)
+EDIT_SEASON_SCHEMA = vol.Schema({
+    vol.Required("season_id"): cv.string,
+    vol.Optional("name"): cv.string,
+    vol.Optional("start_date"): cv.string,
+    vol.Optional("end_date"): cv.string,
+})
 
-SET_ACTIVE_SEASON_SCHEMA = vol.Schema(
-    {
-        vol.Required("season_id"): cv.string,
-    }
-)
+DELETE_SEASON_SCHEMA = vol.Schema({
+    vol.Required("season_id"): cv.string,
+})
 
-ADD_FARM_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): cv.string,
-    }
-)
+SET_ACTIVE_SEASON_SCHEMA = vol.Schema({
+    vol.Required("season_id"): cv.string,
+})
 
-EDIT_FARM_SCHEMA = vol.Schema(
-    {
-        vol.Required("farm_id"): cv.string,
-        vol.Optional("name"): cv.string,
-    }
-)
+ADD_FARM_SCHEMA = vol.Schema({
+    vol.Required("name"): cv.string,
+})
 
-DELETE_FARM_SCHEMA = vol.Schema(
-    {
-        vol.Required("farm_id"): cv.string,
-    }
-)
+EDIT_FARM_SCHEMA = vol.Schema({
+    vol.Required("farm_id"): cv.string,
+    vol.Optional("name"): cv.string,
+})
 
-IMPORT_REGISTRY_SCHEMA = vol.Schema(
-    {
-        vol.Required("filename"): cv.string,
-    }
-)
+DELETE_FARM_SCHEMA = vol.Schema({
+    vol.Required("farm_id"): cv.string,
+})
 
+IMPORT_REGISTRY_SCHEMA = vol.Schema({
+    vol.Required("filename"): cv.string,
+})
+
+# Installer schemas
+INSTALL_MODULE_SCHEMA = vol.Schema({
+    vol.Required("module_id"): vol.In(AVAILABLE_MODULES),
+})
+
+REMOVE_MODULE_SCHEMA = vol.Schema({
+    vol.Required("module_id"): vol.In(AVAILABLE_MODULES),
+})
+
+UPDATE_PADDISENSE_SCHEMA = vol.Schema({
+    vol.Optional("backup_first", default=True): cv.boolean,
+})
+
+RESTORE_BACKUP_SCHEMA = vol.Schema({
+    vol.Required("backup_id"): cv.string,
+})
+
+
+# =============================================================================
+# SETUP
+# =============================================================================
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up PaddiSense from yaml configuration."""
@@ -163,12 +170,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     backend = RegistryBackend()
     await hass.async_add_executor_job(backend.init)
 
-    # Store backend reference
+    # Initialize installer components with token from license
+    git_manager = GitManager(token=entry.data.get(CONF_GITHUB_TOKEN))
+    module_manager = ModuleManager()
+    backup_manager = BackupManager()
+    config_writer = ConfigWriter()
+
+    # Store references
     hass.data[DOMAIN]["backend"] = backend
     hass.data[DOMAIN]["entry_id"] = entry.entry_id
+    hass.data[DOMAIN]["git_manager"] = git_manager
+    hass.data[DOMAIN]["module_manager"] = module_manager
+    hass.data[DOMAIN]["backup_manager"] = backup_manager
+    hass.data[DOMAIN]["config_writer"] = config_writer
 
     # Register services
-    await _async_register_services(hass, backend)
+    await _async_register_registry_services(hass, backend)
+    await _async_register_installer_services(hass)
 
     # Register frontend resources
     await _async_register_frontend(hass)
@@ -181,42 +199,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Unload platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        # Remove services
-        for service in [
-            SERVICE_ADD_PADDOCK,
-            SERVICE_EDIT_PADDOCK,
-            SERVICE_DELETE_PADDOCK,
-            SERVICE_SET_CURRENT_SEASON,
-            SERVICE_ADD_BAY,
-            SERVICE_EDIT_BAY,
-            SERVICE_DELETE_BAY,
-            SERVICE_ADD_SEASON,
-            SERVICE_EDIT_SEASON,
-            SERVICE_DELETE_SEASON,
-            SERVICE_SET_ACTIVE_SEASON,
-            SERVICE_ADD_FARM,
-            SERVICE_EDIT_FARM,
-            SERVICE_DELETE_FARM,
-            SERVICE_EXPORT_REGISTRY,
+        # Remove all services
+        all_services = [
+            # Registry
+            SERVICE_ADD_PADDOCK, SERVICE_EDIT_PADDOCK, SERVICE_DELETE_PADDOCK,
+            SERVICE_SET_CURRENT_SEASON, SERVICE_ADD_BAY, SERVICE_EDIT_BAY,
+            SERVICE_DELETE_BAY, SERVICE_ADD_SEASON, SERVICE_EDIT_SEASON,
+            SERVICE_DELETE_SEASON, SERVICE_SET_ACTIVE_SEASON, SERVICE_ADD_FARM,
+            SERVICE_EDIT_FARM, SERVICE_DELETE_FARM, SERVICE_EXPORT_REGISTRY,
             SERVICE_IMPORT_REGISTRY,
-        ]:
+            # Installer
+            SERVICE_CHECK_UPDATES, SERVICE_UPDATE_PADDISENSE, SERVICE_INSTALL_MODULE,
+            SERVICE_REMOVE_MODULE, SERVICE_CREATE_BACKUP, SERVICE_RESTORE_BACKUP,
+            SERVICE_ROLLBACK,
+        ]
+        for service in all_services:
             hass.services.async_remove(DOMAIN, service)
 
+        # Clean up data
         hass.data[DOMAIN].pop("backend", None)
         hass.data[DOMAIN].pop("entry_id", None)
+        hass.data[DOMAIN].pop("git_manager", None)
+        hass.data[DOMAIN].pop("module_manager", None)
+        hass.data[DOMAIN].pop("backup_manager", None)
+        hass.data[DOMAIN].pop("config_writer", None)
 
     return unload_ok
 
 
-async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend) -> None:
-    """Register PaddiSense services."""
+# =============================================================================
+# REGISTRY SERVICES
+# =============================================================================
+
+async def _async_register_registry_services(
+    hass: HomeAssistant, backend: RegistryBackend
+) -> None:
+    """Register Farm Registry services."""
 
     async def handle_add_paddock(call: ServiceCall) -> None:
-        """Handle add_paddock service call."""
         result = await hass.async_add_executor_job(
             backend.add_paddock,
             call.data["name"],
@@ -229,7 +252,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_edit_paddock(call: ServiceCall) -> None:
-        """Handle edit_paddock service call."""
         result = await hass.async_add_executor_job(
             backend.edit_paddock,
             call.data["paddock_id"],
@@ -241,7 +263,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_delete_paddock(call: ServiceCall) -> None:
-        """Handle delete_paddock service call."""
         result = await hass.async_add_executor_job(
             backend.delete_paddock,
             call.data["paddock_id"],
@@ -250,7 +271,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_set_current_season(call: ServiceCall) -> None:
-        """Handle set_current_season service call."""
         result = await hass.async_add_executor_job(
             backend.set_current_season,
             call.data["paddock_id"],
@@ -260,7 +280,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_add_bay(call: ServiceCall) -> None:
-        """Handle add_bay service call."""
         result = await hass.async_add_executor_job(
             backend.add_bay,
             call.data["paddock_id"],
@@ -272,7 +291,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_edit_bay(call: ServiceCall) -> None:
-        """Handle edit_bay service call."""
         result = await hass.async_add_executor_job(
             backend.edit_bay,
             call.data["bay_id"],
@@ -284,7 +302,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_delete_bay(call: ServiceCall) -> None:
-        """Handle delete_bay service call."""
         result = await hass.async_add_executor_job(
             backend.delete_bay,
             call.data["bay_id"],
@@ -293,7 +310,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_add_season(call: ServiceCall) -> None:
-        """Handle add_season service call."""
         result = await hass.async_add_executor_job(
             backend.add_season,
             call.data["name"],
@@ -305,7 +321,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_edit_season(call: ServiceCall) -> None:
-        """Handle edit_season service call."""
         result = await hass.async_add_executor_job(
             backend.edit_season,
             call.data["season_id"],
@@ -317,7 +332,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_delete_season(call: ServiceCall) -> None:
-        """Handle delete_season service call."""
         result = await hass.async_add_executor_job(
             backend.delete_season,
             call.data["season_id"],
@@ -326,7 +340,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_set_active_season(call: ServiceCall) -> None:
-        """Handle set_active_season service call."""
         result = await hass.async_add_executor_job(
             backend.set_active_season,
             call.data["season_id"],
@@ -335,7 +348,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_add_farm(call: ServiceCall) -> None:
-        """Handle add_farm service call."""
         result = await hass.async_add_executor_job(
             backend.add_farm,
             call.data["name"],
@@ -344,7 +356,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_edit_farm(call: ServiceCall) -> None:
-        """Handle edit_farm service call."""
         result = await hass.async_add_executor_job(
             backend.edit_farm,
             call.data["farm_id"],
@@ -354,7 +365,6 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_delete_farm(call: ServiceCall) -> None:
-        """Handle delete_farm service call."""
         result = await hass.async_add_executor_job(
             backend.delete_farm,
             call.data["farm_id"],
@@ -363,12 +373,10 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         await _async_update_sensors(hass)
 
     async def handle_export_registry(call: ServiceCall) -> None:
-        """Handle export_registry service call."""
         result = await hass.async_add_executor_job(backend.export_registry)
         _log_service_result("export_registry", result)
 
     async def handle_import_registry(call: ServiceCall) -> None:
-        """Handle import_registry service call."""
         result = await hass.async_add_executor_job(
             backend.import_registry,
             call.data["filename"],
@@ -376,56 +384,137 @@ async def _async_register_services(hass: HomeAssistant, backend: RegistryBackend
         _log_service_result("import_registry", result)
         await _async_update_sensors(hass)
 
-    # Register all services
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_PADDOCK, handle_add_paddock, schema=ADD_PADDOCK_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_EDIT_PADDOCK, handle_edit_paddock, schema=EDIT_PADDOCK_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DELETE_PADDOCK, handle_delete_paddock, schema=DELETE_PADDOCK_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_CURRENT_SEASON, handle_set_current_season, schema=SET_CURRENT_SEASON_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_BAY, handle_add_bay, schema=ADD_BAY_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_EDIT_BAY, handle_edit_bay, schema=EDIT_BAY_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DELETE_BAY, handle_delete_bay, schema=DELETE_BAY_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_SEASON, handle_add_season, schema=ADD_SEASON_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_EDIT_SEASON, handle_edit_season, schema=EDIT_SEASON_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DELETE_SEASON, handle_delete_season, schema=DELETE_SEASON_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_ACTIVE_SEASON, handle_set_active_season, schema=SET_ACTIVE_SEASON_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_FARM, handle_add_farm, schema=ADD_FARM_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_EDIT_FARM, handle_edit_farm, schema=EDIT_FARM_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DELETE_FARM, handle_delete_farm, schema=DELETE_FARM_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_EXPORT_REGISTRY, handle_export_registry
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_IMPORT_REGISTRY, handle_import_registry, schema=IMPORT_REGISTRY_SCHEMA
-    )
+    # Register all registry services
+    hass.services.async_register(DOMAIN, SERVICE_ADD_PADDOCK, handle_add_paddock, ADD_PADDOCK_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EDIT_PADDOCK, handle_edit_paddock, EDIT_PADDOCK_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_PADDOCK, handle_delete_paddock, DELETE_PADDOCK_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_CURRENT_SEASON, handle_set_current_season, SET_CURRENT_SEASON_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_ADD_BAY, handle_add_bay, ADD_BAY_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EDIT_BAY, handle_edit_bay, EDIT_BAY_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_BAY, handle_delete_bay, DELETE_BAY_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_ADD_SEASON, handle_add_season, ADD_SEASON_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EDIT_SEASON, handle_edit_season, EDIT_SEASON_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_SEASON, handle_delete_season, DELETE_SEASON_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_ACTIVE_SEASON, handle_set_active_season, SET_ACTIVE_SEASON_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_ADD_FARM, handle_add_farm, ADD_FARM_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EDIT_FARM, handle_edit_farm, EDIT_FARM_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE_FARM, handle_delete_farm, DELETE_FARM_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_EXPORT_REGISTRY, handle_export_registry)
+    hass.services.async_register(DOMAIN, SERVICE_IMPORT_REGISTRY, handle_import_registry, IMPORT_REGISTRY_SCHEMA)
 
+
+# =============================================================================
+# INSTALLER SERVICES
+# =============================================================================
+
+async def _async_register_installer_services(hass: HomeAssistant) -> None:
+    """Register installer services."""
+
+    async def handle_check_updates(call: ServiceCall) -> None:
+        """Check for PaddiSense updates."""
+        git_manager: GitManager = hass.data[DOMAIN]["git_manager"]
+        result = await hass.async_add_executor_job(git_manager.check_for_updates)
+        _log_service_result("check_for_updates", result)
+
+        # Update version sensor
+        if result.get("success"):
+            hass.bus.async_fire(EVENT_MODULES_CHANGED)
+
+    async def handle_update_paddisense(call: ServiceCall) -> None:
+        """Update PaddiSense to latest version."""
+        backup_manager: BackupManager = hass.data[DOMAIN]["backup_manager"]
+        git_manager: GitManager = hass.data[DOMAIN]["git_manager"]
+
+        # Create backup first if requested
+        if call.data.get("backup_first", True):
+            backup_result = await hass.async_add_executor_job(
+                backup_manager.create_backup, "pre_update"
+            )
+            if not backup_result.get("success"):
+                _LOGGER.error("Backup failed, aborting update")
+                return
+
+        # Pull latest changes
+        result = await hass.async_add_executor_job(git_manager.pull)
+        _log_service_result("update_paddisense", result)
+
+        if result.get("success"):
+            # Trigger restart
+            _LOGGER.info("PaddiSense updated, triggering restart")
+            await hass.services.async_call("homeassistant", "restart")
+        else:
+            # Rollback on failure
+            _LOGGER.error("Update failed, attempting rollback")
+            await hass.async_add_executor_job(backup_manager.rollback)
+
+    async def handle_install_module(call: ServiceCall) -> None:
+        """Install a PaddiSense module."""
+        module_manager: ModuleManager = hass.data[DOMAIN]["module_manager"]
+        result = await hass.async_add_executor_job(
+            module_manager.install_module,
+            call.data["module_id"],
+        )
+        _log_service_result("install_module", result)
+
+        if result.get("success") and result.get("restart_required"):
+            hass.bus.async_fire(EVENT_MODULES_CHANGED)
+            await hass.services.async_call("homeassistant", "restart")
+
+    async def handle_remove_module(call: ServiceCall) -> None:
+        """Remove a PaddiSense module."""
+        module_manager: ModuleManager = hass.data[DOMAIN]["module_manager"]
+        result = await hass.async_add_executor_job(
+            module_manager.remove_module,
+            call.data["module_id"],
+        )
+        _log_service_result("remove_module", result)
+
+        if result.get("success") and result.get("restart_required"):
+            hass.bus.async_fire(EVENT_MODULES_CHANGED)
+            await hass.services.async_call("homeassistant", "restart")
+
+    async def handle_create_backup(call: ServiceCall) -> None:
+        """Create a PaddiSense backup."""
+        backup_manager: BackupManager = hass.data[DOMAIN]["backup_manager"]
+        result = await hass.async_add_executor_job(
+            backup_manager.create_backup, "manual"
+        )
+        _log_service_result("create_backup", result)
+
+    async def handle_restore_backup(call: ServiceCall) -> None:
+        """Restore from a backup."""
+        backup_manager: BackupManager = hass.data[DOMAIN]["backup_manager"]
+        result = await hass.async_add_executor_job(
+            backup_manager.restore_backup,
+            call.data["backup_id"],
+        )
+        _log_service_result("restore_backup", result)
+
+        if result.get("success") and result.get("restart_required"):
+            await hass.services.async_call("homeassistant", "restart")
+
+    async def handle_rollback(call: ServiceCall) -> None:
+        """Rollback to previous version."""
+        backup_manager: BackupManager = hass.data[DOMAIN]["backup_manager"]
+        result = await hass.async_add_executor_job(backup_manager.rollback)
+        _log_service_result("rollback", result)
+
+        if result.get("success") and result.get("restart_required"):
+            await hass.services.async_call("homeassistant", "restart")
+
+    # Register installer services
+    hass.services.async_register(DOMAIN, SERVICE_CHECK_UPDATES, handle_check_updates)
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_PADDISENSE, handle_update_paddisense, UPDATE_PADDISENSE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_INSTALL_MODULE, handle_install_module, INSTALL_MODULE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_REMOVE_MODULE, handle_remove_module, REMOVE_MODULE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_CREATE_BACKUP, handle_create_backup)
+    hass.services.async_register(DOMAIN, SERVICE_RESTORE_BACKUP, handle_restore_backup, RESTORE_BACKUP_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_ROLLBACK, handle_rollback)
+
+
+# =============================================================================
+# HELPERS
+# =============================================================================
 
 def _log_service_result(service: str, result: dict[str, Any]) -> None:
     """Log service result."""
@@ -437,20 +526,24 @@ def _log_service_result(service: str, result: dict[str, Any]) -> None:
 
 async def _async_update_sensors(hass: HomeAssistant) -> None:
     """Trigger sensor update after data change."""
-    # Fire event to trigger sensor update
-    hass.bus.async_fire(f"{DOMAIN}_data_updated")
+    hass.bus.async_fire(EVENT_DATA_UPDATED)
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
     """Register frontend resources."""
-    # Register custom card JS as a static path
+    # Register custom card JS as static paths
     hass.http.register_static_path(
         "/paddisense/paddisense-registry-card.js",
         hass.config.path("custom_components/paddisense/www/paddisense-registry-card.js"),
         cache_headers=False,
     )
+    hass.http.register_static_path(
+        "/paddisense/paddisense-manager-card.js",
+        hass.config.path("custom_components/paddisense/www/paddisense-manager-card.js"),
+        cache_headers=False,
+    )
 
     _LOGGER.info(
         "PaddiSense frontend registered. Add to Lovelace resources: "
-        "/paddisense/paddisense-registry-card.js"
+        "/paddisense/paddisense-registry-card.js, /paddisense/paddisense-manager-card.js"
     )
