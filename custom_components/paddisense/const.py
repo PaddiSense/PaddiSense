@@ -33,7 +33,7 @@ PACKAGES_DIR = PADDISENSE_DIR / "packages"
 # =============================================================================
 
 PADDISENSE_REPO_URL = "https://github.com/PKmac78/PaddiSense.git"  # Your module repo
-PADDISENSE_REPO_BRANCH = "main"
+PADDISENSE_REPO_BRANCH = "dev"
 
 # =============================================================================
 # MODULES
