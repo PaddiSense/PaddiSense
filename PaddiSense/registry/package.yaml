@@ -233,6 +233,16 @@ input_select:
       - "Select..."
     icon: mdi:barn
 
+  # Module selector for install/remove actions (PaddiSense Manager)
+  paddisense_module_action:
+    name: "Select Module"
+    options:
+      - "ipm"
+      - "asm"
+      - "weather"
+      - "pwm"
+    icon: mdi:puzzle
+
 # -----------------------------------------------------------------------------
 # INPUT TEXT (for add/edit forms)
 # -----------------------------------------------------------------------------
