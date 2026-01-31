@@ -232,6 +232,62 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of an entry - clean up dashboards and symlinks."""
+    from pathlib import Path
+    from .const import LOVELACE_DASHBOARDS_YAML, PACKAGES_DIR, MODULE_METADATA
+
+    _LOGGER.info("Removing PaddiSense integration - cleaning up dashboards and packages")
+
+    # Remove module symlinks from packages directory
+    if PACKAGES_DIR.exists():
+        for module_id in AVAILABLE_MODULES:
+            symlink_path = PACKAGES_DIR / f"{module_id}.yaml"
+            if symlink_path.exists() or symlink_path.is_symlink():
+                try:
+                    symlink_path.unlink()
+                    _LOGGER.info("Removed package symlink: %s", symlink_path)
+                except OSError as e:
+                    _LOGGER.warning("Failed to remove symlink %s: %s", symlink_path, e)
+
+    # Remove PaddiSense dashboards from lovelace_dashboards.yaml
+    if LOVELACE_DASHBOARDS_YAML.exists():
+        try:
+            import yaml
+            content = LOVELACE_DASHBOARDS_YAML.read_text(encoding="utf-8")
+            dashboards = yaml.safe_load(content) or {}
+
+            # Find and remove PaddiSense dashboards
+            paddisense_slugs = []
+            for module_id, meta in MODULE_METADATA.items():
+                slug = meta.get("dashboard_slug", f"{module_id}-dashboard")
+                paddisense_slugs.append(slug)
+
+            # Also check for registry dashboard
+            paddisense_slugs.append("paddisense-registry")
+
+            removed = []
+            for slug in paddisense_slugs:
+                if slug in dashboards:
+                    del dashboards[slug]
+                    removed.append(slug)
+
+            if removed:
+                # Write back
+                header = """# Lovelace Dashboards
+# Managed by Home Assistant
+
+"""
+                new_content = header + yaml.dump(dashboards, default_flow_style=False, sort_keys=False)
+                LOVELACE_DASHBOARDS_YAML.write_text(new_content, encoding="utf-8")
+                _LOGGER.info("Removed dashboards: %s", ", ".join(removed))
+
+        except Exception as e:
+            _LOGGER.warning("Failed to clean up dashboards: %s", e)
+
+    _LOGGER.info("PaddiSense cleanup complete. Restart Home Assistant to apply changes.")
+
+
 # =============================================================================
 # REGISTRY SERVICES
 # =============================================================================
