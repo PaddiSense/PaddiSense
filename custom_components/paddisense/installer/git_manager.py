@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +16,9 @@ from ..const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Subfolder in repo containing the modules (repo structure: repo/PaddiSense/ipm, etc.)
+REPO_MODULES_SUBFOLDER = "PaddiSense"
 
 
 class GitManager:
@@ -52,12 +57,14 @@ class GitManager:
             return False
 
     def is_repo_cloned(self) -> bool:
-        """Check if the PaddiSense repo is already cloned."""
-        git_dir = self.repo_dir / ".git"
-        return git_dir.is_dir()
+        """Check if the PaddiSense modules are present."""
+        # Check for modules.json or VERSION as indicator
+        version_file = self.repo_dir / "VERSION"
+        modules_json = self.repo_dir / "modules.json"
+        return version_file.exists() or modules_json.exists()
 
     def clone(self) -> dict[str, Any]:
-        """Clone the PaddiSense repository."""
+        """Clone the PaddiSense repository and extract modules subfolder."""
         if self.is_repo_cloned():
             return {
                 "success": False,
@@ -65,32 +72,55 @@ class GitManager:
             }
 
         try:
-            # Ensure parent directory exists
-            self.repo_dir.parent.mkdir(parents=True, exist_ok=True)
+            # Clone to temp directory first
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir) / "repo"
 
-            result = subprocess.run(
-                [
-                    "git",
-                    "clone",
-                    "--branch",
-                    self.branch,
-                    "--single-branch",
-                    "--depth",
-                    "1",
-                    self.repo_url,
-                    str(self.repo_dir),
-                ],
-                capture_output=True,
-                text=True,
-                timeout=300,  # 5 minutes
-            )
+                _LOGGER.info("Cloning PaddiSense repository...")
+                result = subprocess.run(
+                    [
+                        "git",
+                        "clone",
+                        "--branch",
+                        self.branch,
+                        "--single-branch",
+                        "--depth",
+                        "1",
+                        self.repo_url,
+                        str(temp_path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,  # 5 minutes
+                )
 
-            if result.returncode != 0:
-                _LOGGER.error("Git clone failed: %s", result.stderr)
-                return {
-                    "success": False,
-                    "error": f"Clone failed: {result.stderr}",
-                }
+                if result.returncode != 0:
+                    _LOGGER.error("Git clone failed: %s", result.stderr)
+                    return {
+                        "success": False,
+                        "error": f"Clone failed: {result.stderr}",
+                    }
+
+                # Check if modules are in a subfolder
+                modules_source = temp_path / REPO_MODULES_SUBFOLDER
+                if modules_source.is_dir():
+                    source_dir = modules_source
+                    _LOGGER.info("Found modules in %s subfolder", REPO_MODULES_SUBFOLDER)
+                else:
+                    # Modules at repo root
+                    source_dir = temp_path
+                    _LOGGER.info("Modules at repository root")
+
+                # Ensure target directory exists
+                self.repo_dir.parent.mkdir(parents=True, exist_ok=True)
+
+                # Remove existing target if it exists
+                if self.repo_dir.exists():
+                    shutil.rmtree(self.repo_dir)
+
+                # Copy modules to target
+                shutil.copytree(source_dir, self.repo_dir)
+                _LOGGER.info("Copied modules to %s", self.repo_dir)
 
             _LOGGER.info("Successfully cloned PaddiSense repository")
             return {
@@ -108,6 +138,11 @@ class GitManager:
                 "success": False,
                 "error": f"Clone failed: {e}",
             }
+        except (OSError, shutil.Error) as e:
+            return {
+                "success": False,
+                "error": f"Failed to copy modules: {e}",
+            }
 
     def pull(self) -> dict[str, Any]:
         """Pull latest changes from the repository."""
@@ -118,37 +153,49 @@ class GitManager:
             }
 
         try:
-            # Fetch first
-            fetch_result = subprocess.run(
-                ["git", "fetch", "origin", self.branch],
-                cwd=str(self.repo_dir),
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
+            # Clone to temp and copy (same as clone, but overwrites)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir) / "repo"
 
-            if fetch_result.returncode != 0:
-                _LOGGER.error("Git fetch failed: %s", fetch_result.stderr)
-                return {
-                    "success": False,
-                    "error": f"Fetch failed: {fetch_result.stderr}",
-                }
+                _LOGGER.info("Fetching latest PaddiSense updates...")
+                result = subprocess.run(
+                    [
+                        "git",
+                        "clone",
+                        "--branch",
+                        self.branch,
+                        "--single-branch",
+                        "--depth",
+                        "1",
+                        self.repo_url,
+                        str(temp_path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
 
-            # Reset to origin/branch (force update, preserving nothing)
-            reset_result = subprocess.run(
-                ["git", "reset", "--hard", f"origin/{self.branch}"],
-                cwd=str(self.repo_dir),
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
+                if result.returncode != 0:
+                    _LOGGER.error("Git fetch failed: %s", result.stderr)
+                    return {
+                        "success": False,
+                        "error": f"Fetch failed: {result.stderr}",
+                    }
 
-            if reset_result.returncode != 0:
-                _LOGGER.error("Git reset failed: %s", reset_result.stderr)
-                return {
-                    "success": False,
-                    "error": f"Reset failed: {reset_result.stderr}",
-                }
+                # Check if modules are in a subfolder
+                modules_source = temp_path / REPO_MODULES_SUBFOLDER
+                if modules_source.is_dir():
+                    source_dir = modules_source
+                else:
+                    source_dir = temp_path
+
+                # Backup existing data directories (local_data is separate, but just in case)
+                # Remove old modules and copy new
+                if self.repo_dir.exists():
+                    shutil.rmtree(self.repo_dir)
+
+                shutil.copytree(source_dir, self.repo_dir)
+                _LOGGER.info("Updated modules at %s", self.repo_dir)
 
             _LOGGER.info("Successfully pulled latest changes")
             return {
@@ -166,6 +213,11 @@ class GitManager:
                 "success": False,
                 "error": f"Pull failed: {e}",
             }
+        except (OSError, shutil.Error) as e:
+            return {
+                "success": False,
+                "error": f"Failed to update modules: {e}",
+            }
 
     def get_local_version(self) -> str | None:
         """Get the local version from VERSION file."""
@@ -178,33 +230,41 @@ class GitManager:
 
     def get_remote_version(self) -> str | None:
         """Get the latest version from remote repository."""
-        if not self.is_repo_cloned():
-            return None
-
         try:
-            # Fetch latest without merging
-            subprocess.run(
-                ["git", "fetch", "origin", self.branch],
-                cwd=str(self.repo_dir),
-                capture_output=True,
-                text=True,
-                timeout=60,
-            )
+            # Clone minimal to temp and read VERSION
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_path = Path(temp_dir) / "repo"
 
-            # Read VERSION from remote
-            result = subprocess.run(
-                ["git", "show", f"origin/{self.branch}:VERSION"],
-                cwd=str(self.repo_dir),
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
+                result = subprocess.run(
+                    [
+                        "git",
+                        "clone",
+                        "--branch",
+                        self.branch,
+                        "--single-branch",
+                        "--depth",
+                        "1",
+                        self.repo_url,
+                        str(temp_path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
 
-            if result.returncode == 0:
-                return result.stdout.strip()
-            return None
+                if result.returncode != 0:
+                    return None
 
-        except subprocess.SubprocessError:
+                # Check subfolder first
+                version_file = temp_path / REPO_MODULES_SUBFOLDER / "VERSION"
+                if not version_file.exists():
+                    version_file = temp_path / "VERSION"
+
+                if version_file.exists():
+                    return version_file.read_text(encoding="utf-8").strip()
+                return None
+
+        except (subprocess.SubprocessError, IOError):
             return None
 
     def check_for_updates(self) -> dict[str, Any]:
@@ -238,35 +298,13 @@ class GitManager:
 
     def get_commit_info(self) -> dict[str, Any]:
         """Get current commit information."""
-        if not self.is_repo_cloned():
-            return {"error": "Repository not found"}
-
-        try:
-            # Get commit hash
-            hash_result = subprocess.run(
-                ["git", "rev-parse", "--short", "HEAD"],
-                cwd=str(self.repo_dir),
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-
-            # Get commit date
-            date_result = subprocess.run(
-                ["git", "log", "-1", "--format=%ci"],
-                cwd=str(self.repo_dir),
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-
-            return {
-                "commit": hash_result.stdout.strip() if hash_result.returncode == 0 else "unknown",
-                "date": date_result.stdout.strip() if date_result.returncode == 0 else "unknown",
-            }
-
-        except subprocess.SubprocessError:
-            return {"error": "Failed to get commit info"}
+        # Since we don't keep .git, return version info instead
+        version = self.get_local_version()
+        return {
+            "version": version or "unknown",
+            "commit": "N/A (shallow copy)",
+            "date": "N/A",
+        }
 
     def verify_repo_integrity(self) -> dict[str, Any]:
         """Verify the repository is in good state."""
@@ -277,9 +315,9 @@ class GitManager:
             }
 
         checks = {
-            "git_dir_exists": (self.repo_dir / ".git").is_dir(),
             "version_file_exists": PADDISENSE_VERSION_FILE.exists(),
             "modules_json_exists": (self.repo_dir / "modules.json").exists(),
+            "ipm_exists": (self.repo_dir / "ipm").is_dir(),
         }
 
         all_passed = all(checks.values())
