@@ -145,12 +145,10 @@ class GitManager:
             }
 
     def pull(self) -> dict[str, Any]:
-        """Pull latest changes from the repository."""
+        """Pull latest changes from the repository (or clone if missing)."""
         if not self.is_repo_cloned():
-            return {
-                "success": False,
-                "error": "Repository not found. Run clone first.",
-            }
+            _LOGGER.info("Repository not found, performing fresh clone")
+            return self.clone()
 
         try:
             # Clone to temp and copy (same as clone, but overwrites)
