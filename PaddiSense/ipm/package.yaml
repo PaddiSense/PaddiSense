@@ -2550,10 +2550,10 @@ script:
                 entity_id: input_boolean.ipm_product_locked
                 state: "on"
             sequence:
-              - service: persistent_notification.create
+              - service: browser_mod.notification
                 data:
-                  title: "IPM Warning"
-                  message: "This product may be locked by another user. Your changes might conflict."
+                  message: "Warning: This product may be locked by another user."
+                  duration: 5000
 
       # Validate product selected
       - choose:
@@ -2561,10 +2561,10 @@ script:
               - condition: template
                 value_template: "{{ product_id in ['none', 'unknown', 'unavailable', ''] }}"
             sequence:
-              - service: persistent_notification.create
+              - service: browser_mod.notification
                 data:
-                  title: "IPM Movement"
                   message: "Please select a product first."
+                  duration: 5000
               - stop: "No product selected"
 
       # Validate location (for multi-location products)
@@ -2573,12 +2573,13 @@ script:
               - condition: template
                 value_template: >
                   {% set locs = state_attr('sensor.ipm_product_locations', 'locations') or [] %}
-                  {{ locs | length > 1 and location in ['Select Location', 'unknown', 'unavailable', ''] }}
+                  {% set invalid = ['Select Location', 'Select location', 'None', 'none', '-', '---', 'unknown', 'unavailable', ''] %}
+                  {{ locs | length > 1 and (location in invalid or location not in locs) }}
             sequence:
-              - service: persistent_notification.create
+              - service: browser_mod.notification
                 data:
-                  title: "IPM Movement"
-                  message: "This product is in multiple locations. Please select a location."
+                  message: "Please check location - this product is in multiple locations."
+                  duration: 5000
               - stop: "No location selected"
 
       # Validate quantity not zero
@@ -2587,10 +2588,10 @@ script:
               - condition: template
                 value_template: "{{ delta == 0 }}"
             sequence:
-              - service: persistent_notification.create
+              - service: browser_mod.notification
                 data:
-                  title: "IPM Movement"
                   message: "Quantity is zero. Nothing to save."
+                  duration: 5000
               - stop: "Delta is zero"
 
       # Determine actual location
@@ -2644,13 +2645,12 @@ script:
                   value: ""
 
       # Confirmation
-      - service: persistent_notification.create
+      - service: browser_mod.notification
         data:
-          title: "IPM Movement"
           message: >
             {% set p = products.get(product_id, {}) %}
-            Stock updated: {{ p.name | default(product_id) }} at {{ actual_location }}
-            Change: {{ delta | float | round(1) }} {{ p.unit | default('') }}
+            Stock updated: {{ p.name | default(product_id) }} ({{ delta | float | round(1) }} {{ p.unit | default('') }})
+          duration: 3000
 
   #---------------------------------------------------------------------------
   # Add new product
