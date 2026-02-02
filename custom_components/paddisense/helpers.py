@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -10,12 +12,16 @@ from typing import Any
 import yaml
 
 from .const import (
+    MODULE_FOLDERS,
+    PADDISENSE_DIR,
     REGISTRY_BACKUP_DIR,
     REGISTRY_CONFIG_FILE,
     REGISTRY_DATA_DIR,
     SERVER_YAML,
-    VERSION_FILE,
+    PADDISENSE_VERSION_FILE,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def generate_id(name: str) -> str:
@@ -26,10 +32,10 @@ def generate_id(name: str) -> str:
 
 
 def get_version() -> str:
-    """Read module version from VERSION file."""
+    """Read PaddiSense version from VERSION file."""
     try:
-        if VERSION_FILE.exists():
-            return VERSION_FILE.read_text(encoding="utf-8").strip()
+        if PADDISENSE_VERSION_FILE.exists():
+            return PADDISENSE_VERSION_FILE.read_text(encoding="utf-8").strip()
     except IOError:
         pass
     return "unknown"
@@ -105,11 +111,7 @@ def extract_grower(server_config: dict[str, Any]) -> dict[str, Any]:
 def extract_farms(
     server_config: dict[str, Any], registry_farms: dict[str, Any]
 ) -> dict[str, Any]:
-    """
-    Merge farm definitions from server.yaml and config.json.
-
-    Priority: config.json farms override server.yaml farms if same ID.
-    """
+    """Merge farm definitions from server.yaml and config.json."""
     pwm_config = server_config.get("pwm", {})
     server_farms = dict(pwm_config.get("farms", {}))
 
@@ -137,6 +139,11 @@ def existing_data_detected() -> bool:
     return REGISTRY_CONFIG_FILE.exists()
 
 
+def existing_repo_detected() -> bool:
+    """Check if PaddiSense repo is already cloned."""
+    return PADDISENSE_DIR.is_dir() and (PADDISENSE_DIR / ".git").is_dir()
+
+
 def get_existing_data_summary() -> dict[str, Any]:
     """Get summary of existing data for import."""
     config = load_registry_config()
@@ -146,4 +153,65 @@ def get_existing_data_summary() -> dict[str, Any]:
         "season_count": len(config.get("seasons", {})),
         "farm_count": len(config.get("farms", {})),
         "initialized": config.get("initialized", False),
+    }
+
+
+def get_repo_summary() -> dict[str, Any]:
+    """Get summary of existing PaddiSense repo."""
+    if not existing_repo_detected():
+        return {"exists": False}
+
+    summary = {"exists": True}
+
+    # Get version
+    if PADDISENSE_VERSION_FILE.exists():
+        try:
+            summary["version"] = PADDISENSE_VERSION_FILE.read_text(encoding="utf-8").strip()
+        except IOError:
+            summary["version"] = "unknown"
+
+    # Count installed modules
+    from .const import AVAILABLE_MODULES, PACKAGES_DIR
+
+    installed = []
+    for mod in AVAILABLE_MODULES:
+        symlink = PACKAGES_DIR / f"{mod}.yaml"
+        if symlink.exists() or symlink.is_symlink():
+            installed.append(mod)
+
+    summary["installed_modules"] = installed
+    summary["module_count"] = len(installed)
+
+    return summary
+
+
+def cleanup_unlicensed_modules(licensed_modules: list[str]) -> dict[str, Any]:
+    """Delete folders for modules not included in the license.
+
+    Args:
+        licensed_modules: List of module IDs the user is licensed for.
+
+    Returns:
+        Dictionary with cleanup results.
+    """
+    removed = []
+    errors = []
+
+    for module_id, folders in MODULE_FOLDERS.items():
+        if module_id not in licensed_modules:
+            for folder in folders:
+                path = PADDISENSE_DIR / folder
+                if path.exists():
+                    try:
+                        shutil.rmtree(path)
+                        removed.append(f"{module_id}/{folder}")
+                        _LOGGER.info("Removed unlicensed module folder: %s", path)
+                    except OSError as e:
+                        errors.append(f"{module_id}/{folder}: {e}")
+                        _LOGGER.warning("Failed to remove folder %s: %s", path, e)
+
+    return {
+        "success": len(errors) == 0,
+        "removed": removed,
+        "errors": errors,
     }

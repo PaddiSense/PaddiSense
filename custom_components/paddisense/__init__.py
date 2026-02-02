@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AVAILABLE_MODULES,
     CONF_GITHUB_TOKEN,
+    CONF_LICENSE_MODULES,
     DOMAIN,
     EVENT_DATA_UPDATED,
     EVENT_MODULES_CHANGED,
@@ -50,6 +51,7 @@ from .const import (
     SERVICE_UPDATE_PADDISENSE,
     REQUIRED_HACS_CARDS,
 )
+from .helpers import cleanup_unlicensed_modules
 from .installer import BackupManager, ConfigWriter, GitManager, ModuleManager
 from .registry.backend import RegistryBackend
 
@@ -175,6 +177,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Initialize backend
     backend = RegistryBackend()
     await hass.async_add_executor_job(backend.init)
+
+    # Cleanup unlicensed module folders
+    licensed_modules = entry.data.get(CONF_LICENSE_MODULES, [])
+    if licensed_modules:
+        cleanup_result = await hass.async_add_executor_job(
+            cleanup_unlicensed_modules, licensed_modules
+        )
+        if cleanup_result.get("removed"):
+            _LOGGER.info(
+                "Cleaned up unlicensed modules: %s",
+                ", ".join(cleanup_result["removed"])
+            )
 
     # Initialize installer components with token from license
     git_manager = GitManager(token=entry.data.get(CONF_GITHUB_TOKEN))
@@ -713,7 +727,61 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
         ),
     ])
 
-    _LOGGER.info(
-        "PaddiSense frontend registered. Add to Lovelace resources: "
-        "/paddisense/paddisense-registry-card.js, /paddisense/paddisense-manager-card.js"
-    )
+    # Auto-register resources in lovelace_resources storage
+    await _async_register_lovelace_resources(hass)
+
+    _LOGGER.info("PaddiSense frontend resources registered")
+
+
+async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
+    """Register PaddiSense cards in lovelace_resources storage."""
+    import json
+    from pathlib import Path
+
+    resources_file = Path(hass.config.path(".storage/lovelace_resources"))
+
+    paddisense_resources = [
+        {
+            "id": "paddisense_registry_card",
+            "url": "/paddisense/paddisense-registry-card.js",
+            "type": "module",
+        },
+        {
+            "id": "paddisense_manager_card",
+            "url": "/paddisense/paddisense-manager-card.js",
+            "type": "module",
+        },
+    ]
+
+    try:
+        if resources_file.exists():
+            content = await hass.async_add_executor_job(resources_file.read_text)
+            data = json.loads(content)
+        else:
+            data = {
+                "version": 1,
+                "minor_version": 1,
+                "key": "lovelace_resources",
+                "data": {"items": []},
+            }
+
+        items = data.get("data", {}).get("items", [])
+        existing_ids = {item.get("id") for item in items}
+
+        # Add missing PaddiSense resources
+        added = []
+        for resource in paddisense_resources:
+            if resource["id"] not in existing_ids:
+                items.insert(0, resource)
+                added.append(resource["id"])
+
+        if added:
+            data["data"]["items"] = items
+            new_content = json.dumps(data, indent=2)
+            await hass.async_add_executor_job(
+                resources_file.write_text, new_content
+            )
+            _LOGGER.info("Added lovelace resources: %s", ", ".join(added))
+
+    except Exception as e:
+        _LOGGER.warning("Failed to register lovelace resources: %s", e)

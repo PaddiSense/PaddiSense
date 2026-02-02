@@ -41,6 +41,14 @@ PADDISENSE_REPO_BRANCH = "main"
 
 AVAILABLE_MODULES = ["ipm", "asm", "weather", "pwm"]
 
+# Module folder paths (relative to PADDISENSE_DIR) for cleanup of unlicensed modules
+MODULE_FOLDERS = {
+    "ipm": ["ipm"],
+    "asm": ["asm"],
+    "weather": ["weather"],
+    "pwm": ["pwm"],
+}
+
 MODULE_METADATA = {
     "ipm": {
         "name": "Inventory Manager",
@@ -141,14 +149,14 @@ REQUIRED_HACS_CARDS = [
     {"repository": "thomasloven/lovelace-card-mod", "category": "plugin"},
 ]
 
-# Registry is always installed (core component)
+# Registry is always installed (core component) - now includes full management UI
 REGISTRY_MODULE = {
     "id": "registry",
-    "name": "Farm Registry",
-    "dashboard_slug": "paddisense-registry",
-    "dashboard_title": "Farm Registry",
-    "dashboard_file": "registry/dashboards/config.yaml",
-    "icon": "mdi:barn",
+    "name": "PaddiSense Manager",
+    "dashboard_slug": "paddisense-manager",
+    "dashboard_title": "PaddiSense Manager",
+    "dashboard_file": "registry/dashboards/manager.yaml",
+    "icon": "mdi:view-dashboard",
 }
 
 # =============================================================================
