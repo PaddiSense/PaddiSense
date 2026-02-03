@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     AVAILABLE_MODULES,
+    CONFIG_DIR,
     CONF_FARM_ID,
     CONF_FARM_NAME,
     CONF_GITHUB_TOKEN,
@@ -32,6 +33,9 @@ from .const import (
     INSTALL_TYPE_UPGRADE,
     MODULE_METADATA,
 )
+
+# Dev mode bypass - skip license validation if .dev_mode file exists
+DEV_MODE_FILE = CONFIG_DIR / ".dev_mode"
 from .license import LicenseError, validate_license
 from .helpers import (
     existing_data_detected,
@@ -159,7 +163,15 @@ class PaddiSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Check if git is available."""
+        # Dev mode bypass - skip git operations if repo already exists
+        is_dev_mode = await self.hass.async_add_executor_job(DEV_MODE_FILE.exists)
         git_manager = GitManager(token=self._data.get(CONF_GITHUB_TOKEN))
+        is_cloned = await self.hass.async_add_executor_job(git_manager.is_repo_cloned)
+
+        if is_dev_mode and is_cloned:
+            _LOGGER.info("Dev mode: Skipping git operations, using existing repo")
+            return await self.async_step_modules()
+
         self._git_available = await self.hass.async_add_executor_job(
             git_manager.is_git_available
         )
@@ -237,6 +249,18 @@ class PaddiSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """License key validation step."""
         errors = {}
+
+        # Dev mode bypass - skip license if .dev_mode file exists
+        is_dev_mode = await self.hass.async_add_executor_job(DEV_MODE_FILE.exists)
+        if is_dev_mode:
+            _LOGGER.info("Dev mode detected - bypassing license validation")
+            self._data[CONF_LICENSE_KEY] = "DEV_MODE"
+            self._data[CONF_LICENSE_GROWER] = "Developer"
+            self._data[CONF_LICENSE_EXPIRY] = "2099-12-31"
+            self._data[CONF_LICENSE_MODULES] = AVAILABLE_MODULES
+            self._data[CONF_LICENSE_SEASON] = "DEV"
+            self._data[CONF_GITHUB_TOKEN] = ""
+            return await self.async_step_git_check()
 
         if user_input is not None:
             key = user_input.get(CONF_LICENSE_KEY, "").strip()

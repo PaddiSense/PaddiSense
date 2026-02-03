@@ -1030,3 +1030,21 @@ automation:
       - service: script.registry_open_edit_season
         data:
           id: "{{ season_id | trim }}"
+
+  # -----------------------------------------------------------------------------
+  # RTR (Real Time Rice) AUTOMATION
+  # -----------------------------------------------------------------------------
+  # Daily refresh of RTR prediction data
+  - id: paddisense_rtr_daily_refresh
+    alias: "RTR - Daily Data Refresh"
+    description: "Automatically refresh Real Time Rice data each morning"
+    trigger:
+      - platform: time
+        at: "06:00:00"
+    condition:
+      - condition: state
+        entity: sensor.paddisense_rtr
+        attribute: rtr_url_set
+        state: true
+    action:
+      - service: paddisense.refresh_rtr_data

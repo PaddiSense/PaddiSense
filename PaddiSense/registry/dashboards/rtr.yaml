@@ -1,0 +1,217 @@
+# =============================================================================
+# REAL TIME RICE (RTR) DASHBOARD
+# =============================================================================
+# Displays paddock predictions from Real Time Rice integration.
+# Data is fetched daily from the RTR CSV endpoint.
+# =============================================================================
+
+title: Real Time Rice
+views:
+  - title: Predictions
+    path: predictions
+    icon: mdi:rice
+    cards:
+      # Header Card
+      - type: markdown
+        content: |
+          # 🌾 Real Time Rice Predictions
+          Crop stage predictions from Real Time Rice (RTR) - updated daily.
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent;
+              box-shadow: none;
+            }
+
+      # RTR Status Card
+      - type: entities
+        title: RTR Status
+        show_header_toggle: false
+        entities:
+          - entity: sensor.paddisense_rtr
+            name: Status
+            icon: mdi:rice
+          - type: attribute
+            entity: sensor.paddisense_rtr
+            attribute: rtr_last_updated
+            name: Last Updated
+            icon: mdi:clock-outline
+          - type: attribute
+            entity: sensor.paddisense_rtr
+            attribute: rtr_paddock_count
+            name: Paddocks
+            icon: mdi:view-grid
+        card_mod:
+          style: |
+            ha-card {
+              background: var(--card-background-color);
+            }
+
+      # Paddock Predictions Grid - uses auto-entities to dynamically show all RTR paddock sensors
+      - type: custom:auto-entities
+        card:
+          type: grid
+          columns: 2
+          square: false
+        card_param: cards
+        filter:
+          include:
+            - entity_id: sensor.paddisense_rtr_*
+              options:
+                type: custom:button-card
+                entity: this.entity_id
+                show_name: true
+                show_state: false
+                show_icon: true
+                icon: mdi:sprout
+                layout: vertical
+                name: |
+                  [[[
+                    return entity.attributes.paddock || entity.state;
+                  ]]]
+                styles:
+                  card:
+                    - padding: 16px
+                    - border-radius: 12px
+                  icon:
+                    - color: var(--primary-color)
+                    - width: 32px
+                    - height: 32px
+                  name:
+                    - font-size: 1.2em
+                    - font-weight: 600
+                    - margin-top: 8px
+                  custom_fields:
+                    dates:
+                      - font-size: 0.85em
+                      - margin-top: 12px
+                      - text-align: left
+                      - width: 100%
+                custom_fields:
+                  dates: |
+                    [[[
+                      const a = entity.attributes;
+                      const formatDate = (d) => {
+                        if (!d) return '-';
+                        const date = new Date(d);
+                        return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                      };
+                      const warning = a.warnings ? `<div style="color: var(--warning-color); margin-top: 8px;">⚠️ ${a.warnings}</div>` : '';
+                      return `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px;">
+                          <div style="color: var(--secondary-text-color);">Sow</div>
+                          <div>${formatDate(a.sow_date)}</div>
+                          <div style="color: var(--secondary-text-color);">PI</div>
+                          <div>${formatDate(a.pi_date)}</div>
+                          <div style="color: var(--secondary-text-color);">Flowering</div>
+                          <div>${formatDate(a.flowering_date)}</div>
+                          <div style="color: var(--secondary-text-color);">Harvest</div>
+                          <div style="font-weight: 600; color: var(--success-color);">${formatDate(a.harvest_date)}</div>
+                        </div>
+                        ${warning}
+                      `;
+                    ]]]
+          exclude:
+            - entity_id: sensor.paddisense_rtr
+        sort:
+          method: name
+          ignore_case: true
+
+      # Fallback message when no paddocks configured
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: sensor.paddisense_rtr
+            state: "Not configured"
+        card:
+          type: markdown
+          content: |
+            ## RTR Not Configured
+
+            To enable Real Time Rice predictions:
+
+            1. Go to **PaddiSense Manager**
+            2. Find the **Real Time Rice** section
+            3. Paste your RTR dashboard URL
+            4. Click **Save**
+
+            Data will refresh automatically each day.
+          card_mod:
+            style: |
+              ha-card {
+                background: rgba(255, 193, 7, 0.1);
+                border-left: 4px solid var(--warning-color);
+              }
+
+  - title: Timeline
+    path: timeline
+    icon: mdi:timeline
+    cards:
+      # Timeline Header
+      - type: markdown
+        content: |
+          # 📅 Crop Timeline
+          Key dates for all paddocks in chronological order.
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent;
+              box-shadow: none;
+            }
+
+      # PI Dates
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: Panicle Initiation (PI)
+          show_header_toggle: false
+        filter:
+          include:
+            - entity_id: sensor.paddisense_rtr_*
+              options:
+                type: custom:template-entity-row
+                entity: this.entity_id
+                name: "{{ state_attr(config.entity, 'paddock') }}"
+                state: "{{ state_attr(config.entity, 'pi_date') or '-' }}"
+                icon: mdi:leaf
+        sort:
+          method: attribute
+          attribute: pi_date
+
+      # Flowering Dates
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: Flowering
+          show_header_toggle: false
+        filter:
+          include:
+            - entity_id: sensor.paddisense_rtr_*
+              options:
+                type: custom:template-entity-row
+                entity: this.entity_id
+                name: "{{ state_attr(config.entity, 'paddock') }}"
+                state: "{{ state_attr(config.entity, 'flowering_date') or '-' }}"
+                icon: mdi:flower
+        sort:
+          method: attribute
+          attribute: flowering_date
+
+      # Harvest Dates
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: Harvest (22% Moisture)
+          show_header_toggle: false
+        filter:
+          include:
+            - entity_id: sensor.paddisense_rtr_*
+              options:
+                type: custom:template-entity-row
+                entity: this.entity_id
+                name: "{{ state_attr(config.entity, 'paddock') }}"
+                state: "{{ state_attr(config.entity, 'harvest_date') or '-' }}"
+                icon: mdi:tractor
+        sort:
+          method: attribute
+          attribute: harvest_date

@@ -188,8 +188,33 @@ ATTR_INSTALLED_MODULES = "installed_modules"
 ATTR_AVAILABLE_MODULES = "available_modules"
 
 # =============================================================================
+# RTR (Real Time Rice) PATHS
+# =============================================================================
+
+RTR_DATA_DIR = DATA_DIR / "rtr"
+RTR_CONFIG_FILE = RTR_DATA_DIR / "config.json"
+RTR_CACHE_FILE = RTR_DATA_DIR / "data.json"
+
+# =============================================================================
+# RTR SERVICES
+# =============================================================================
+
+SERVICE_SET_RTR_URL = "set_rtr_url"
+SERVICE_REFRESH_RTR = "refresh_rtr_data"
+
+# =============================================================================
+# RTR ATTRIBUTES
+# =============================================================================
+
+ATTR_RTR_URL_SET = "rtr_url_set"
+ATTR_RTR_LAST_UPDATED = "rtr_last_updated"
+ATTR_RTR_PADDOCK_COUNT = "rtr_paddock_count"
+ATTR_RTR_CSV_URL = "rtr_csv_url"
+
+# =============================================================================
 # EVENTS
 # =============================================================================
 
 EVENT_DATA_UPDATED = f"{DOMAIN}_data_updated"
 EVENT_MODULES_CHANGED = f"{DOMAIN}_modules_changed"
+EVENT_RTR_UPDATED = f"{DOMAIN}_rtr_updated"

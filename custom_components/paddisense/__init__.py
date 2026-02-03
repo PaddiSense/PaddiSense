@@ -18,6 +18,7 @@ from .const import (
     DOMAIN,
     EVENT_DATA_UPDATED,
     EVENT_MODULES_CHANGED,
+    EVENT_RTR_UPDATED,
     LOVELACE_DASHBOARDS_YAML,
     PACKAGES_DIR,
     PADDISENSE_DIR,
@@ -50,10 +51,14 @@ from .const import (
     SERVICE_ROLLBACK,
     SERVICE_UPDATE_PADDISENSE,
     REQUIRED_HACS_CARDS,
+    # RTR services
+    SERVICE_SET_RTR_URL,
+    SERVICE_REFRESH_RTR,
 )
 from .helpers import cleanup_unlicensed_modules
 from .installer import BackupManager, ConfigWriter, GitManager, ModuleManager
 from .registry.backend import RegistryBackend
+from .rtr.backend import RTRBackend
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,6 +164,11 @@ RESTORE_BACKUP_SCHEMA = vol.Schema({
     vol.Required("backup_id"): cv.string,
 })
 
+# RTR schemas
+SET_RTR_URL_SCHEMA = vol.Schema({
+    vol.Required("url"): cv.string,
+})
+
 
 # =============================================================================
 # SETUP
@@ -196,8 +206,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     backup_manager = BackupManager()
     config_writer = ConfigWriter()
 
+    # Initialize RTR backend
+    rtr_backend = RTRBackend()
+    await hass.async_add_executor_job(rtr_backend.init)
+
     # Store references
     hass.data[DOMAIN]["backend"] = backend
+    hass.data[DOMAIN]["rtr_backend"] = rtr_backend
     hass.data[DOMAIN]["entry_id"] = entry.entry_id
     hass.data[DOMAIN]["git_manager"] = git_manager
     hass.data[DOMAIN]["module_manager"] = module_manager
@@ -210,6 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register services
     await _async_register_registry_services(hass, backend)
     await _async_register_installer_services(hass)
+    await _async_register_rtr_services(hass, rtr_backend)
 
     # Register frontend resources
     await _async_register_frontend(hass)
@@ -238,12 +254,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_CHECK_UPDATES, SERVICE_UPDATE_PADDISENSE, SERVICE_INSTALL_MODULE,
             SERVICE_REMOVE_MODULE, SERVICE_CREATE_BACKUP, SERVICE_RESTORE_BACKUP,
             SERVICE_ROLLBACK, SERVICE_INSTALL_HACS_CARDS,
+            # RTR
+            SERVICE_SET_RTR_URL, SERVICE_REFRESH_RTR,
         ]
         for service in all_services:
             hass.services.async_remove(DOMAIN, service)
 
         # Clean up data
         hass.data[DOMAIN].pop("backend", None)
+        hass.data[DOMAIN].pop("rtr_backend", None)
         hass.data[DOMAIN].pop("entry_id", None)
         hass.data[DOMAIN].pop("git_manager", None)
         hass.data[DOMAIN].pop("module_manager", None)
@@ -639,6 +658,44 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_RESTORE_BACKUP, handle_restore_backup, RESTORE_BACKUP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_ROLLBACK, handle_rollback)
     hass.services.async_register(DOMAIN, SERVICE_INSTALL_HACS_CARDS, handle_install_hacs_cards)
+
+
+# =============================================================================
+# RTR SERVICES
+# =============================================================================
+
+async def _async_register_rtr_services(
+    hass: HomeAssistant, rtr_backend: RTRBackend
+) -> None:
+    """Register RTR (Real Time Rice) services."""
+
+    async def handle_set_rtr_url(call: ServiceCall) -> None:
+        """Set the RTR dashboard URL."""
+        result = await hass.async_add_executor_job(
+            rtr_backend.set_url,
+            call.data["url"],
+        )
+        _log_service_result("set_rtr_url", result)
+
+        if result.get("success"):
+            # Auto-refresh data after setting URL
+            refresh_result = await hass.async_add_executor_job(rtr_backend.refresh_data)
+            _log_service_result("refresh_rtr_data", refresh_result)
+            hass.bus.async_fire(EVENT_RTR_UPDATED)
+
+    async def handle_refresh_rtr(call: ServiceCall) -> None:
+        """Refresh RTR data from CSV endpoint."""
+        result = await hass.async_add_executor_job(rtr_backend.refresh_data)
+        _log_service_result("refresh_rtr_data", result)
+
+        if result.get("success"):
+            hass.bus.async_fire(EVENT_RTR_UPDATED)
+
+    # Register RTR services
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_RTR_URL, handle_set_rtr_url, SET_RTR_URL_SCHEMA
+    )
+    hass.services.async_register(DOMAIN, SERVICE_REFRESH_RTR, handle_refresh_rtr)
 
 
 # =============================================================================

@@ -43,12 +43,31 @@ secrets/*.yaml
 # PaddiSense per-server configuration
 server.yaml
 
+# Dev mode bypass (for development servers only)
+.dev_mode
+
 ########################################
 # Editor / OS junk
 ########################################
 .DS_Store
 .vscode/
 .idea/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Backup folders
+custom_components/_paddisense_backup_*/
+
+# Tools cache
+tools/__pycache__/
+
+# Claude local settings
+.claude/settings.local.json
+
+# Cloud auth (sensitive)
+.cloud/
 
 # Home Assistant internal
 .HA_VERSION
