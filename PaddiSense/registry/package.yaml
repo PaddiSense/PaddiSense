@@ -1034,17 +1034,19 @@ automation:
   # -----------------------------------------------------------------------------
   # RTR (Real Time Rice) AUTOMATION
   # -----------------------------------------------------------------------------
-  # Daily refresh of RTR prediction data
+  # Daily refresh of RTR prediction data at 6am (RTR server updates at 3am)
   - id: paddisense_rtr_daily_refresh
     alias: "RTR - Daily Data Refresh"
-    description: "Automatically refresh Real Time Rice data each morning"
+    description: "Automatically refresh Real Time Rice data each morning at 6am"
     trigger:
       - platform: time
         at: "06:00:00"
     condition:
-      - condition: state
-        entity: sensor.paddisense_rtr
-        attribute: rtr_url_set
-        state: true
+      - condition: template
+        value_template: "{{ state_attr('sensor.paddisense_real_time_rice', 'rtr_url_set') == true }}"
     action:
       - service: paddisense.refresh_rtr_data
+      - service: system_log.write
+        data:
+          message: "RTR daily refresh completed at 6am"
+          level: info

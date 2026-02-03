@@ -25,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 class PaddiSenseRTRSensor(SensorEntity):
     """Summary sensor showing RTR configuration status."""
 
-    _attr_has_entity_name = True
-    _attr_name = "Real Time Rice"
     _attr_icon = "mdi:rice"
 
     def __init__(
@@ -40,6 +38,7 @@ class PaddiSenseRTRSensor(SensorEntity):
         self._entry = entry
         self._backend = backend
         self._attr_unique_id = f"{DOMAIN}_rtr"
+        self._attr_name = "PaddiSense RTR"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": "PaddiSense",
@@ -63,6 +62,7 @@ class PaddiSenseRTRSensor(SensorEntity):
     def _update_state(self) -> None:
         """Update sensor state from RTR data."""
         status = self._backend.get_status()
+        data = self._backend.get_data()
 
         if status.get("configured"):
             paddock_count = status.get("paddock_count", 0)
@@ -78,6 +78,8 @@ class PaddiSenseRTRSensor(SensorEntity):
             ATTR_RTR_LAST_UPDATED: status.get("last_updated"),
             ATTR_RTR_PADDOCK_COUNT: status.get("paddock_count", 0),
             ATTR_RTR_CSV_URL: status.get("csv_url"),
+            # Include full paddock data for dashboard rendering
+            "paddocks": data.get("paddocks", {}),
         }
 
     async def async_update(self) -> None:
@@ -88,7 +90,6 @@ class PaddiSenseRTRSensor(SensorEntity):
 class PaddiSenseRTRPaddockSensor(SensorEntity):
     """Sensor for individual paddock RTR predictions."""
 
-    _attr_has_entity_name = True
     _attr_icon = "mdi:sprout"
 
     def __init__(
@@ -108,7 +109,8 @@ class PaddiSenseRTRPaddockSensor(SensorEntity):
 
         paddock_name = paddock_data.get("paddock", paddock_id)
         self._attr_unique_id = f"{DOMAIN}_rtr_{paddock_id}"
-        self._attr_name = f"RTR {paddock_name}"
+        # Entity ID will be sensor.paddisense_rtr_{paddock_id}
+        self._attr_name = f"PaddiSense RTR {paddock_name}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": "PaddiSense",

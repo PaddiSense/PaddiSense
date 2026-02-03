@@ -371,3 +371,23 @@ rollback:
 install_hacs_cards:
   name: Install Required HACS Cards
   description: Install button-card and card-mod from HACS (required for PaddiSense dashboards)
+
+# =============================================================================
+# RTR (REAL TIME RICE) SERVICES
+# =============================================================================
+
+set_rtr_url:
+  name: Set RTR URL
+  description: Set the Real Time Rice dashboard URL (supports Microsoft SafeLinks wrapped URLs)
+  fields:
+    url:
+      name: URL
+      description: The RTR dashboard URL from your email (can be the full SafeLinks URL or direct Google Storage URL)
+      required: true
+      example: "https://storage.googleapis.com/realtimerice/farms/.../rtr_dashboard_xxx.html"
+      selector:
+        text:
+
+refresh_rtr_data:
+  name: Refresh RTR Data
+  description: Fetch latest predictions from the Real Time Rice CSV endpoint
