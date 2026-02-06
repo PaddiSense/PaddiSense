@@ -361,6 +361,52 @@ input_datetime:
 # SCRIPTS
 # -----------------------------------------------------------------------------
 script:
+  # Refresh all dropdowns (can be called from dashboard)
+  registry_refresh_dropdowns:
+    alias: "Registry - Refresh Dropdowns"
+    icon: mdi:refresh
+    sequence:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      - delay:
+          seconds: 1
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_farm_filter
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['All Farms'] + (farms | list) if farms else ['All Farms'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_new_paddock_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
+            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+
   # Initialize registry
   registry_init_system:
     alias: "Registry - Initialize System"
@@ -480,7 +526,7 @@ script:
         target:
           entity_id: sensor.farm_registry_data
 
-  # Add season
+  # Add season (with parameters - for programmatic use)
   registry_add_season:
     alias: "Registry - Add Season"
     icon: mdi:calendar-plus
@@ -523,6 +569,57 @@ script:
         data:
           value: ""
 
+  # Add season from form (reads input entities directly - for dashboard buttons)
+  registry_add_season_from_form:
+    alias: "Registry - Add Season from Form"
+    icon: mdi:calendar-plus
+    fields:
+      set_active:
+        description: "Set as active season after adding"
+        selector:
+          boolean:
+    sequence:
+      - variables:
+          season_name: "{{ states('input_text.registry_new_season_name') }}"
+          season_start: "{{ states('input_datetime.registry_season_start') }}"
+          season_end: "{{ states('input_datetime.registry_season_end') }}"
+          make_active: "{{ set_active | default(false) }}"
+      # Validate inputs
+      - condition: template
+        value_template: "{{ season_name | length > 0 }}"
+      - condition: template
+        value_template: "{{ season_start not in ['unknown', 'unavailable', ''] }}"
+      - condition: template
+        value_template: "{{ season_end not in ['unknown', 'unavailable', ''] }}"
+      # Call shell command
+      - service: shell_command.registry_add_season
+        data:
+          name: "{{ season_name }}"
+          start: "{{ season_start }}"
+          end: "{{ season_end }}"
+          active: "{{ make_active }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_season_name
+        data:
+          value: ""
+      # Refresh season dropdown
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
+
   # Set active season
   registry_set_active_season:
     alias: "Registry - Set Active Season"
@@ -534,6 +631,9 @@ script:
         selector:
           text:
     sequence:
+      # Validate that a season is selected
+      - condition: template
+        value_template: "{{ id | length > 0 and id != 'Select...' }}"
       - service: shell_command.registry_set_active_season
         data:
           id: "{{ id }}"
@@ -542,6 +642,16 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Refresh season dropdown to show updated active status
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
 
   # Toggle paddock current_season
   registry_toggle_current_season:
@@ -615,6 +725,9 @@ script:
           paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
           new_name: "{{ states('input_text.registry_edit_paddock_name') }}"
           current_season: "{{ is_state('input_boolean.registry_edit_current_season', 'on') }}"
+      # Validate that a paddock is selected
+      - condition: template
+        value_template: "{{ paddock_id | length > 0 }}"
       - service: shell_command.registry_edit_paddock
         data:
           id: "{{ paddock_id }}"
@@ -625,6 +738,16 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Refresh dropdown with updated data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
+            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
       # Clear form
       - service: input_text.set_value
         target:
@@ -725,6 +848,9 @@ script:
       - variables:
           farm_id: "{{ states('input_text.registry_edit_farm_pointer') }}"
           new_name: "{{ states('input_text.registry_edit_farm_name') }}"
+      # Validate that a farm is selected
+      - condition: template
+        value_template: "{{ farm_id | length > 0 }}"
       - service: shell_command.registry_edit_farm
         data:
           id: "{{ farm_id }}"
@@ -734,6 +860,16 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Refresh dropdown with updated data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
       # Clear form
       - service: input_text.set_value
         target:
@@ -795,6 +931,9 @@ script:
           new_name: "{{ states('input_text.registry_edit_season_name') }}"
           new_start: "{{ states('input_datetime.registry_edit_season_start') }}"
           new_end: "{{ states('input_datetime.registry_edit_season_end') }}"
+      # Validate that a season is selected
+      - condition: template
+        value_template: "{{ season_id | length > 0 }}"
       - service: shell_command.registry_edit_season
         data:
           id: "{{ season_id }}"
@@ -806,6 +945,16 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Refresh dropdown with updated data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
       # Clear form
       - service: input_text.set_value
         target:
@@ -842,11 +991,81 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Clear form after delete
+      - delay:
+          milliseconds: 500
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_season_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_season_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_season
+        data:
+          option: "Select..."
 
 # -----------------------------------------------------------------------------
 # AUTOMATIONS
 # -----------------------------------------------------------------------------
 automation:
+  # Initialize dropdowns on Home Assistant startup
+  - id: registry_init_dropdowns_on_startup
+    alias: "Registry - Initialize Dropdowns on Startup"
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      # Wait for sensor to be available
+      - delay:
+          seconds: 10
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      - delay:
+          seconds: 2
+      # Update all dropdowns
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_farm_filter
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['All Farms'] + (farms | list) if farms else ['All Farms'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_new_paddock_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
+            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+
   # Update season dropdown when data changes
   - id: registry_update_season_dropdown
     alias: "Registry - Update Season Dropdown"
@@ -987,6 +1206,39 @@ automation:
         data:
           id: "{{ paddock_id | trim }}"
 
+  # Refresh paddock dropdown when switching to edit mode
+  - id: registry_refresh_paddock_dropdown_on_mode_change
+    alias: "Registry - Refresh Paddock Dropdown on Mode Change"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_paddock_editor_mode
+        to: "Edit Existing Paddock"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_farm_filter
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['All Farms'] + (farms | list) if farms else ['All Farms'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
+            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          option: "Select..."
+
   # Load farm edit form when farm is selected
   - id: registry_load_farm_on_select
     alias: "Registry - Load Farm on Select"
@@ -1009,6 +1261,32 @@ automation:
         data:
           id: "{{ farm_id | trim }}"
 
+  # Refresh farm dropdown when switching to edit mode
+  - id: registry_refresh_farm_dropdown_on_mode_change
+    alias: "Registry - Refresh Farm Dropdown on Mode Change"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_farm_editor_mode
+        to: "Edit Existing Farm"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          options: >-
+            {% set farms = state_attr('sensor.farm_registry_data', 'farm_names') or [] %}
+            {{ ['Select...'] + (farms | list) if farms else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          option: "Select..."
+
   # Load season edit form when season is selected
   - id: registry_load_season_on_select
     alias: "Registry - Load Season on Select"
@@ -1030,6 +1308,32 @@ automation:
       - service: script.registry_open_edit_season
         data:
           id: "{{ season_id | trim }}"
+
+  # Refresh season dropdown when switching to edit mode
+  - id: registry_refresh_season_dropdown_on_mode_change
+    alias: "Registry - Refresh Season Dropdown on Mode Change"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_season_editor_mode
+        to: "Edit Existing Season"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_season
+        data:
+          options: >-
+            {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
+            {{ ['Select...'] + seasons if seasons else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_season
+        data:
+          option: "Select..."
 
   # -----------------------------------------------------------------------------
   # RTR (Real Time Rice) AUTOMATION

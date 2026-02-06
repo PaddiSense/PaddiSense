@@ -3,12 +3,11 @@
 # Comprehensive management interface for PaddiSense Farm Management System
 #
 # Views:
-#   1. System Status - Version, updates, registration info
-#   2. Modules - Install/remove modules
-#   3. Farm Management - Add/edit farms
-#   4. Paddock Editor - Add/edit paddocks
-#   5. Season - Manage seasons
-#   6. Settings - Backup, restore, HACS
+#   1. Modules - Install/remove modules, version & update status
+#   2. Farm Management - Add/edit farms
+#   3. Paddock Editor - Add/edit paddocks
+#   4. Season - Manage seasons
+#   5. Settings - Backup, restore, HACS dependencies, advanced options
 ##############################################################################
 
 title: PaddiSense Manager
@@ -25,6 +24,10 @@ button_card_templates:
     show_icon: false
     show_state: false
     name: '[[[ return variables.var_name ]]]'
+    tap_action:
+      action: none
+    hold_action:
+      action: none
     styles:
       card:
         - height: 50px
@@ -164,187 +167,10 @@ button_card_templates:
 
 views:
   # ===========================================================================
-  # View 1: System Status
-  # ===========================================================================
-  - title: System
-    path: system
-    icon: mdi:cog
-    type: sections
-    max_columns: 1
-    sections:
-      - type: grid
-        cards:
-          - type: vertical-stack
-            cards:
-              - type: custom:button-card
-                template: template_titleblock
-                variables:
-                  var_name: PADDISENSE SYSTEM STATUS
-
-              # License & Version Info Card
-              - type: custom:button-card
-                entity: sensor.paddisense_version
-                show_icon: false
-                show_name: false
-                show_state: false
-                styles:
-                  card:
-                    - background: var(--card-background-color)
-                    - border-radius: 12px
-                    - padding: 16px
-                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
-                  grid:
-                    - display: block
-                custom_fields:
-                  status: |
-                    [[[
-                      try {
-                        if (!entity || !entity.attributes) {
-                          return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">Loading...</div>`;
-                        }
-
-                        const attr = entity.attributes;
-                        const version = entity.state || 'Unknown';
-                        const latestVersion = attr.latest_version || 'Not checked';
-                        const updateAvailable = attr.update_available === true;
-                        const lastChecked = attr.last_checked ? new Date(attr.last_checked).toLocaleString() : 'Never';
-
-                        const grower = attr.license_grower || 'Unknown';
-                        const farm = attr.farm_name || 'Unknown';
-                        const expiry = attr.license_expiry || 'Unknown';
-                        const season = attr.license_season || 'Unknown';
-                        const licensedModules = attr.license_modules || [];
-
-                        // Check if license is expired
-                        let expiryStatus = 'valid';
-                        let expiryColor = '#4caf50';
-                        if (expiry && expiry !== 'Unknown') {
-                          const expiryDate = new Date(expiry);
-                          const now = new Date();
-                          const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
-                          if (daysLeft < 0) {
-                            expiryStatus = 'EXPIRED';
-                            expiryColor = '#dc3545';
-                          } else if (daysLeft < 30) {
-                            expiryStatus = daysLeft + ' days left';
-                            expiryColor = '#fd7e14';
-                          } else {
-                            expiryStatus = 'Valid';
-                            expiryColor = '#4caf50';
-                          }
-                        }
-
-                        const updateBadge = updateAvailable
-                          ? `<span style="background:#fd7e14;color:white;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-left:10px;">UPDATE AVAILABLE</span>`
-                          : '';
-
-                        return `
-                          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                            <!-- License Info -->
-                            <div style="border-right:1px solid var(--divider-color,#e0e0e0);padding-right:20px;">
-                              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                                <ha-icon icon="mdi:license" style="--mdc-icon-size:28px;color:#7b1fa2;"></ha-icon>
-                                <span style="font-size:18px;font-weight:700;color:var(--primary-text-color);">License</span>
-                                <span style="background:${expiryColor};color:white;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-left:auto;">${expiryStatus}</span>
-                              </div>
-                              <div style="display:grid;gap:8px;">
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Grower</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${grower}</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Farm</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${farm}</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Season</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${season}</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Expires</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${expiry}</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Licensed Modules</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${licensedModules.join(', ') || 'None'}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <!-- Version Info -->
-                            <div>
-                              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                                <ha-icon icon="mdi:package-variant" style="--mdc-icon-size:28px;color:#0066cc;"></ha-icon>
-                                <span style="font-size:18px;font-weight:700;color:var(--primary-text-color);">Version</span>
-                                ${updateBadge}
-                              </div>
-                              <div style="display:grid;gap:8px;">
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Installed</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${version}</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Latest</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);">${latestVersion}</span>
-                                </div>
-                                <div style="display:flex;justify-content:space-between;">
-                                  <span style="color:var(--secondary-text-color);font-size:13px;">Last Checked</span>
-                                  <span style="font-weight:600;color:var(--primary-text-color);font-size:12px;">${lastChecked}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        `;
-                      } catch (e) {
-                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
-                      }
-                    ]]]
-
-              # Action Buttons
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: template_action
-                    name: Check Updates
-                    icon: mdi:cloud-download
-                    tap_action:
-                      action: call-service
-                      service: paddisense.check_for_updates
-                    hold_action:
-                      action: none
-
-                  - type: custom:button-card
-                    template: template_success
-                    name: Update Now
-                    icon: mdi:download
-                    entity: sensor.paddisense_version
-                    state:
-                      - value: "unavailable"
-                        color: "#555555"
-                    tap_action:
-                      action: call-service
-                      service: paddisense.update_paddisense
-                      data:
-                        backup_first: true
-                    confirmation:
-                      text: Update PaddiSense to latest version? A backup will be created first.
-
-                  - type: custom:button-card
-                    template: template_secondary
-                    name: Settings
-                    icon: mdi:cog
-                    tap_action:
-                      action: navigate
-                      navigation_path: /config/integrations/integration/paddisense
-                    hold_action:
-                      action: none
-
-  # ===========================================================================
-  # View 2: Module Management
+  # View 1: Module Management
   # ===========================================================================
   - title: Modules
     path: modules
-    icon: mdi:puzzle
     type: sections
     max_columns: 1
     sections:
@@ -357,12 +183,107 @@ views:
                 variables:
                   var_name: MODULE MANAGEMENT
 
-              # Installed Modules Display
+              # Version & Update Status Card
               - type: custom:button-card
                 entity: sensor.paddisense_version
                 show_icon: false
                 show_name: false
                 show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
+                styles:
+                  card:
+                    - background: var(--card-background-color)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                  grid:
+                    - display: block
+                custom_fields:
+                  status: |
+                    [[[
+                      try {
+                        // Create helper function if not exists
+                        if (!window._pdsCallService) {
+                          window._pdsCallService = function(domain, service, data) {
+                            const ha = document.querySelector('home-assistant');
+                            if (!ha || !ha.hass) {
+                              console.error('PaddiSense: Home Assistant not found');
+                              return Promise.reject(new Error('Home Assistant not available'));
+                            }
+                            console.log('PaddiSense: Calling service', domain + '.' + service, data);
+                            return ha.hass.callService(domain, service, data);
+                          };
+                        }
+
+                        if (!entity || !entity.attributes) {
+                          return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Loading...</div>`;
+                        }
+
+                        const version = entity.state || 'Unknown';
+                        const latestVersion = entity.attributes.latest_version || 'Not checked';
+                        const updateAvailable = entity.attributes.update_available === true;
+                        const lastChecked = entity.attributes.last_checked ? new Date(entity.attributes.last_checked).toLocaleString() : 'Never';
+
+                        const statusBadge = updateAvailable
+                          ? `<span style="background:#fd7e14;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UPDATE AVAILABLE: v${latestVersion}</span>`
+                          : `<span style="background:#4caf50;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UP TO DATE</span>`;
+
+                        return `
+                          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                              <ha-icon icon="mdi:package-variant" style="--mdc-icon-size:28px;color:#0066cc;"></ha-icon>
+                              <div>
+                                <div style="font-size:14px;font-weight:700;color:var(--primary-text-color);">PaddiSense v${version}</div>
+                                <div style="font-size:11px;color:var(--secondary-text-color);">Last checked: ${lastChecked}</div>
+                              </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                              ${statusBadge}
+                              <button id="check-updates-btn" onclick="
+                                event.stopPropagation();
+                                const btn = this;
+                                const origText = btn.innerHTML;
+                                btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:18px;animation:spin 1s linear infinite;\\'></ha-icon> Checking...';
+                                btn.disabled = true;
+                                window._pdsCallService('paddisense', 'check_for_updates').then(() => {
+                                  setTimeout(() => { btn.innerHTML = origText; btn.disabled = false; }, 2000);
+                                }).catch(() => {
+                                  btn.innerHTML = origText; btn.disabled = false;
+                                });
+                              " style="background:#0066cc;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                                <ha-icon icon="mdi:cloud-download" style="--mdc-icon-size:18px;"></ha-icon>Check Updates
+                              </button>
+                              ${updateAvailable ? `<button onclick="
+                                event.stopPropagation();
+                                const btn = this;
+                                btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:18px;animation:spin 1s linear infinite;\\'></ha-icon> Updating...';
+                                btn.disabled = true;
+                                window._pdsCallService('paddisense', 'update_paddisense', { backup_first: true });
+                              " style="background:#28a745;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                                <ha-icon icon="mdi:download" style="--mdc-icon-size:18px;"></ha-icon>Update Now
+                              </button>` : ''}
+                            </div>
+                          </div>
+                          <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+                        `;
+                      } catch (e) {
+                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
+                      }
+                    ]]]
+
+              # Module Cards - Compact row layout with integrated actions
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                show_icon: false
+                show_name: false
+                show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
                 styles:
                   card:
                     - background: transparent
@@ -374,6 +295,19 @@ views:
                   modules: |
                     [[[
                       try {
+                        // Create a helper function that gets fresh hass reference
+                        if (!window._pdsCallService) {
+                          window._pdsCallService = function(domain, service, data) {
+                            const ha = document.querySelector('home-assistant');
+                            if (!ha || !ha.hass) {
+                              console.error('PaddiSense: Home Assistant not found');
+                              return Promise.reject(new Error('Home Assistant not available'));
+                            }
+                            console.log('PaddiSense: Calling service', domain + '.' + service, data);
+                            return ha.hass.callService(domain, service, data);
+                          };
+                        }
+
                         if (!entity || !entity.attributes) {
                           return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">Loading...</div>`;
                         }
@@ -382,21 +316,62 @@ views:
                         const availableModules = entity.attributes.available_modules || [];
                         const licensedModules = entity.attributes.license_modules || [];
 
-                        // Module metadata - all available modules
+                        // Module metadata
                         const moduleInfo = {
-                          'ipm': { name: 'Inventory Manager', icon: 'mdi:warehouse', desc: 'Track chemicals, fertilizers, and consumables', color: '#4caf50' },
-                          'asm': { name: 'Asset Service Manager', icon: 'mdi:tractor', desc: 'Track equipment, parts, and service history', color: '#ff9800' },
-                          'weather': { name: 'Weather Stations', icon: 'mdi:weather-cloudy', desc: 'Local gateway and API weather data', color: '#2196f3' },
-                          'pwm': { name: 'Water Management', icon: 'mdi:water', desc: 'Irrigation scheduling and bay monitoring', color: '#00bcd4' },
-                          'rtr': { name: 'Real Time Rice', icon: 'mdi:rice', desc: 'Crop growth predictions from Real Time Rice', color: '#43a047' },
-                          'str': { name: 'Stock Tracker', icon: 'mdi:cow', desc: 'Livestock inventory and movement tracking', color: '#8d6e63' },
-                          'wss': { name: 'Worker Safety', icon: 'mdi:account-hard-hat', desc: 'Worker check-in/check-out safety system', color: '#e53935' },
-                          'hfm': { name: 'Hey Farmer', icon: 'mdi:chart-areaspline', desc: 'Community insights (requires data sharing)', color: '#7b1fa2' },
+                          'ipm': { name: 'Inventory Manager', icon: 'mdi:warehouse', desc: 'Chemicals, fertilizers & consumables', color: '#4caf50' },
+                          'asm': { name: 'Asset Service Manager', icon: 'mdi:tractor', desc: 'Equipment, parts & service history', color: '#ff9800' },
+                          'weather': { name: 'Weather Stations', icon: 'mdi:weather-cloudy', desc: 'Local gateway & API weather data', color: '#2196f3' },
+                          'pwm': { name: 'Water Management', icon: 'mdi:water', desc: 'Irrigation scheduling & bay monitoring', color: '#00bcd4' },
+                          'rtr': { name: 'Real Time Rice', icon: 'mdi:rice', desc: 'Crop growth predictions', color: '#43a047' },
+                          'str': { name: 'Stock Tracker', icon: 'mdi:cow', desc: 'Livestock inventory & movement', color: '#8d6e63' },
+                          'wss': { name: 'Worker Safety', icon: 'mdi:account-hard-hat', desc: 'Worker check-in/check-out', color: '#e53935' },
+                          'hfm': { name: 'Hey Farmer', icon: 'mdi:chart-areaspline', desc: 'Community insights', color: '#7b1fa2' },
                         };
 
-                        let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:4px;">`;
+                        let html = `<style>
+                          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                          .pds-module-row {
+                            display: flex;
+                            align-items: center;
+                            background: var(--card-background-color);
+                            border-radius: 12px;
+                            padding: 12px 16px;
+                            margin-bottom: 8px;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+                            transition: box-shadow 0.2s;
+                          }
+                          .pds-module-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+                          .pds-module-icon {
+                            width: 44px; height: 44px; border-radius: 10px;
+                            display: flex; align-items: center; justify-content: center;
+                            flex-shrink: 0; margin-right: 14px;
+                          }
+                          .pds-module-info { flex: 1; min-width: 0; margin-right: 12px; }
+                          .pds-module-name { font-size: 15px; font-weight: 600; color: var(--primary-text-color); margin-bottom: 2px; }
+                          .pds-module-desc { font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                          .pds-module-badges { display: flex; gap: 6px; align-items: center; margin-right: 16px; flex-shrink: 0; }
+                          .pds-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+                          .pds-module-action { flex-shrink: 0; }
+                          .pds-btn {
+                            border: none; border-radius: 8px; padding: 10px 16px;
+                            font-size: 13px; font-weight: 600; cursor: pointer;
+                            display: flex; align-items: center; gap: 6px;
+                            transition: opacity 0.2s, transform 0.1s;
+                          }
+                          .pds-btn:hover { opacity: 0.9; }
+                          .pds-btn:active { transform: scale(0.97); }
+                          .pds-btn-install { background: #28a745; color: white; }
+                          .pds-btn-remove { background: #dc3545; color: white; }
+                          .pds-btn-disabled { background: transparent; color: var(--secondary-text-color); cursor: default; padding: 10px 12px; }
+                          @media (max-width: 600px) {
+                            .pds-module-row { flex-wrap: wrap; gap: 10px; }
+                            .pds-module-info { flex-basis: calc(100% - 60px); margin-right: 0; }
+                            .pds-module-badges { margin-right: 0; }
+                          }
+                        </style>`;
 
-                        // Show all available modules
+                        html += `<div style="padding: 4px 0;">`;
+
                         const allModules = ['ipm', 'asm', 'weather', 'pwm', 'rtr', 'str', 'wss', 'hfm'];
 
                         for (const modId of allModules) {
@@ -405,40 +380,64 @@ views:
                           const isInstalled = !!installedData;
                           const isLicensed = licensedModules.includes(modId);
                           const isAvailable = availableModules.some(m => m.id === modId);
+                          const version = installedData?.version || '';
 
                           let statusBg, statusColor, statusText;
                           if (isInstalled) {
-                            statusBg = 'rgba(76,175,80,0.15)';
-                            statusColor = '#4caf50';
-                            statusText = 'INSTALLED';
+                            statusBg = 'rgba(76,175,80,0.15)'; statusColor = '#4caf50'; statusText = 'Installed';
                           } else if (!isLicensed) {
-                            statusBg = 'rgba(158,158,158,0.15)';
-                            statusColor = '#9e9e9e';
-                            statusText = 'NOT LICENSED';
+                            statusBg = 'rgba(158,158,158,0.12)'; statusColor = '#9e9e9e'; statusText = 'Not Licensed';
                           } else if (isAvailable) {
-                            statusBg = 'rgba(33,150,243,0.15)';
-                            statusColor = '#2196f3';
-                            statusText = 'AVAILABLE';
+                            statusBg = 'rgba(33,150,243,0.15)'; statusColor = '#2196f3'; statusText = 'Available';
                           } else {
-                            statusBg = 'rgba(158,158,158,0.15)';
-                            statusColor = '#9e9e9e';
-                            statusText = 'UNAVAILABLE';
+                            statusBg = 'rgba(158,158,158,0.12)'; statusColor = '#9e9e9e'; statusText = 'Unavailable';
+                          }
+
+                          // Action button
+                          let actionBtn = '';
+                          if (isInstalled) {
+                            actionBtn = `<button class="pds-btn pds-btn-remove" onclick="
+                              event.stopPropagation();
+                              const btn = this;
+                              const origHtml = btn.innerHTML;
+                              btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:16px;animation:spin 1s linear infinite;\\'></ha-icon>';
+                              btn.disabled = true;
+                              btn.style.opacity = '0.7';
+                              window._pdsCallService('paddisense', 'remove_module', { module_id: '${modId}' })
+                                .then(() => { btn.innerHTML = '<ha-icon icon=\\'mdi:check\\' style=\\'--mdc-icon-size:16px;\\'></ha-icon>'; btn.style.background = '#28a745'; })
+                                .catch((e) => { btn.innerHTML = origHtml; btn.disabled = false; btn.style.opacity = '1'; });
+                            "><ha-icon icon="mdi:trash-can-outline" style="--mdc-icon-size:16px;"></ha-icon>Remove</button>`;
+                          } else if (isLicensed && isAvailable) {
+                            actionBtn = `<button class="pds-btn pds-btn-install" onclick="
+                              event.stopPropagation();
+                              const btn = this;
+                              const origHtml = btn.innerHTML;
+                              btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:16px;animation:spin 1s linear infinite;\\'></ha-icon>';
+                              btn.disabled = true;
+                              btn.style.opacity = '0.7';
+                              window._pdsCallService('paddisense', 'install_module', { module_id: '${modId}' })
+                                .then(() => { btn.innerHTML = '<ha-icon icon=\\'mdi:check\\' style=\\'--mdc-icon-size:16px;\\'></ha-icon>'; })
+                                .catch((e) => { btn.innerHTML = origHtml; btn.disabled = false; btn.style.opacity = '1'; });
+                            "><ha-icon icon="mdi:download" style="--mdc-icon-size:16px;"></ha-icon>Install</button>`;
+                          } else {
+                            actionBtn = `<span class="pds-btn pds-btn-disabled"><ha-icon icon="mdi:lock-outline" style="--mdc-icon-size:14px;"></ha-icon></span>`;
                           }
 
                           html += `
-                            <div style="background:var(--card-background-color);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${info.color};">
-                              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                                <div style="width:50px;height:50px;border-radius:50%;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;">
-                                  <ha-icon icon="${info.icon}" style="--mdc-icon-size:28px;color:${info.color};"></ha-icon>
-                                </div>
-                                <div style="flex:1;min-width:0;">
-                                  <div style="font-size:16px;font-weight:700;color:var(--primary-text-color);">${info.name}</div>
-                                  <div style="font-size:12px;color:var(--secondary-text-color);">${info.desc}</div>
-                                </div>
+                            <div class="pds-module-row">
+                              <div class="pds-module-icon" style="background:${info.color}15;">
+                                <ha-icon icon="${info.icon}" style="--mdc-icon-size:24px;color:${info.color};"></ha-icon>
                               </div>
-                              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--divider-color,#e0e0e0);">
-                                <span style="padding:4px 10px;border-radius:12px;background:${statusBg};color:${statusColor};font-size:11px;font-weight:700;">${statusText}</span>
-                                <span style="font-size:12px;color:var(--secondary-text-color);">${modId.toUpperCase()}</span>
+                              <div class="pds-module-info">
+                                <div class="pds-module-name">${info.name}</div>
+                                <div class="pds-module-desc">${info.desc}</div>
+                              </div>
+                              <div class="pds-module-badges">
+                                <span class="pds-badge" style="background:${statusBg};color:${statusColor};">${statusText}</span>
+                                ${isInstalled && version ? `<span class="pds-badge" style="background:rgba(0,102,204,0.1);color:#0066cc;">v${version}</span>` : ''}
+                              </div>
+                              <div class="pds-module-action">
+                                ${actionBtn}
                               </div>
                             </div>`;
                         }
@@ -450,67 +449,11 @@ views:
                       }
                     ]]]
 
-              - type: custom:button-card
-                template: template_titleblock
-                variables:
-                  var_name: MODULE ACTIONS
-
-              # Install/Remove Module section
-              - type: markdown
-                content: |
-                  Select a module to install or remove. All modules are free for registered users.
-                  Removing a module preserves its data for later reinstallation.
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 8px;
-                      background: var(--card-background-color);
-                    }
-
-              - type: entities
-                entities:
-                  - entity: input_select.paddisense_module_action
-                    name: Select Module
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 4px;
-                    }
-
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: template_success
-                    name: Install Module
-                    icon: mdi:puzzle-plus
-                    tap_action:
-                      action: call-service
-                      service: paddisense.install_module
-                      data:
-                        module_id: "{{ states('input_select.paddisense_module_action') }}"
-                    confirmation:
-                      text: Install this module?
-
-                  - type: custom:button-card
-                    template: template_danger
-                    name: Remove Module
-                    icon: mdi:puzzle-remove
-                    tap_action:
-                      action: call-service
-                      service: paddisense.remove_module
-                      data:
-                        module_id: "{{ states('input_select.paddisense_module_action') }}"
-                    confirmation:
-                      text: Remove this module? Data will be preserved.
-
   # ===========================================================================
-  # View 3: Farm Management
+  # View 2: Farm Management
   # ===========================================================================
   - title: Farms
     path: farms
-    icon: mdi:barn
     type: sections
     max_columns: 1
     sections:
@@ -522,6 +465,17 @@ views:
                 template: template_titleblock
                 variables:
                   var_name: FARM MANAGEMENT
+
+              # Refresh button for dropdowns (helps after install)
+              - type: custom:button-card
+                template: template_secondary
+                name: Refresh Data
+                icon: mdi:refresh
+                tap_action:
+                  action: call-service
+                  service: script.registry_refresh_dropdowns
+                hold_action:
+                  action: none
 
               # Editor mode selector
               - type: entities
@@ -604,6 +558,8 @@ views:
                           tap_action:
                             action: call-service
                             service: script.registry_save_farm_edit
+                          hold_action:
+                            action: none
                           confirmation:
                             text: Save farm changes?
 
@@ -616,6 +572,8 @@ views:
                             service: script.registry_delete_farm
                             data:
                               id: "{{ states('input_text.registry_edit_farm_pointer') }}"
+                          hold_action:
+                            action: none
                           confirmation:
                             text: Delete this farm? Farms with paddocks cannot be deleted.
 
@@ -651,16 +609,55 @@ views:
                           }
 
                     - type: custom:button-card
-                      template: template_success
-                      name: Add Farm
-                      icon: mdi:barn
+                      show_name: false
+                      show_icon: false
+                      show_state: false
                       tap_action:
-                        action: call-service
-                        service: script.registry_add_farm
-                        data:
-                          name: "{{ states('input_text.registry_new_farm_name') }}"
-                      confirmation:
-                        text: Add new farm?
+                        action: none
+                      styles:
+                        card:
+                          - background: transparent
+                          - box-shadow: none
+                          - padding: 0
+                        grid:
+                          - display: block
+                      custom_fields:
+                        btn: |
+                          [[[
+                            return `
+                              <button onclick="
+                                event.stopPropagation();
+                                const btn = this;
+                                const ha = document.querySelector('home-assistant');
+                                if (!ha || !ha.hass) { alert('Home Assistant not available'); return; }
+
+                                const name = ha.hass.states['input_text.registry_new_farm_name']?.state || '';
+
+                                if (!name || name.trim() === '') {
+                                  alert('Please enter a farm name');
+                                  return;
+                                }
+
+                                if (!confirm('Add new farm: ' + name + '?')) return;
+
+                                const origHtml = btn.innerHTML;
+                                btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:22px;animation:spin 1s linear infinite;\\'></ha-icon> Adding...';
+                                btn.disabled = true;
+                                btn.style.opacity = '0.7';
+
+                                ha.hass.callService('script', 'registry_add_farm', { name: name })
+                                  .then(() => {
+                                    btn.innerHTML = '<ha-icon icon=\\'mdi:check\\' style=\\'--mdc-icon-size:22px;\\'></ha-icon> Added!';
+                                    setTimeout(() => { btn.innerHTML = origHtml; btn.disabled = false; btn.style.opacity = '1'; }, 2000);
+                                  })
+                                  .catch((e) => { btn.innerHTML = origHtml; btn.disabled = false; btn.style.opacity = '1'; alert('Failed: ' + (e.message || e)); });
+                              " style="width:100%;background:#28a745;color:white;border:none;border-radius:12px;padding:16px 24px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                                <ha-icon icon="mdi:barn" style="--mdc-icon-size:24px;"></ha-icon>
+                                Add Farm
+                              </button>
+                              <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+                            `;
+                          ]]]
 
               #----------------------------------------------------------------
               # Farm Cards Display
@@ -675,6 +672,10 @@ views:
                 show_icon: false
                 show_name: false
                 show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
                 styles:
                   card:
                     - background: transparent
@@ -740,11 +741,10 @@ views:
                     ]]]
 
   # ===========================================================================
-  # View 4: Paddock Editor
+  # View 3: Paddock Editor
   # ===========================================================================
   - title: Paddocks
     path: paddocks
-    icon: mdi:view-grid
     type: sections
     max_columns: 1
     sections:
@@ -859,6 +859,8 @@ views:
                           tap_action:
                             action: call-service
                             service: script.registry_save_paddock_edit
+                          hold_action:
+                            action: none
                           confirmation:
                             text: Save paddock changes?
 
@@ -871,6 +873,8 @@ views:
                             service: script.registry_delete_paddock
                             data:
                               id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
+                          hold_action:
+                            action: none
                           confirmation:
                             text: Delete this paddock and all its bays?
 
@@ -910,23 +914,74 @@ views:
                           }
 
                     - type: custom:button-card
-                      template: template_success
-                      name: Add Paddock
-                      icon: mdi:view-grid-plus
+                      entity: sensor.farm_registry_data
+                      show_name: false
+                      show_icon: false
+                      show_state: false
                       tap_action:
-                        action: call-service
-                        service: script.registry_add_paddock
-                        data:
-                          name: "{{ states('input_text.registry_new_paddock_name') }}"
-                          bay_count: "{{ states('input_number.registry_new_paddock_bay_count') | int(1) }}"
-                          farm: >-
-                            {% set farm_name = states('input_select.registry_new_paddock_farm') %}
-                            {% set farms = state_attr('sensor.farm_registry_data', 'farms') or {} %}
-                            {% for fid, f in farms.items() if f.name == farm_name %}
-                            {{ fid }}
-                            {% endfor %}
-                      confirmation:
-                        text: Add new paddock?
+                        action: none
+                      styles:
+                        card:
+                          - background: transparent
+                          - box-shadow: none
+                          - padding: 0
+                        grid:
+                          - display: block
+                      custom_fields:
+                        btn: |
+                          [[[
+                            // Get farms for lookup
+                            const farms = entity.attributes.farms || {};
+
+                            return `
+                              <button onclick="
+                                event.stopPropagation();
+                                const btn = this;
+                                const ha = document.querySelector('home-assistant');
+                                if (!ha || !ha.hass) { alert('Home Assistant not available'); return; }
+
+                                const name = ha.hass.states['input_text.registry_new_paddock_name']?.state || '';
+                                const bayCount = parseInt(ha.hass.states['input_number.registry_new_paddock_bay_count']?.state || '1');
+                                const farmName = ha.hass.states['input_select.registry_new_paddock_farm']?.state || '';
+
+                                if (!name || name.trim() === '') {
+                                  alert('Please enter a paddock name');
+                                  return;
+                                }
+                                if (!farmName || farmName === 'Select...') {
+                                  alert('Please select a farm');
+                                  return;
+                                }
+
+                                // Look up farm ID from name
+                                const farms = JSON.parse('${JSON.stringify(farms).replace(/'/g, "\\'")}');
+                                let farmId = 'farm_1';
+                                for (const [fid, f] of Object.entries(farms)) {
+                                  if (f.name === farmName) { farmId = fid; break; }
+                                }
+
+                                if (!confirm('Add paddock \\\"' + name + '\\\" with ' + bayCount + ' bays to ' + farmName + '?')) return;
+
+                                const origHtml = btn.innerHTML;
+                                btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:22px;animation:spin 1s linear infinite;\\'></ha-icon> Adding...';
+                                btn.disabled = true;
+                                btn.style.opacity = '0.7';
+
+                                ha.hass.callService('script', 'registry_add_paddock', {
+                                  name: name,
+                                  bay_count: bayCount,
+                                  farm: farmId
+                                }).then(() => {
+                                  btn.innerHTML = '<ha-icon icon=\\'mdi:check\\' style=\\'--mdc-icon-size:22px;\\'></ha-icon> Added!';
+                                  setTimeout(() => { btn.innerHTML = origHtml; btn.disabled = false; btn.style.opacity = '1'; }, 2000);
+                                }).catch((e) => { btn.innerHTML = origHtml; btn.disabled = false; btn.style.opacity = '1'; alert('Failed: ' + (e.message || e)); });
+                              " style="width:100%;background:#28a745;color:white;border:none;border-radius:12px;padding:16px 24px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                                <ha-icon icon="mdi:view-grid-plus" style="--mdc-icon-size:24px;"></ha-icon>
+                                Add Paddock
+                              </button>
+                              <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+                            `;
+                          ]]]
 
               #----------------------------------------------------------------
               # Paddock Cards Display
@@ -941,6 +996,10 @@ views:
                 show_icon: false
                 show_name: false
                 show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
                 styles:
                   card:
                     - background: transparent
@@ -1020,11 +1079,10 @@ views:
                     ]]]
 
   # ===========================================================================
-  # View 5: Season Management
+  # View 4: Season Management
   # ===========================================================================
   - title: Seasons
     path: seasons
-    icon: mdi:calendar-range
     type: sections
     max_columns: 1
     sections:
@@ -1037,13 +1095,59 @@ views:
                 variables:
                   var_name: SEASON MANAGEMENT
 
-              # Current active season display
-              - type: entities
-                title: Current Status
-                entities:
-                  - entity: sensor.farm_registry_active_season
-                    name: Active Season
-                    icon: mdi:calendar-star
+              # Current active season display - styled card
+              - type: custom:button-card
+                entity: sensor.farm_registry_active_season
+                show_icon: false
+                show_name: false
+                show_state: false
+                tap_action:
+                  action: none
+                styles:
+                  card:
+                    - background: var(--card-background-color)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                  grid:
+                    - display: block
+                custom_fields:
+                  content: |
+                    [[[
+                      const seasonName = entity.state || 'None';
+                      const seasonId = entity.attributes.season_id || '';
+                      const hasActive = seasonName && seasonName !== 'None' && seasonName !== 'unknown';
+
+                      const iconBg = hasActive ? 'rgba(123,31,162,0.15)' : 'rgba(158,158,158,0.15)';
+                      const iconColor = hasActive ? '#7b1fa2' : '#9e9e9e';
+                      const statusBg = hasActive ? 'rgba(76,175,80,0.15)' : 'rgba(253,126,20,0.15)';
+                      const statusColor = hasActive ? '#4caf50' : '#fd7e14';
+                      const statusText = hasActive ? 'ACTIVE' : 'NOT SET';
+
+                      return `
+                        <div style="display:flex;align-items:center;gap:14px;">
+                          <div style="width:56px;height:56px;border-radius:50%;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <ha-icon icon="mdi:calendar-star" style="--mdc-icon-size:32px;color:${iconColor};"></ha-icon>
+                          </div>
+                          <div style="flex:1;min-width:0;">
+                            <div style="font-size:12px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Current Season</div>
+                            <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);">${seasonName}</div>
+                          </div>
+                          <div style="padding:6px 12px;border-radius:8px;background:${statusBg};color:${statusColor};font-size:12px;font-weight:700;">${statusText}</div>
+                        </div>
+                      `;
+                    ]]]
+
+              # Refresh button for dropdowns
+              - type: custom:button-card
+                template: template_secondary
+                name: Refresh Data
+                icon: mdi:refresh
+                tap_action:
+                  action: call-service
+                  service: script.registry_refresh_dropdowns
+                hold_action:
+                  action: none
 
               # Editor mode selector
               - type: entities
@@ -1082,6 +1186,7 @@ views:
                             background: var(--card-background-color);
                           }
 
+                    # Season selector using HA input_select (matches farm/paddock pattern)
                     - type: entities
                       entities:
                         - entity: input_select.registry_season
@@ -1121,6 +1226,7 @@ views:
                             font-size: 1.2rem !important;
                           }
 
+                    # Action buttons - horizontal row
                     - type: horizontal-stack
                       cards:
                         - type: custom:button-card
@@ -1130,6 +1236,8 @@ views:
                           tap_action:
                             action: call-service
                             service: script.registry_save_season_edit
+                          hold_action:
+                            action: none
                           confirmation:
                             text: Save season changes?
 
@@ -1142,8 +1250,10 @@ views:
                             service: script.registry_set_active_season
                             data:
                               id: "{{ states('input_text.registry_edit_season_pointer') }}"
+                          hold_action:
+                            action: none
                           confirmation:
-                            text: Set this season as the active season?
+                            text: Set this as the active season?
 
                         - type: custom:button-card
                           template: template_danger
@@ -1154,8 +1264,10 @@ views:
                             service: script.registry_delete_season
                             data:
                               id: "{{ states('input_text.registry_edit_season_pointer') }}"
+                          hold_action:
+                            action: none
                           confirmation:
-                            text: Delete this season?
+                            text: Delete this season? This cannot be undone.
 
               #----------------------------------------------------------------
               # Add New Season (conditional)
@@ -1192,20 +1304,36 @@ views:
                             font-size: 1.2rem !important;
                           }
 
-                    - type: custom:button-card
-                      template: template_success
-                      name: Add Season
-                      icon: mdi:calendar-plus
-                      tap_action:
-                        action: call-service
-                        service: script.registry_add_season
-                        data:
-                          name: "{{ states('input_text.registry_new_season_name') }}"
-                          start: "{{ states('input_datetime.registry_season_start') }}"
-                          end: "{{ states('input_datetime.registry_season_end') }}"
-                          active: false
-                      confirmation:
-                        text: Add new season?
+                    # Action buttons - horizontal row (matching Edit form style)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          template: template_success
+                          name: Add Season
+                          icon: mdi:calendar-plus
+                          tap_action:
+                            action: call-service
+                            service: script.registry_add_season_from_form
+                            data:
+                              set_active: false
+                          hold_action:
+                            action: none
+                          confirmation:
+                            text: Add this new season?
+
+                        - type: custom:button-card
+                          template: template_action
+                          name: Add & Set Active
+                          icon: mdi:calendar-star
+                          tap_action:
+                            action: call-service
+                            service: script.registry_add_season_from_form
+                            data:
+                              set_active: true
+                          hold_action:
+                            action: none
+                          confirmation:
+                            text: Add this season and set it as the active season?
 
               #----------------------------------------------------------------
               # Season Cards Display
@@ -1220,6 +1348,10 @@ views:
                 show_icon: false
                 show_name: false
                 show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
                 styles:
                   card:
                     - background: transparent
@@ -1248,12 +1380,27 @@ views:
                                   </div>`;
                         }
 
+                        // Helper function to format date as dd/mm/yy
+                        const formatDate = (dateStr) => {
+                          if (!dateStr || dateStr === '---') return '---';
+                          try {
+                            const parts = dateStr.split('-');
+                            if (parts.length === 3) {
+                              const year = parts[0].slice(-2); // last 2 digits
+                              const month = parts[1];
+                              const day = parts[2];
+                              return day + '/' + month + '/' + year;
+                            }
+                          } catch (e) {}
+                          return dateStr;
+                        };
+
                         let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:4px;">`;
 
                         for (const [sid, season] of seasonList) {
                           const name = season.name || sid;
-                          const startDate = season.start_date || '---';
-                          const endDate = season.end_date || '---';
+                          const startDate = formatDate(season.start_date);
+                          const endDate = formatDate(season.end_date);
                           const isActive = sid === activeSeason;
 
                           const cardColor = isActive ? '#7b1fa2' : '#5c6bc0';
@@ -1295,7 +1442,7 @@ views:
                     ]]]
 
   # ===========================================================================
-  # View 6: Settings
+  # View 5: Settings
   # ===========================================================================
   - title: Settings
     path: settings
@@ -1333,16 +1480,20 @@ views:
                     tap_action:
                       action: call-service
                       service: paddisense.create_backup
+                    hold_action:
+                      action: none
                     confirmation:
                       text: Create a backup of PaddiSense configuration?
 
                   - type: custom:button-card
-                    template: template_secondary
+                    template: template_action
                     name: Export Registry
                     icon: mdi:database-export
                     tap_action:
                       action: call-service
                       service: paddisense.export_registry
+                    hold_action:
+                      action: none
                     confirmation:
                       text: Export registry data to backup file?
 
@@ -1353,10 +1504,7 @@ views:
 
               - type: markdown
                 content: |
-                  PaddiSense dashboards require custom cards from HACS:
-                  - **button-card** - For styled action buttons
-                  - **card-mod** - For card styling
-
+                  PaddiSense dashboards require the following HACS components.
                   Click below to install these automatically (requires HACS).
                 card_mod:
                   style: |
@@ -1366,6 +1514,76 @@ views:
                       background: var(--card-background-color);
                     }
 
+              # HACS Required Components Display
+              - type: custom:button-card
+                show_icon: false
+                show_name: false
+                show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
+                styles:
+                  card:
+                    - background: var(--card-background-color)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                  grid:
+                    - display: block
+                custom_fields:
+                  hacs: |
+                    [[[
+                      try {
+                        // Required HACS components
+                        const requiredComponents = [
+                          { name: 'button-card', desc: 'Styled action buttons' },
+                          { name: 'card-mod', desc: 'Card styling' },
+                          { name: 'auto-entities', desc: 'Dynamic entity filtering' },
+                        ];
+
+                        // Optional HACS components
+                        const optionalComponents = [
+                          { name: 'mini-graph-card', desc: 'Compact graph cards' },
+                          { name: 'apexcharts-card', desc: 'Advanced charts' },
+                          { name: 'mushroom', desc: 'Modern card collection' },
+                          { name: 'flex-table-card', desc: 'Flexible tables' },
+                          { name: 'browser_mod', desc: 'Browser control' },
+                        ];
+
+                        let html = '<div style="margin-bottom:16px;">';
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Required Components</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+                        for (const comp of requiredComponents) {
+                          html += `<div style="background:rgba(76,175,80,0.1);border:1px solid #4caf50;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+                            <ha-icon icon="mdi:check-circle" style="--mdc-icon-size:18px;color:#4caf50;"></ha-icon>
+                            <div>
+                              <div style="font-size:13px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
+                              <div style="font-size:10px;color:var(--secondary-text-color);">${comp.desc}</div>
+                            </div>
+                          </div>`;
+                        }
+                        html += '</div></div>';
+
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Optional Components</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+                        for (const comp of optionalComponents) {
+                          html += `<div style="background:rgba(0,0,0,0.03);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+                            <ha-icon icon="mdi:puzzle-outline" style="--mdc-icon-size:18px;color:var(--secondary-text-color);"></ha-icon>
+                            <div>
+                              <div style="font-size:13px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
+                              <div style="font-size:10px;color:var(--secondary-text-color);">${comp.desc}</div>
+                            </div>
+                          </div>`;
+                        }
+                        html += '</div>';
+
+                        return html;
+                      } catch (e) {
+                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
+                      }
+                    ]]]
+
               - type: custom:button-card
                 template: template_success
                 name: Install Required HACS Cards
@@ -1373,8 +1591,10 @@ views:
                 tap_action:
                   action: call-service
                   service: paddisense.install_hacs_cards
+                hold_action:
+                  action: none
                 confirmation:
-                  text: Install button-card and card-mod from HACS?
+                  text: Install button-card, card-mod, and auto-entities from HACS?
 
               - type: custom:button-card
                 template: template_titleblock
@@ -1390,13 +1610,17 @@ views:
                     tap_action:
                       action: call-service
                       service: paddisense.rollback
+                    hold_action:
+                      action: none
                     confirmation:
                       text: Rollback to the previous version? This will restore from the last backup.
 
                   - type: custom:button-card
-                    template: template_secondary
+                    template: template_action
                     name: Integration Settings
                     icon: mdi:tune
                     tap_action:
                       action: navigate
                       navigation_path: /config/integrations/integration/paddisense
+                    hold_action:
+                      action: none

@@ -146,6 +146,7 @@ class PaddiSenseRTRPaddockSensor(SensorEntity):
         self._attr_extra_state_attributes = {
             "paddock": data.get("paddock", ""),
             "farm": data.get("farm", ""),
+            "year": data.get("year", ""),
             "variety": data.get("variety", ""),
             "sow_date": data.get("sow_date", ""),
             "sow_method": data.get("sow_method", ""),

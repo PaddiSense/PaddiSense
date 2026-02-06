@@ -213,9 +213,23 @@ class RTRBackend:
                 # Generate a clean paddock ID
                 paddock_id = re.sub(r"[^a-z0-9]+", "_", paddock_name.lower()).strip("_")
 
+                # Extract year - RTR uses crop year (e.g., 2025 = CY25 = 2025-2026 season)
+                year_str = row.get(CSV_COLUMNS["year"], "").strip()
+
+                # Only update if this is a newer year than existing data
+                # This ensures we keep the most recent season's data when CSV has multiple years
+                if paddock_id in paddocks:
+                    existing_year = paddocks[paddock_id].get("year", "0")
+                    try:
+                        if int(year_str) <= int(existing_year):
+                            continue  # Skip older data
+                    except ValueError:
+                        pass  # If year parsing fails, overwrite
+
                 paddocks[paddock_id] = {
                     "paddock": paddock_name,
                     "farm": row.get(CSV_COLUMNS["farm"], "").strip(),
+                    "year": year_str,
                     "variety": row.get(CSV_COLUMNS["variety"], "").strip(),
                     "sow_date": row.get(CSV_COLUMNS["sow_date"], "").strip(),
                     "sow_method": row.get(CSV_COLUMNS["sow_method"], "").strip(),
