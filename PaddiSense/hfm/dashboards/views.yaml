@@ -1004,7 +1004,7 @@ views:
                       template: hfm_title
                       name: EVENT DETAILS
 
-                    # Nutrient/Chemical: Product + Rate + Method
+                    # Nutrient/Chemical: Multiple Products + Method
                     - type: conditional
                       conditions:
                         - condition: or
@@ -1014,24 +1014,275 @@ views:
                             - entity: input_select.hfm_event_type
                               state: "Chemical Application"
                       card:
-                        type: entities
-                        entities:
-                          - entity: input_select.hfm_selected_product
-                            name: Product
-                          - entity: input_text.hfm_product_rate
-                            name: Rate
-                          - entity: input_text.hfm_rate_unit
-                            name: Unit
-                          - entity: input_select.hfm_application_method
-                            name: Application Method
-                        card_mod:
-                          style: |
-                            ha-card {
-                              border-radius: 12px;
-                            }
-                            .mdc-list-item__primary-text {
-                              font-size: 1.2rem !important;
-                            }
+                        type: vertical-stack
+                        cards:
+                          # Product 1 (always shown)
+                          - type: custom:button-card
+                            color_type: card
+                            color: "#43a047"
+                            show_icon: false
+                            show_name: true
+                            show_state: false
+                            name: "Product 1"
+                            styles:
+                              card:
+                                - height: 36px
+                                - border-radius: 12px 12px 0 0
+                                - margin-bottom: 0
+                              name:
+                                - font-size: 14px
+                                - font-weight: 600
+                                - color: white
+
+                          - type: entities
+                            entities:
+                              - entity: input_select.hfm_selected_product
+                                name: Product
+                              - entity: input_text.hfm_product_rate
+                                name: Rate
+                              - entity: input_text.hfm_rate_unit
+                                name: Unit
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  border-radius: 0 0 12px 12px;
+                                  margin-top: 0;
+                                }
+
+                          # Product 2
+                          - type: conditional
+                            conditions:
+                              - condition: numeric_state
+                                entity: input_number.hfm_product_count
+                                above: 1
+                            card:
+                              type: vertical-stack
+                              cards:
+                                - type: custom:button-card
+                                  color_type: card
+                                  color: "#43a047"
+                                  show_icon: false
+                                  show_name: true
+                                  name: "Product 2"
+                                  styles:
+                                    card:
+                                      - height: 36px
+                                      - border-radius: 12px 12px 0 0
+                                      - margin-top: 8px
+                                    name:
+                                      - font-size: 14px
+                                      - font-weight: 600
+                                      - color: white
+
+                                - type: entities
+                                  entities:
+                                    - entity: input_select.hfm_selected_product_2
+                                      name: Product
+                                    - entity: input_text.hfm_product_rate_2
+                                      name: Rate
+                                    - entity: input_text.hfm_rate_unit_2
+                                      name: Unit
+                                  card_mod:
+                                    style: |
+                                      ha-card {
+                                        border-radius: 0 0 12px 12px;
+                                      }
+
+                          # Product 3
+                          - type: conditional
+                            conditions:
+                              - condition: numeric_state
+                                entity: input_number.hfm_product_count
+                                above: 2
+                            card:
+                              type: vertical-stack
+                              cards:
+                                - type: custom:button-card
+                                  color_type: card
+                                  color: "#43a047"
+                                  show_icon: false
+                                  show_name: true
+                                  name: "Product 3"
+                                  styles:
+                                    card:
+                                      - height: 36px
+                                      - border-radius: 12px 12px 0 0
+                                      - margin-top: 8px
+                                    name:
+                                      - font-size: 14px
+                                      - font-weight: 600
+                                      - color: white
+
+                                - type: entities
+                                  entities:
+                                    - entity: input_select.hfm_selected_product_3
+                                      name: Product
+                                    - entity: input_text.hfm_product_rate_3
+                                      name: Rate
+                                    - entity: input_text.hfm_rate_unit_3
+                                      name: Unit
+                                  card_mod:
+                                    style: |
+                                      ha-card {
+                                        border-radius: 0 0 12px 12px;
+                                      }
+
+                          # Product 4
+                          - type: conditional
+                            conditions:
+                              - condition: numeric_state
+                                entity: input_number.hfm_product_count
+                                above: 3
+                            card:
+                              type: vertical-stack
+                              cards:
+                                - type: custom:button-card
+                                  color_type: card
+                                  color: "#43a047"
+                                  show_icon: false
+                                  show_name: true
+                                  name: "Product 4"
+                                  styles:
+                                    card:
+                                      - height: 36px
+                                      - border-radius: 12px 12px 0 0
+                                      - margin-top: 8px
+                                    name:
+                                      - font-size: 14px
+                                      - font-weight: 600
+                                      - color: white
+
+                                - type: entities
+                                  entities:
+                                    - entity: input_select.hfm_selected_product_4
+                                      name: Product
+                                    - entity: input_text.hfm_product_rate_4
+                                      name: Rate
+                                    - entity: input_text.hfm_rate_unit_4
+                                      name: Unit
+                                  card_mod:
+                                    style: |
+                                      ha-card {
+                                        border-radius: 0 0 12px 12px;
+                                      }
+
+                          # Product 5
+                          - type: conditional
+                            conditions:
+                              - condition: numeric_state
+                                entity: input_number.hfm_product_count
+                                above: 4
+                            card:
+                              type: vertical-stack
+                              cards:
+                                - type: custom:button-card
+                                  color_type: card
+                                  color: "#43a047"
+                                  show_icon: false
+                                  show_name: true
+                                  name: "Product 5"
+                                  styles:
+                                    card:
+                                      - height: 36px
+                                      - border-radius: 12px 12px 0 0
+                                      - margin-top: 8px
+                                    name:
+                                      - font-size: 14px
+                                      - font-weight: 600
+                                      - color: white
+
+                                - type: entities
+                                  entities:
+                                    - entity: input_select.hfm_selected_product_5
+                                      name: Product
+                                    - entity: input_text.hfm_product_rate_5
+                                      name: Rate
+                                    - entity: input_text.hfm_rate_unit_5
+                                      name: Unit
+                                  card_mod:
+                                    style: |
+                                      ha-card {
+                                        border-radius: 0 0 12px 12px;
+                                      }
+
+                          # Product 6
+                          - type: conditional
+                            conditions:
+                              - condition: numeric_state
+                                entity: input_number.hfm_product_count
+                                above: 5
+                            card:
+                              type: vertical-stack
+                              cards:
+                                - type: custom:button-card
+                                  color_type: card
+                                  color: "#43a047"
+                                  show_icon: false
+                                  show_name: true
+                                  name: "Product 6"
+                                  styles:
+                                    card:
+                                      - height: 36px
+                                      - border-radius: 12px 12px 0 0
+                                      - margin-top: 8px
+                                    name:
+                                      - font-size: 14px
+                                      - font-weight: 600
+                                      - color: white
+
+                                - type: entities
+                                  entities:
+                                    - entity: input_select.hfm_selected_product_6
+                                      name: Product
+                                    - entity: input_text.hfm_product_rate_6
+                                      name: Rate
+                                    - entity: input_text.hfm_rate_unit_6
+                                      name: Unit
+                                  card_mod:
+                                    style: |
+                                      ha-card {
+                                        border-radius: 0 0 12px 12px;
+                                      }
+
+                          # Add/Remove product buttons
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                template: hfm_action
+                                name: Add Product
+                                icon: mdi:plus
+                                entity: input_number.hfm_product_count
+                                color: "#43a047"
+                                state:
+                                  - value: 6
+                                    color: "#555555"
+                                tap_action:
+                                  action: call-service
+                                  service: script.hfm_add_product_slot
+
+                              - type: custom:button-card
+                                template: hfm_secondary
+                                name: Remove
+                                icon: mdi:minus
+                                entity: input_number.hfm_product_count
+                                state:
+                                  - value: 1
+                                    color: "#555555"
+                                tap_action:
+                                  action: call-service
+                                  service: script.hfm_remove_product_slot
+
+                          # Application method
+                          - type: entities
+                            entities:
+                              - entity: input_select.hfm_application_method
+                                name: Application Method
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  border-radius: 12px;
+                                  margin-top: 8px;
+                                }
 
                     # Irrigation: Type selection
                     - type: conditional
@@ -1146,10 +1397,57 @@ views:
 
                               const eventDate = states['sensor.hfm_event_date']?.state || '';
                               const paddock = states['input_select.hfm_selected_paddock']?.state || '';
-                              const product = states['input_select.hfm_selected_product']?.state || '';
-                              const rate = states['input_text.hfm_product_rate']?.state || '';
-                              const rateUnit = states['input_text.hfm_rate_unit']?.state || '';
                               const method = states['input_select.hfm_application_method']?.state || '';
+                              const productCount = parseInt(states['input_number.hfm_product_count']?.state) || 1;
+
+                              // Build products array from all slots
+                              const products = [];
+                              const p1 = states['input_select.hfm_selected_product']?.state;
+                              const r1 = states['input_text.hfm_product_rate']?.state;
+                              const u1 = states['input_text.hfm_rate_unit']?.state;
+                              if (p1 && p1 !== 'Select Product' && r1) {
+                                products.push({name: p1, rate: r1, unit: u1});
+                              }
+                              if (productCount >= 2) {
+                                const p2 = states['input_select.hfm_selected_product_2']?.state;
+                                const r2 = states['input_text.hfm_product_rate_2']?.state;
+                                const u2 = states['input_text.hfm_rate_unit_2']?.state;
+                                if (p2 && p2 !== 'Select Product' && r2) {
+                                  products.push({name: p2, rate: r2, unit: u2});
+                                }
+                              }
+                              if (productCount >= 3) {
+                                const p3 = states['input_select.hfm_selected_product_3']?.state;
+                                const r3 = states['input_text.hfm_product_rate_3']?.state;
+                                const u3 = states['input_text.hfm_rate_unit_3']?.state;
+                                if (p3 && p3 !== 'Select Product' && r3) {
+                                  products.push({name: p3, rate: r3, unit: u3});
+                                }
+                              }
+                              if (productCount >= 4) {
+                                const p4 = states['input_select.hfm_selected_product_4']?.state;
+                                const r4 = states['input_text.hfm_product_rate_4']?.state;
+                                const u4 = states['input_text.hfm_rate_unit_4']?.state;
+                                if (p4 && p4 !== 'Select Product' && r4) {
+                                  products.push({name: p4, rate: r4, unit: u4});
+                                }
+                              }
+                              if (productCount >= 5) {
+                                const p5 = states['input_select.hfm_selected_product_5']?.state;
+                                const r5 = states['input_text.hfm_product_rate_5']?.state;
+                                const u5 = states['input_text.hfm_rate_unit_5']?.state;
+                                if (p5 && p5 !== 'Select Product' && r5) {
+                                  products.push({name: p5, rate: r5, unit: u5});
+                                }
+                              }
+                              if (productCount >= 6) {
+                                const p6 = states['input_select.hfm_selected_product_6']?.state;
+                                const r6 = states['input_text.hfm_product_rate_6']?.state;
+                                const u6 = states['input_text.hfm_rate_unit_6']?.state;
+                                if (p6 && p6 !== 'Select Product' && r6) {
+                                  products.push({name: p6, rate: r6, unit: u6});
+                                }
+                              }
                               const irrigation = states['input_select.hfm_irrigation_type']?.state || '';
                               const cropStage = states['input_select.hfm_crop_stage']?.state || '';
                               const notes = states['input_text.hfm_notes']?.state || '';
@@ -1177,17 +1475,17 @@ views:
 
                               // Type-specific details
                               if (eventType === 'Nutrient Application' || eventType === 'Chemical Application') {
-                                if (product && product !== 'Select Product') {
-                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
-                                            <span style="font-size:14px;color:var(--secondary-text-color);">Product</span>
-                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${product}</span>
-                                          </div>`;
-                                }
-                                if (rate) {
-                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
-                                            <span style="font-size:14px;color:var(--secondary-text-color);">Rate</span>
-                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${rate} ${rateUnit}</span>
-                                          </div>`;
+                                // Show all products
+                                if (products.length > 0) {
+                                  html += `<div style="padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:6px;">Products (${products.length})</div>`;
+                                  for (const p of products) {
+                                    html += `<div style="display:flex;justify-content:space-between;padding:4px 0;">
+                                              <span style="font-size:14px;font-weight:500;color:var(--primary-text-color);">${p.name}</span>
+                                              <span style="font-size:14px;color:var(--secondary-text-color);">${p.rate} ${p.unit}</span>
+                                            </div>`;
+                                  }
+                                  html += `</div>`;
                                 }
                                 if (method && method !== 'Select Method') {
                                   html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
@@ -1247,13 +1545,18 @@ views:
                         - type: custom:button-card
                           template: hfm_success
                           entity: input_boolean.hfm_edit_mode
-                          color_type: card
-                          color: "#28a745"
                           name: |
                             [[[
                               return entity.state === 'on' ? 'Update' : 'Confirm';
                             ]]]
                           icon: mdi:check
+                          styles:
+                            card:
+                              - background: "#28a745"
+                            name:
+                              - color: white
+                            icon:
+                              - color: white
                           tap_action:
                             action: call-service
                             service: script.hfm_submit_event

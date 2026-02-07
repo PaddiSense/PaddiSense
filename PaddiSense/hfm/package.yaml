@@ -154,7 +154,37 @@ input_select:
       - Select Paddock
 
   hfm_selected_product:
-    name: HFM Selected Product
+    name: HFM Product 1
+    icon: mdi:flask
+    options:
+      - Select Product
+
+  hfm_selected_product_2:
+    name: HFM Product 2
+    icon: mdi:flask
+    options:
+      - Select Product
+
+  hfm_selected_product_3:
+    name: HFM Product 3
+    icon: mdi:flask
+    options:
+      - Select Product
+
+  hfm_selected_product_4:
+    name: HFM Product 4
+    icon: mdi:flask
+    options:
+      - Select Product
+
+  hfm_selected_product_5:
+    name: HFM Product 5
+    icon: mdi:flask
+    options:
+      - Select Product
+
+  hfm_selected_product_6:
+    name: HFM Product 6
     icon: mdi:flask
     options:
       - Select Product
@@ -183,7 +213,62 @@ input_text:
     max: 20
 
   hfm_rate_unit:
-    name: HFM Rate Unit
+    name: HFM Rate Unit 1
+    icon: mdi:ruler
+    max: 20
+    initial: "kg/ha"
+
+  hfm_product_rate_2:
+    name: HFM Product Rate 2
+    icon: mdi:scale
+    max: 20
+
+  hfm_rate_unit_2:
+    name: HFM Rate Unit 2
+    icon: mdi:ruler
+    max: 20
+    initial: "kg/ha"
+
+  hfm_product_rate_3:
+    name: HFM Product Rate 3
+    icon: mdi:scale
+    max: 20
+
+  hfm_rate_unit_3:
+    name: HFM Rate Unit 3
+    icon: mdi:ruler
+    max: 20
+    initial: "kg/ha"
+
+  hfm_product_rate_4:
+    name: HFM Product Rate 4
+    icon: mdi:scale
+    max: 20
+
+  hfm_rate_unit_4:
+    name: HFM Rate Unit 4
+    icon: mdi:ruler
+    max: 20
+    initial: "kg/ha"
+
+  hfm_product_rate_5:
+    name: HFM Product Rate 5
+    icon: mdi:scale
+    max: 20
+
+  hfm_rate_unit_5:
+    name: HFM Rate Unit 5
+    icon: mdi:ruler
+    max: 20
+    initial: "kg/ha"
+
+  hfm_product_rate_6:
+    name: HFM Product Rate 6
+    icon: mdi:scale
+    max: 20
+
+  hfm_rate_unit_6:
+    name: HFM Rate Unit 6
     icon: mdi:ruler
     max: 20
     initial: "kg/ha"
@@ -219,12 +304,15 @@ input_text:
     icon: mdi:identifier
     max: 50
 
-input_boolean:
-  hfm_edit_mode:
-    name: HFM Edit Mode
-    icon: mdi:pencil
-
 input_number:
+  hfm_product_count:
+    name: HFM Product Count
+    min: 1
+    max: 6
+    step: 1
+    mode: box
+    icon: mdi:flask-plus
+
   hfm_wizard_step:
     name: HFM Wizard Step
     min: 1
@@ -232,6 +320,11 @@ input_number:
     step: 1
     mode: box
     icon: mdi:step-forward
+
+input_boolean:
+  hfm_edit_mode:
+    name: HFM Edit Mode
+    icon: mdi:pencil
 
 
 # -----------------------------------------------------------------------------
@@ -285,6 +378,7 @@ template:
           {% endif %}
 
 
+
 # -----------------------------------------------------------------------------
 # Automations - Dropdown Updates
 # -----------------------------------------------------------------------------
@@ -317,11 +411,8 @@ automation:
         event: start
     action:
       - delay: 1
-      - service: input_select.set_options
-        target:
-          entity_id: input_select.hfm_selected_product
-        data:
-          options: >
+      - variables:
+          product_options: >
             {% set event_type = states('input_select.hfm_event_type') %}
             {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
             {% set product_list = products.values() | list if products is mapping else products %}
@@ -331,6 +422,17 @@ automation:
               {% set ns.names = ns.names + [p.name] %}
             {% endfor %}
             {{ ['Select Product'] + (ns.names | sort) if ns.names else ['Select Product'] }}
+      - service: input_select.set_options
+        target:
+          entity_id:
+            - input_select.hfm_selected_product
+            - input_select.hfm_selected_product_2
+            - input_select.hfm_selected_product_3
+            - input_select.hfm_selected_product_4
+            - input_select.hfm_selected_product_5
+            - input_select.hfm_selected_product_6
+        data:
+          options: "{{ product_options }}"
 
   - id: hfm_set_product_unit
     alias: "HFM Set Product Unit from IPM"
@@ -349,9 +451,126 @@ automation:
             {% set product_name = states('input_select.hfm_selected_product') %}
             {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
             {% set product_list = products.values() | list if products is mapping else products %}
+            {% set ns = namespace(unit='') %}
             {% for p in product_list if p.name == product_name %}
-              {{ p.application_unit | default(p.unit, true) }}
+              {% set ns.unit = p.application_unit | default(p.unit, true) %}
             {% endfor %}
+            {{ ns.unit | trim | default('kg/ha', true) }}
+
+  - id: hfm_set_product_unit_2
+    alias: "HFM Set Product 2 Unit from IPM"
+    trigger:
+      - platform: state
+        entity_id: input_select.hfm_selected_product_2
+    condition:
+      - condition: template
+        value_template: "{{ states('input_select.hfm_selected_product_2') != 'Select Product' }}"
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_rate_unit_2
+        data:
+          value: >
+            {% set product_name = states('input_select.hfm_selected_product_2') %}
+            {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
+            {% set product_list = products.values() | list if products is mapping else products %}
+            {% set ns = namespace(unit='') %}
+            {% for p in product_list if p.name == product_name %}
+              {% set ns.unit = p.application_unit | default(p.unit, true) %}
+            {% endfor %}
+            {{ ns.unit | trim | default('kg/ha', true) }}
+
+  - id: hfm_set_product_unit_3
+    alias: "HFM Set Product 3 Unit from IPM"
+    trigger:
+      - platform: state
+        entity_id: input_select.hfm_selected_product_3
+    condition:
+      - condition: template
+        value_template: "{{ states('input_select.hfm_selected_product_3') != 'Select Product' }}"
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_rate_unit_3
+        data:
+          value: >
+            {% set product_name = states('input_select.hfm_selected_product_3') %}
+            {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
+            {% set product_list = products.values() | list if products is mapping else products %}
+            {% set ns = namespace(unit='') %}
+            {% for p in product_list if p.name == product_name %}
+              {% set ns.unit = p.application_unit | default(p.unit, true) %}
+            {% endfor %}
+            {{ ns.unit | trim | default('kg/ha', true) }}
+
+  - id: hfm_set_product_unit_4
+    alias: "HFM Set Product 4 Unit from IPM"
+    trigger:
+      - platform: state
+        entity_id: input_select.hfm_selected_product_4
+    condition:
+      - condition: template
+        value_template: "{{ states('input_select.hfm_selected_product_4') != 'Select Product' }}"
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_rate_unit_4
+        data:
+          value: >
+            {% set product_name = states('input_select.hfm_selected_product_4') %}
+            {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
+            {% set product_list = products.values() | list if products is mapping else products %}
+            {% set ns = namespace(unit='') %}
+            {% for p in product_list if p.name == product_name %}
+              {% set ns.unit = p.application_unit | default(p.unit, true) %}
+            {% endfor %}
+            {{ ns.unit | trim | default('kg/ha', true) }}
+
+  - id: hfm_set_product_unit_5
+    alias: "HFM Set Product 5 Unit from IPM"
+    trigger:
+      - platform: state
+        entity_id: input_select.hfm_selected_product_5
+    condition:
+      - condition: template
+        value_template: "{{ states('input_select.hfm_selected_product_5') != 'Select Product' }}"
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_rate_unit_5
+        data:
+          value: >
+            {% set product_name = states('input_select.hfm_selected_product_5') %}
+            {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
+            {% set product_list = products.values() | list if products is mapping else products %}
+            {% set ns = namespace(unit='') %}
+            {% for p in product_list if p.name == product_name %}
+              {% set ns.unit = p.application_unit | default(p.unit, true) %}
+            {% endfor %}
+            {{ ns.unit | trim | default('kg/ha', true) }}
+
+  - id: hfm_set_product_unit_6
+    alias: "HFM Set Product 6 Unit from IPM"
+    trigger:
+      - platform: state
+        entity_id: input_select.hfm_selected_product_6
+    condition:
+      - condition: template
+        value_template: "{{ states('input_select.hfm_selected_product_6') != 'Select Product' }}"
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_rate_unit_6
+        data:
+          value: >
+            {% set product_name = states('input_select.hfm_selected_product_6') %}
+            {% set products = state_attr('sensor.ipm_products', 'products') or {} %}
+            {% set product_list = products.values() | list if products is mapping else products %}
+            {% set ns = namespace(unit='') %}
+            {% for p in product_list if p.name == product_name %}
+              {% set ns.unit = p.application_unit | default(p.unit, true) %}
+            {% endfor %}
+            {{ ns.unit | trim | default('kg/ha', true) }}
 
   - id: hfm_update_method_options
     alias: "HFM Update Application Method Options"
@@ -465,6 +684,30 @@ script:
         data:
           value: "{{ [1, states('input_number.hfm_wizard_step') | int - 1] | max }}"
 
+  hfm_add_product_slot:
+    alias: "HFM Add Product Slot"
+    icon: mdi:flask-plus
+    sequence:
+      - condition: template
+        value_template: "{{ states('input_number.hfm_product_count') | int < 6 }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.hfm_product_count
+        data:
+          value: "{{ states('input_number.hfm_product_count') | int + 1 }}"
+
+  hfm_remove_product_slot:
+    alias: "HFM Remove Product Slot"
+    icon: mdi:flask-minus
+    sequence:
+      - condition: template
+        value_template: "{{ states('input_number.hfm_product_count') | int > 1 }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.hfm_product_count
+        data:
+          value: "{{ states('input_number.hfm_product_count') | int - 1 }}"
+
   hfm_wizard_reset:
     alias: "HFM Wizard Reset"
     icon: mdi:restart
@@ -533,6 +776,32 @@ script:
           entity_id: input_text.hfm_product_rate
         data:
           value: ""
+      # Reset product count and all product slots
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.hfm_product_count
+        data:
+          value: 1
+      - service: input_select.select_option
+        target:
+          entity_id:
+            - input_select.hfm_selected_product_2
+            - input_select.hfm_selected_product_3
+            - input_select.hfm_selected_product_4
+            - input_select.hfm_selected_product_5
+            - input_select.hfm_selected_product_6
+        data:
+          option: "Select Product"
+      - service: input_text.set_value
+        target:
+          entity_id:
+            - input_text.hfm_product_rate_2
+            - input_text.hfm_product_rate_3
+            - input_text.hfm_product_rate_4
+            - input_text.hfm_product_rate_5
+            - input_text.hfm_product_rate_6
+        data:
+          value: ""
 
   hfm_submit_event:
     alias: "HFM Submit Event"
@@ -551,9 +820,56 @@ script:
           paddock_id: >
             {% set pmap = state_attr('sensor.hfm_events', 'paddock_map') or {} %}
             {% for pid, pname in pmap.items() if pname == paddock_name %}{{ pid }}{% endfor %}
-          product_name: "{{ states('input_select.hfm_selected_product') }}"
-          rate: "{{ states('input_text.hfm_product_rate') }}"
-          rate_unit: "{{ states('input_text.hfm_rate_unit') }}"
+          product_count: "{{ states('input_number.hfm_product_count') | int }}"
+          products_json: >
+            {% set ns = namespace(products=[]) %}
+            {% set p1 = states('input_select.hfm_selected_product') %}
+            {% set r1 = states('input_text.hfm_product_rate') %}
+            {% set u1 = states('input_text.hfm_rate_unit') %}
+            {% if p1 != 'Select Product' and r1 != '' %}
+              {% set ns.products = ns.products + [{'product_name': p1, 'rate': r1 | float(0), 'rate_unit': u1}] %}
+            {% endif %}
+            {% if product_count >= 2 %}
+              {% set p2 = states('input_select.hfm_selected_product_2') %}
+              {% set r2 = states('input_text.hfm_product_rate_2') %}
+              {% set u2 = states('input_text.hfm_rate_unit_2') %}
+              {% if p2 != 'Select Product' and r2 != '' %}
+                {% set ns.products = ns.products + [{'product_name': p2, 'rate': r2 | float(0), 'rate_unit': u2}] %}
+              {% endif %}
+            {% endif %}
+            {% if product_count >= 3 %}
+              {% set p3 = states('input_select.hfm_selected_product_3') %}
+              {% set r3 = states('input_text.hfm_product_rate_3') %}
+              {% set u3 = states('input_text.hfm_rate_unit_3') %}
+              {% if p3 != 'Select Product' and r3 != '' %}
+                {% set ns.products = ns.products + [{'product_name': p3, 'rate': r3 | float(0), 'rate_unit': u3}] %}
+              {% endif %}
+            {% endif %}
+            {% if product_count >= 4 %}
+              {% set p4 = states('input_select.hfm_selected_product_4') %}
+              {% set r4 = states('input_text.hfm_product_rate_4') %}
+              {% set u4 = states('input_text.hfm_rate_unit_4') %}
+              {% if p4 != 'Select Product' and r4 != '' %}
+                {% set ns.products = ns.products + [{'product_name': p4, 'rate': r4 | float(0), 'rate_unit': u4}] %}
+              {% endif %}
+            {% endif %}
+            {% if product_count >= 5 %}
+              {% set p5 = states('input_select.hfm_selected_product_5') %}
+              {% set r5 = states('input_text.hfm_product_rate_5') %}
+              {% set u5 = states('input_text.hfm_rate_unit_5') %}
+              {% if p5 != 'Select Product' and r5 != '' %}
+                {% set ns.products = ns.products + [{'product_name': p5, 'rate': r5 | float(0), 'rate_unit': u5}] %}
+              {% endif %}
+            {% endif %}
+            {% if product_count >= 6 %}
+              {% set p6 = states('input_select.hfm_selected_product_6') %}
+              {% set r6 = states('input_text.hfm_product_rate_6') %}
+              {% set u6 = states('input_text.hfm_rate_unit_6') %}
+              {% if p6 != 'Select Product' and r6 != '' %}
+                {% set ns.products = ns.products + [{'product_name': p6, 'rate': r6 | float(0), 'rate_unit': u6}] %}
+              {% endif %}
+            {% endif %}
+            {{ ns.products | to_json }}
           method_name: "{{ states('input_select.hfm_application_method') }}"
           method_id: >
             {% set methods = state_attr('sensor.hfm_events', 'application_methods') or [] %}
@@ -581,10 +897,7 @@ script:
                   event_id: "{{ edit_event_id }}"
                   event_date: "{{ event_date }}"
                   paddocks: '["{{ paddock_id }}"]'
-                  products: >
-                    {% if event_type in ['nutrient', 'chemical'] and product_name != 'Select Product' %}
-                    [{"product_name": "{{ product_name }}", "rate": {{ rate | float(0) }}, "rate_unit": "{{ rate_unit }}"}]
-                    {% else %}[]{% endif %}
+                  products: "{{ products_json }}"
                   application_method: "{{ method_id }}"
                   crop_stage: "{{ stage_id }}"
                   irrigation_type: "{{ irrigation_id }}"
@@ -594,10 +907,7 @@ script:
             data:
               event_type: "{{ event_type }}"
               paddocks: '["{{ paddock_id }}"]'
-              products: >
-                {% if event_type in ['nutrient', 'chemical'] and product_name != 'Select Product' %}
-                [{"product_name": "{{ product_name }}", "rate": {{ rate | float(0) }}, "rate_unit": "{{ rate_unit }}"}]
-                {% else %}[]{% endif %}
+              products: "{{ products_json }}"
               application_method: "{{ method_id }}"
               crop_stage: "{{ stage_id }}"
               irrigation_type: "{{ irrigation_id }}"
@@ -766,6 +1076,13 @@ script:
                 value_template: "{{ event_data.event_type in ['nutrient', 'chemical'] }}"
             sequence:
               - delay: 1
+              # Set product count based on number of products
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.hfm_product_count
+                data:
+                  value: "{{ [1, event_data.products | length] | max }}"
+              # Load product 1
               - service: input_select.select_option
                 target:
                   entity_id: input_select.hfm_selected_product
@@ -778,18 +1095,92 @@ script:
                 target:
                   entity_id: input_text.hfm_product_rate
                 data:
-                  value: >
-                    {% if event_data.products and event_data.products | length > 0 %}
-                    {{ event_data.products[0].rate | default('') }}
-                    {% else %}{% endif %}
+                  value: "{{ event_data.products[0].rate | default('') if event_data.products | length > 0 else '' }}"
               - service: input_text.set_value
                 target:
                   entity_id: input_text.hfm_rate_unit
                 data:
-                  value: >
-                    {% if event_data.products and event_data.products | length > 0 %}
-                    {{ event_data.products[0].rate_unit | default('kg/ha') }}
-                    {% else %}kg/ha{% endif %}
+                  value: "{{ event_data.products[0].rate_unit | default('kg/ha') if event_data.products | length > 0 else 'kg/ha' }}"
+              # Load product 2
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.hfm_selected_product_2
+                data:
+                  option: "{{ event_data.products[1].product_name | default('Select Product') if event_data.products | length > 1 else 'Select Product' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_product_rate_2
+                data:
+                  value: "{{ event_data.products[1].rate | default('') if event_data.products | length > 1 else '' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_rate_unit_2
+                data:
+                  value: "{{ event_data.products[1].rate_unit | default('kg/ha') if event_data.products | length > 1 else 'kg/ha' }}"
+              # Load product 3
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.hfm_selected_product_3
+                data:
+                  option: "{{ event_data.products[2].product_name | default('Select Product') if event_data.products | length > 2 else 'Select Product' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_product_rate_3
+                data:
+                  value: "{{ event_data.products[2].rate | default('') if event_data.products | length > 2 else '' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_rate_unit_3
+                data:
+                  value: "{{ event_data.products[2].rate_unit | default('kg/ha') if event_data.products | length > 2 else 'kg/ha' }}"
+              # Load product 4
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.hfm_selected_product_4
+                data:
+                  option: "{{ event_data.products[3].product_name | default('Select Product') if event_data.products | length > 3 else 'Select Product' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_product_rate_4
+                data:
+                  value: "{{ event_data.products[3].rate | default('') if event_data.products | length > 3 else '' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_rate_unit_4
+                data:
+                  value: "{{ event_data.products[3].rate_unit | default('kg/ha') if event_data.products | length > 3 else 'kg/ha' }}"
+              # Load product 5
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.hfm_selected_product_5
+                data:
+                  option: "{{ event_data.products[4].product_name | default('Select Product') if event_data.products | length > 4 else 'Select Product' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_product_rate_5
+                data:
+                  value: "{{ event_data.products[4].rate | default('') if event_data.products | length > 4 else '' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_rate_unit_5
+                data:
+                  value: "{{ event_data.products[4].rate_unit | default('kg/ha') if event_data.products | length > 4 else 'kg/ha' }}"
+              # Load product 6
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.hfm_selected_product_6
+                data:
+                  option: "{{ event_data.products[5].product_name | default('Select Product') if event_data.products | length > 5 else 'Select Product' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_product_rate_6
+                data:
+                  value: "{{ event_data.products[5].rate | default('') if event_data.products | length > 5 else '' }}"
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hfm_rate_unit_6
+                data:
+                  value: "{{ event_data.products[5].rate_unit | default('kg/ha') if event_data.products | length > 5 else 'kg/ha' }}"
               - delay: 1
               - service: input_select.select_option
                 target:
