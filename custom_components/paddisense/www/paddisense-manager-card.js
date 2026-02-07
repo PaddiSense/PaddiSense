@@ -171,6 +171,71 @@ class PaddiSenseManagerCard extends HTMLElement {
           opacity: 0.7;
         }
 
+        button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        button.loading {
+          position: relative;
+          color: transparent;
+        }
+
+        button.loading::after {
+          content: '';
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          top: 50%;
+          left: 50%;
+          margin-left: -8px;
+          margin-top: -8px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-radius: 50%;
+          border-top-color: white;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .toast {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 12px 24px;
+          border-radius: 8px;
+          color: white;
+          font-weight: 500;
+          z-index: 9999;
+          animation: slideUp 0.3s ease;
+        }
+
+        .toast.success {
+          background: var(--success-color);
+        }
+
+        .toast.error {
+          background: var(--danger-color);
+        }
+
+        .toast.info {
+          background: var(--primary-color);
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+
         button.primary {
           background: var(--primary-color);
           color: white;
@@ -208,8 +273,35 @@ class PaddiSenseManagerCard extends HTMLElement {
           border-left: 3px solid var(--success-color);
         }
 
+        .module-card.required {
+          border-left: 3px solid var(--primary-color);
+        }
+
+        .module-deps-info {
+          font-size: 0.75em;
+          color: var(--primary-color);
+          margin: 4px 0;
+          padding: 4px 8px;
+          background: rgba(3, 169, 244, 0.1);
+          border-radius: 4px;
+        }
+
         .module-card.available {
           border-left: 3px solid var(--text-secondary);
+        }
+
+        .module-card.blocked {
+          opacity: 0.7;
+          border-left: 3px solid var(--warning-color);
+        }
+
+        .module-deps-warning {
+          font-size: 0.75em;
+          color: var(--warning-color);
+          margin: 4px 0;
+          padding: 4px 8px;
+          background: rgba(255, 193, 7, 0.1);
+          border-radius: 4px;
         }
 
         .module-icon {
@@ -354,11 +446,11 @@ class PaddiSenseManagerCard extends HTMLElement {
             </div>
             ` : ''}
             <div class="button-row">
-              <button class="secondary" onclick="this.getRootNode().host._checkUpdates()">
+              <button class="secondary" onclick="this.getRootNode().host._checkUpdates(event)">
                 Check for Updates
               </button>
               ${updateAvailable ? `
-              <button class="primary" onclick="this.getRootNode().host._updatePaddisense()">
+              <button class="primary" onclick="this.getRootNode().host._updatePaddisense(event)">
                 Update Now
               </button>
               ` : ''}
@@ -371,19 +463,24 @@ class PaddiSenseManagerCard extends HTMLElement {
           <div class="section-title">Installed Modules</div>
           ${installedModules.length > 0 ? `
           <div class="modules-grid">
-            ${installedModules.map(m => `
-              <div class="module-card installed">
+            ${installedModules.map(m => {
+              const hasDependents = m.dependents && m.dependents.length > 0;
+              return `
+              <div class="module-card installed ${hasDependents ? 'required' : ''}">
                 <div class="module-icon">${this._getModuleIcon(m.id)}</div>
                 <div class="module-name">${m.name || m.id}</div>
                 <div class="module-version">v${m.version || 'unknown'}</div>
                 <div class="module-status current">Installed</div>
+                ${hasDependents ? `
+                  <div class="module-deps-info">Required by: ${m.dependents.join(', ')}</div>
+                ` : ''}
                 <div class="module-actions">
-                  <button class="danger" onclick="this.getRootNode().host._removeModule('${m.id}')">
+                  <button class="danger" onclick="this.getRootNode().host._removeModule('${m.id}', event)">
                     Remove
                   </button>
                 </div>
               </div>
-            `).join('')}
+            `}).join('')}
           </div>
           ` : `
           <div class="empty-state">No modules installed</div>
@@ -395,18 +492,25 @@ class PaddiSenseManagerCard extends HTMLElement {
         <div class="section">
           <div class="section-title">Available Modules</div>
           <div class="modules-grid">
-            ${availableModules.map(m => `
-              <div class="module-card available">
+            ${availableModules.map(m => {
+              const hasMissingDeps = m.missing_dependencies && m.missing_dependencies.length > 0;
+              return `
+              <div class="module-card available ${hasMissingDeps ? 'blocked' : ''}">
                 <div class="module-icon">${this._getModuleIcon(m.id)}</div>
                 <div class="module-name">${m.name || m.id}</div>
                 <div class="module-version">v${m.version || 'unknown'}</div>
+                ${hasMissingDeps ? `
+                  <div class="module-deps-warning">Requires: ${m.missing_dependencies.join(', ')}</div>
+                ` : ''}
                 <div class="module-actions">
-                  <button class="success" onclick="this.getRootNode().host._installModule('${m.id}')">
-                    Install
+                  <button class="${hasMissingDeps ? 'secondary' : 'success'}"
+                          onclick="this.getRootNode().host._installModule('${m.id}', event)"
+                          ${hasMissingDeps ? 'disabled title="Install required modules first"' : ''}>
+                    ${hasMissingDeps ? 'Blocked' : 'Install'}
                   </button>
                 </div>
               </div>
-            `).join('')}
+            `}).join('')}
           </div>
         </div>
         ` : ''}
@@ -415,13 +519,13 @@ class PaddiSenseManagerCard extends HTMLElement {
         <div class="section">
           <div class="section-title">Tools</div>
           <div class="tools-grid">
-            <button class="secondary" onclick="this.getRootNode().host._createBackup()">
+            <button class="secondary" onclick="this.getRootNode().host._createBackup(event)">
               Create Backup
             </button>
             <button class="secondary" onclick="this.getRootNode().host._openOptions()">
               Restore Backup
             </button>
-            <button class="secondary" onclick="this.getRootNode().host._exportConfig()">
+            <button class="secondary" onclick="this.getRootNode().host._exportConfig(event)">
               Export Registry
             </button>
           </div>
@@ -456,13 +560,13 @@ class PaddiSenseManagerCard extends HTMLElement {
                 placeholder="Paste Real Time Rice dashboard URL..."
                 value=""
               />
-              <button class="primary" onclick="this.getRootNode().host._saveRtrUrl()">
+              <button class="primary" onclick="this.getRootNode().host._saveRtrUrl(event)">
                 Save
               </button>
             </div>
             ${rtrConfigured ? `
             <div class="button-row">
-              <button class="secondary" onclick="this.getRootNode().host._refreshRtrData()">
+              <button class="secondary" onclick="this.getRootNode().host._refreshRtrData(event)">
                 Refresh Data
               </button>
             </div>
@@ -479,6 +583,10 @@ class PaddiSenseManagerCard extends HTMLElement {
       'asm': '🚜',
       'weather': '🌤️',
       'pwm': '💧',
+      'rtr': '🌾',
+      'str': '🐄',
+      'wss': '👷',
+      'hfm': '🎤',
     };
     return icons[moduleId] || '📦';
   }
@@ -497,44 +605,147 @@ class PaddiSenseManagerCard extends HTMLElement {
     return date.toLocaleDateString();
   }
 
-  async _callService(domain, service, data = {}) {
+  _showToast(message, type = 'info') {
+    // Remove any existing toast
+    const existing = this.shadowRoot.querySelector('.toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    this.shadowRoot.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  _setButtonLoading(button, loading) {
+    if (loading) {
+      button.classList.add('loading');
+      button.disabled = true;
+    } else {
+      button.classList.remove('loading');
+      button.disabled = false;
+    }
+  }
+
+  async _callService(domain, service, data = {}, button = null) {
+    if (button) this._setButtonLoading(button, true);
+
     try {
       await this._hass.callService(domain, service, data);
+      return { success: true };
     } catch (e) {
       console.error(`Failed to call ${domain}.${service}:`, e);
+      return { success: false, error: e.message || 'Unknown error' };
+    } finally {
+      if (button) this._setButtonLoading(button, false);
     }
   }
 
-  _checkUpdates() {
-    this._callService('paddisense', 'check_for_updates');
-  }
-
-  _updatePaddisense() {
-    if (confirm('Update PaddiSense? A backup will be created first. Home Assistant will restart.')) {
-      this._callService('paddisense', 'update_paddisense', { backup_first: true });
+  async _checkUpdates(event) {
+    const button = event?.target;
+    this._showToast('Checking for updates...', 'info');
+    const result = await this._callService('paddisense', 'check_for_updates', {}, button);
+    if (result.success) {
+      this._showToast('Update check complete', 'success');
+    } else {
+      this._showToast(`Failed: ${result.error}`, 'error');
     }
   }
 
-  _installModule(moduleId) {
-    if (confirm(`Install ${moduleId}? Home Assistant will restart.`)) {
-      this._callService('paddisense', 'install_module', { module_id: moduleId });
+  async _updatePaddisense(event) {
+    if (!confirm('Update PaddiSense? A backup will be created first. Home Assistant will restart.')) {
+      return;
+    }
+    const button = event?.target;
+    this._showToast('Starting update... HA will restart', 'info');
+    const result = await this._callService('paddisense', 'update_paddisense', { backup_first: true }, button);
+    if (!result.success) {
+      this._showToast(`Update failed: ${result.error}`, 'error');
     }
   }
 
-  _removeModule(moduleId) {
-    if (confirm(`Remove ${moduleId}? Your data will be preserved. Home Assistant will restart.`)) {
-      this._callService('paddisense', 'remove_module', { module_id: moduleId });
+  async _installModule(moduleId, event) {
+    // Get module info for better messaging
+    const attrs = this._hass.states[this._config.entity]?.attributes || {};
+    const availableModules = attrs.available_modules || [];
+    const moduleInfo = availableModules.find(m => m.id === moduleId);
+    const moduleName = moduleInfo?.name || moduleId;
+    const deps = moduleInfo?.dependencies || [];
+
+    let confirmMsg = `Install ${moduleName}?`;
+    if (deps.length > 0) {
+      confirmMsg += `\n\nRequires: ${deps.join(', ')}`;
+    }
+    confirmMsg += '\n\nHome Assistant will restart.';
+
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    const button = event?.target;
+    this._showToast(`Installing ${moduleName}...`, 'info');
+    const result = await this._callService('paddisense', 'install_module', { module_id: moduleId }, button);
+    if (result.success) {
+      this._showToast(`${moduleName} installed! Restarting HA...`, 'success');
+    } else {
+      this._showToast(`Install failed: ${result.error}`, 'error');
     }
   }
 
-  _createBackup() {
-    this._callService('paddisense', 'create_backup');
-    alert('Backup created successfully.');
+  async _removeModule(moduleId, event) {
+    // Get module info for better messaging
+    const attrs = this._hass.states[this._config.entity]?.attributes || {};
+    const installedModules = attrs.installed_modules || [];
+    const moduleInfo = installedModules.find(m => m.id === moduleId);
+    const moduleName = moduleInfo?.name || moduleId;
+    const dependents = moduleInfo?.dependents || [];
+
+    let confirmMsg = `Remove ${moduleName}?`;
+    if (dependents.length > 0) {
+      confirmMsg += `\n\n⚠️ Warning: Required by ${dependents.join(', ')}`;
+    }
+    confirmMsg += '\n\nYour data will be preserved. Home Assistant will restart.';
+
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    const button = event?.target;
+    this._showToast(`Removing ${moduleName}...`, 'info');
+
+    // If there are dependents, use force removal
+    const data = { module_id: moduleId };
+    if (dependents.length > 0) {
+      data.force = true;
+    }
+
+    const result = await this._callService('paddisense', 'remove_module', data, button);
+    if (result.success) {
+      this._showToast(`${moduleName} removed! Restarting HA...`, 'success');
+    } else {
+      this._showToast(`Remove failed: ${result.error}`, 'error');
+    }
   }
 
-  _exportConfig() {
-    this._callService('paddisense', 'export_registry');
-    alert('Registry exported to backup folder.');
+  async _createBackup(event) {
+    const button = event?.target;
+    this._showToast('Creating backup...', 'info');
+    const result = await this._callService('paddisense', 'create_backup', {}, button);
+    if (result.success) {
+      this._showToast('Backup created successfully', 'success');
+    } else {
+      this._showToast(`Backup failed: ${result.error}`, 'error');
+    }
+  }
+
+  async _exportConfig(event) {
+    const button = event?.target;
+    this._showToast('Exporting registry...', 'info');
+    const result = await this._callService('paddisense', 'export_registry', {}, button);
+    if (result.success) {
+      this._showToast('Registry exported to backup folder', 'success');
+    } else {
+      this._showToast(`Export failed: ${result.error}`, 'error');
+    }
   }
 
   _openOptions() {
@@ -544,20 +755,32 @@ class PaddiSenseManagerCard extends HTMLElement {
     this.dispatchEvent(event);
   }
 
-  _saveRtrUrl() {
+  async _saveRtrUrl(event) {
     const input = this.shadowRoot.getElementById('rtr-url-input');
     if (!input || !input.value.trim()) {
-      alert('Please enter a Real Time Rice dashboard URL.');
+      this._showToast('Please enter a Real Time Rice dashboard URL', 'error');
       return;
     }
-    this._callService('paddisense', 'set_rtr_url', { url: input.value.trim() });
-    input.value = '';
-    alert('RTR URL saved. Data will be refreshed automatically.');
+    const button = event?.target;
+    this._showToast('Saving RTR URL...', 'info');
+    const result = await this._callService('paddisense', 'set_rtr_url', { url: input.value.trim() }, button);
+    if (result.success) {
+      input.value = '';
+      this._showToast('RTR URL saved. Data refreshing...', 'success');
+    } else {
+      this._showToast(`Failed: ${result.error}`, 'error');
+    }
   }
 
-  _refreshRtrData() {
-    this._callService('paddisense', 'refresh_rtr_data');
-    alert('RTR data refresh started.');
+  async _refreshRtrData(event) {
+    const button = event?.target;
+    this._showToast('Refreshing RTR data...', 'info');
+    const result = await this._callService('paddisense', 'refresh_rtr_data', {}, button);
+    if (result.success) {
+      this._showToast('RTR data refreshed', 'success');
+    } else {
+      this._showToast(`Refresh failed: ${result.error}`, 'error');
+    }
   }
 }
 
@@ -573,7 +796,7 @@ window.customCards.push({
   preview: true,
 });
 
-console.info('%c PADDISENSE-MANAGER-CARD %c v1.1.0 ',
+console.info('%c PADDISENSE-MANAGER-CARD %c v1.3.0 ',
   'background:#0066cc;color:white;font-weight:bold;padding:2px 6px;border-radius:3px 0 0 3px;',
   'background:#333;color:white;padding:2px 6px;border-radius:0 3px 3px 0;'
 );

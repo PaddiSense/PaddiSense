@@ -98,23 +98,35 @@ class ModuleManager:
         """Get list of currently installed modules."""
         installed = []
         metadata = self.get_modules_metadata()
-
+        # First pass to get installed IDs for dependent calculation
+        installed_ids = []
         for module_id in AVAILABLE_MODULES:
             symlink_path = self.packages_dir / f"{module_id}.yaml"
-            module_dir = self.paddisense_dir / module_id
-
             if symlink_path.exists() or symlink_path.is_symlink():
-                # Module is installed
-                version = self._get_module_version(module_id)
-                meta = metadata.get(module_id, MODULE_METADATA.get(module_id, {}))
+                installed_ids.append(module_id)
 
-                installed.append({
-                    "id": module_id,
-                    "name": meta.get("name", module_id),
-                    "version": version,
-                    "icon": meta.get("icon", "mdi:package"),
-                    "has_data": self._module_has_data(module_id),
-                })
+        for module_id in installed_ids:
+            version = self._get_module_version(module_id)
+            meta = metadata.get(module_id, MODULE_METADATA.get(module_id, {}))
+
+            # Find modules that depend on this one
+            dependents = []
+            for other_id in installed_ids:
+                if other_id == module_id:
+                    continue
+                other_meta = metadata.get(other_id, MODULE_METADATA.get(other_id, {}))
+                if module_id in other_meta.get("dependencies", []):
+                    dependents.append(other_id)
+
+            installed.append({
+                "id": module_id,
+                "name": meta.get("name", module_id),
+                "version": version,
+                "icon": meta.get("icon", "mdi:package"),
+                "has_data": self._module_has_data(module_id),
+                "dependencies": meta.get("dependencies", []),
+                "dependents": dependents,
+            })
 
         return installed
 
@@ -132,6 +144,10 @@ class ModuleManager:
                 if module_dir.is_dir():
                     version = self._get_module_version(module_id)
                     meta = metadata.get(module_id, MODULE_METADATA.get(module_id, {}))
+                    dependencies = meta.get("dependencies", [])
+
+                    # Check which dependencies are missing
+                    missing_deps = [d for d in dependencies if d not in installed_ids]
 
                     available.append({
                         "id": module_id,
@@ -139,6 +155,8 @@ class ModuleManager:
                         "description": meta.get("description", ""),
                         "version": version,
                         "icon": meta.get("icon", "mdi:package"),
+                        "dependencies": dependencies,
+                        "missing_dependencies": missing_deps,
                     })
 
         return available
