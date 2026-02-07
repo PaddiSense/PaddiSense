@@ -1,7 +1,7 @@
 # PaddiSense Farm Management
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/badge/version-1.0.0--rc.1-blue.svg)](https://github.com/paddisense/paddisense-ha/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0--rc.1-blue.svg)](https://github.com/PKmac78/PaddiSense/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A modular Home Assistant integration for farm management. Built for Australian rice and mixed farming operations.
@@ -10,17 +10,17 @@ A modular Home Assistant integration for farm management. Built for Australian r
 
 ## Modules
 
-| Module | Description | Status |
-|--------|-------------|--------|
-| **Farm Registry** | Central configuration - paddocks, bays, seasons | RC |
-| **Inventory Manager (IPM)** | Track chemicals, fertilizers, consumables | RC |
-| **Asset Service Manager (ASM)** | Equipment, parts, and service history | RC |
-| **Weather Stations** | Local gateway and API weather data | RC |
-| **Water Management (PWM)** | Irrigation scheduling and bay monitoring | RC |
-| **Real Time Rice (RTR)** | Crop growth predictions integration | RC |
-| **Stock Tracker (STR)** | Livestock inventory and movements | RC |
-| **Hey Farmer (HFM)** | Farm event recording wizard | RC |
-| **Worker Safety (WSS)** | Worker check-in/check-out system | Dev |
+| Module | Description | Status | Dependencies |
+|--------|-------------|--------|--------------|
+| **Farm Registry** | Central configuration - paddocks, bays, seasons | RC | Core |
+| **Inventory Manager (IPM)** | Track chemicals, fertilizers, consumables | RC | None |
+| **Asset Service Manager (ASM)** | Equipment, parts, and service history | RC | None |
+| **Weather Stations** | Local gateway and API weather data | RC | None |
+| **Water Management (PWM)** | Irrigation scheduling and bay monitoring | RC | None |
+| **Real Time Rice (RTR)** | Crop growth predictions integration | RC | None |
+| **Stock Tracker (STR)** | Livestock inventory and movements | RC | None |
+| **Hey Farmer (HFM)** | Farm event recording wizard | RC | IPM |
+| **Worker Safety (WSS)** | Worker check-in/check-out system | Dev | None |
 
 ## Key Features
 
@@ -29,6 +29,23 @@ A modular Home Assistant integration for farm management. Built for Australian r
 - **Modular Design** - Enable only the modules you need
 - **Local Data** - Your farm data never leaves your server
 - **YAML Packages** - Easy to customize and extend
+- **Dependency Management** - Modules with dependencies are automatically blocked until requirements are met
+
+---
+
+## Prerequisites
+
+### Required HACS Frontend Cards
+
+Before installing PaddiSense, install these cards via HACS:
+
+1. **Button Card** - `custom-cards/button-card`
+2. **Card Mod** - `thomasloven/lovelace-card-mod`
+
+Or after installing PaddiSense, call the service:
+```yaml
+service: paddisense.install_hacs_cards
+```
 
 ---
 
@@ -40,7 +57,7 @@ A modular Home Assistant integration for farm management. Built for Australian r
 2. Go to **Integrations**
 3. Click **⋮** (three dots menu) → **Custom repositories**
 4. Add:
-   - **Repository**: `https://github.com/paddisense/paddisense-ha`
+   - **Repository**: `https://github.com/PKmac78/PaddiSense`
    - **Category**: Integration
 5. Click **Add**
 
@@ -56,28 +73,55 @@ A modular Home Assistant integration for farm management. Built for Australian r
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ Add Integration**
 3. Search for "**PaddiSense**"
-4. Follow the setup wizard
+4. Follow the setup wizard:
+   - Enter your grower name and email (for registration)
+   - Select modules to install
+   - Configure initial settings
 
-### Step 4: Add Dashboard Card
+### Step 4: Access Dashboards
 
-1. Go to **Settings** → **Dashboards** → **Resources**
-2. Add: `/paddisense/paddisense-registry-card.js` (JavaScript Module)
-3. Refresh browser (Ctrl+F5)
-4. Add card to your dashboard:
-
-```yaml
-type: custom:paddisense-registry-card
-entity: sensor.paddisense_registry
-```
+After restart, module dashboards appear in the sidebar automatically:
+- **PaddiSense Manager** - Install/remove modules, check updates
+- **Inventory Manager** - Manage products and stock
+- **Stock Tracker** - Track livestock
+- etc.
 
 ---
 
 ## Manual Installation
 
-1. Download the [latest release](https://github.com/paddisense/paddisense-ha/releases)
-2. Extract and copy `custom_components/paddisense/` to your HA `config/custom_components/`
-3. Restart Home Assistant
-4. Follow Steps 3-4 above
+1. Download the [latest release](https://github.com/PKmac78/PaddiSense/releases)
+2. Copy `custom_components/paddisense/` to your HA `config/custom_components/`
+3. Copy `PaddiSense/` folder to your HA `config/` directory
+4. Restart Home Assistant
+5. Follow Steps 3-4 above
+
+---
+
+## Module Management
+
+### Installing Modules
+
+1. Open **PaddiSense Manager** dashboard
+2. Find module in **Available Modules** section
+3. Click **Install** → Confirm
+4. Home Assistant restarts automatically
+
+### Removing Modules
+
+1. Open **PaddiSense Manager** dashboard
+2. Find module in **Installed Modules** section
+3. Click **Remove** → Confirm
+4. Home Assistant restarts automatically
+
+**Note:** Your data is preserved when removing modules. Reinstalling will restore access to your data.
+
+### Dependencies
+
+Some modules require others:
+- **Hey Farmer (HFM)** requires **Inventory Manager (IPM)**
+
+If dependencies are missing, the Install button shows "Blocked" with a message showing required modules.
 
 ---
 
@@ -86,9 +130,23 @@ entity: sensor.paddisense_registry
 | Entity | Description |
 |--------|-------------|
 | `sensor.paddisense_registry` | Farm structure with paddocks, bays, seasons |
-| `sensor.paddisense_version` | Integration version |
+| `sensor.paddisense_version` | Integration version and module status |
+| `sensor.paddisense_rtr` | Real Time Rice data (if configured) |
+| `sensor.ipm_products` | Inventory products (if IPM installed) |
+| `sensor.str_mobs` | Livestock mobs (if STR installed) |
 
-## Services
+## Core Services
+
+| Service | Description |
+|---------|-------------|
+| `paddisense.install_module` | Install a module |
+| `paddisense.remove_module` | Remove a module (preserves data) |
+| `paddisense.check_for_updates` | Check for PaddiSense updates |
+| `paddisense.update_paddisense` | Update to latest version |
+| `paddisense.create_backup` | Create configuration backup |
+| `paddisense.install_hacs_cards` | Install required HACS frontend cards |
+
+## Registry Services
 
 | Service | Description |
 |---------|-------------|
@@ -99,63 +157,57 @@ entity: sensor.paddisense_registry
 | `paddisense.edit_bay` | Update bay settings |
 | `paddisense.delete_bay` | Remove bay |
 | `paddisense.add_season` | Create new season |
-| `paddisense.edit_season` | Update season dates |
-| `paddisense.delete_season` | Remove season |
 | `paddisense.set_active_season` | Set the active season |
-| `paddisense.set_current_season` | Toggle paddock in/out of season |
 | `paddisense.add_farm` | Create new farm |
-| `paddisense.edit_farm` | Update farm name |
-| `paddisense.delete_farm` | Remove empty farm |
 | `paddisense.export_registry` | Backup to file |
 | `paddisense.import_registry` | Restore from backup |
 
 ---
 
-## Card Configuration
-
-```yaml
-type: custom:paddisense-registry-card
-entity: sensor.paddisense_registry
-show_farm_overview: true    # Show paddock/bay counts
-show_paddock_list: true     # Show list of paddocks
-show_season_info: true      # Show active season
-show_actions: true          # Show add buttons
-```
-
----
-
-## Example Service Calls
-
-### Add a Paddock
-
-```yaml
-service: paddisense.add_paddock
-data:
-  name: "SW7"
-  bay_count: 5
-  bay_prefix: "B-"
-```
-
-### Add a Season
-
-```yaml
-service: paddisense.add_season
-data:
-  name: "CY26"
-  start_date: "2025-04-01"
-  end_date: "2026-03-31"
-  active: true
-```
-
----
-
 ## Data Storage
 
-All data is stored locally in `/config/local_data/registry/`:
-- `config.json` - Farm structure
-- `backups/` - Automatic backups
+All data is stored locally:
 
-Data is never sent to external servers.
+```
+/config/
+├── local_data/
+│   ├── registry/     # Farm structure
+│   ├── ipm/          # Inventory data
+│   ├── str/          # Stock tracker data
+│   ├── hfm/          # Farm events
+│   └── ...
+└── PaddiSense/
+    ├── packages/     # Module symlinks
+    └── modules.json  # Module metadata
+```
+
+**Data is never sent to external servers** unless you explicitly enable data-sharing features.
+
+---
+
+## Troubleshooting
+
+### Dashboards Not Appearing
+1. Clear browser cache (Ctrl+F5)
+2. Check **Developer Tools** → **YAML** → **Reload Dashboards**
+3. Verify module is installed in PaddiSense Manager
+
+### Module Won't Install
+1. Check dependencies - install required modules first
+2. Check Home Assistant logs for errors
+3. Verify YAML syntax in package files
+
+### Cards Not Rendering
+1. Install required HACS cards (button-card, card-mod)
+2. Call `paddisense.install_hacs_cards` service
+3. Refresh browser after installing cards
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/PKmac78/PaddiSense/issues)
+- **Documentation**: [docs/](https://github.com/PKmac78/PaddiSense/tree/main/docs)
 
 ---
 
