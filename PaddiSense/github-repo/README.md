@@ -1,18 +1,34 @@
 # PaddiSense Farm Management
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/v/release/paddisense/paddisense-ha)](https://github.com/paddisense/paddisense-ha/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0--rc.1-blue.svg)](https://github.com/paddisense/paddisense-ha/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Home Assistant integration for farm management. Manage paddocks, bays, and seasons for precision agriculture.
+A modular Home Assistant integration for farm management. Built for Australian rice and mixed farming operations.
 
-## Features
+> **Pre-Release Notice**: Version 1.0.0-rc.1 is a release candidate. Core features are complete but still undergoing testing.
 
-- **Farm Registry** - Manage farms, paddocks, bays, and seasons
-- **16 Services** - Full CRUD operations via Home Assistant services
-- **Custom Lovelace Card** - Mobile-friendly dashboard card
-- **Offline-First** - All data stored locally on your server
-- **Migration Support** - Import existing PaddiSense data
+## Modules
+
+| Module | Description | Status |
+|--------|-------------|--------|
+| **Farm Registry** | Central configuration - paddocks, bays, seasons | RC |
+| **Inventory Manager (IPM)** | Track chemicals, fertilizers, consumables | RC |
+| **Asset Service Manager (ASM)** | Equipment, parts, and service history | RC |
+| **Weather Stations** | Local gateway and API weather data | RC |
+| **Water Management (PWM)** | Irrigation scheduling and bay monitoring | RC |
+| **Real Time Rice (RTR)** | Crop growth predictions integration | RC |
+| **Stock Tracker (STR)** | Livestock inventory and movements | RC |
+| **Hey Farmer (HFM)** | Farm event recording wizard | RC |
+| **Worker Safety (WSS)** | Worker check-in/check-out system | Dev |
+
+## Key Features
+
+- **Offline-First** - All data stored locally, works without internet
+- **Mobile-Friendly** - Touch-optimized dashboards for field use
+- **Modular Design** - Enable only the modules you need
+- **Local Data** - Your farm data never leaves your server
+- **YAML Packages** - Easy to customize and extend
 
 ---
 

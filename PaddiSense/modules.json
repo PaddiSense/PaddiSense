@@ -1,6 +1,17 @@
 {
   "schema_version": "1.0.0",
+  "version": "1.0.0-rc.1",
   "modules": {
+    "registry": {
+      "name": "Farm Registry",
+      "description": "Central farm configuration - paddocks, seasons, and settings",
+      "icon": "mdi:database",
+      "dashboard_slug": "paddisense-manager",
+      "dashboard_title": "PaddiSense Manager",
+      "dashboard_file": "registry/dashboards/manager.yaml",
+      "status": "rc",
+      "version": "1.0.0-rc.1"
+    },
     "ipm": {
       "name": "Inventory Manager",
       "description": "Track chemicals, fertilizers, and consumables",
@@ -8,7 +19,8 @@
       "dashboard_slug": "ipm-inventory",
       "dashboard_title": "Inventory Manager",
       "dashboard_file": "ipm/dashboards/inventory.yaml",
-      "status": "stable"
+      "status": "rc",
+      "version": "1.0.0-rc.1"
     },
     "asm": {
       "name": "Asset Service Manager",
@@ -17,7 +29,8 @@
       "dashboard_slug": "asm-service",
       "dashboard_title": "Asset Service Manager",
       "dashboard_file": "asm/dashboards/views.yaml",
-      "status": "stable"
+      "status": "rc",
+      "version": "1.0.0-rc.1"
     },
     "weather": {
       "name": "Weather Stations",
@@ -26,7 +39,8 @@
       "dashboard_slug": "weather-station",
       "dashboard_title": "Weather",
       "dashboard_file": "weather/dashboards/views.yaml",
-      "status": "stable"
+      "status": "rc",
+      "version": "1.0.0-rc.1"
     },
     "pwm": {
       "name": "Water Management",
@@ -35,7 +49,8 @@
       "dashboard_slug": "pwm-irrigation",
       "dashboard_title": "Water Management",
       "dashboard_file": "pwm/dashboards/views.yaml",
-      "status": "stable"
+      "status": "rc",
+      "version": "1.0.0-rc.1"
     },
     "rtr": {
       "name": "Real Time Rice",
@@ -44,7 +59,8 @@
       "dashboard_slug": "rtr-predictions",
       "dashboard_title": "Real Time Rice",
       "dashboard_file": "rtr/dashboards/views.yaml",
-      "status": "stable"
+      "status": "rc",
+      "version": "1.0.0-rc.1"
     },
     "str": {
       "name": "Stock Tracker",
@@ -53,7 +69,18 @@
       "dashboard_slug": "str-stock",
       "dashboard_title": "Stock Tracker",
       "dashboard_file": "str/dashboards/views.yaml",
-      "status": "stable"
+      "status": "rc",
+      "version": "1.0.0-rc.1"
+    },
+    "hfm": {
+      "name": "Hey Farmer",
+      "description": "Farm event recording - applications, irrigation, crop stages",
+      "icon": "mdi:microphone",
+      "dashboard_slug": "hfm-heyfarm",
+      "dashboard_title": "Hey Farmer",
+      "dashboard_file": "hfm/dashboards/views.yaml",
+      "status": "rc",
+      "version": "1.0.0-rc.1"
     },
     "wss": {
       "name": "Worker Safety",
@@ -62,18 +89,8 @@
       "dashboard_slug": "wss-safety",
       "dashboard_title": "Worker Safety",
       "dashboard_file": "wss/dashboards/views.yaml",
-      "status": "placeholder"
-    },
-    "hfm": {
-      "name": "Hey Farmer",
-      "description": "Community insights and benchmarking from aggregated farm data",
-      "icon": "mdi:chart-areaspline",
-      "dashboard_slug": "hfm-insights",
-      "dashboard_title": "Hey Farmer",
-      "dashboard_file": "hfm/dashboards/views.yaml",
-      "status": "placeholder",
-      "tier": "data_sharing",
-      "agreement_required": true
+      "status": "dev",
+      "version": "0.1.0-dev"
     }
   }
 }

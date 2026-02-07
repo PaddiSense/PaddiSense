@@ -38,3 +38,9 @@ str-stock:
   icon: mdi:cow
   show_in_sidebar: true
   filename: PaddiSense/str/dashboards/views.yaml
+hfm-heyfarm:
+  mode: yaml
+  title: Hey Farm
+  icon: mdi:microphone
+  show_in_sidebar: true
+  filename: PaddiSense/hfm/dashboards/views.yaml

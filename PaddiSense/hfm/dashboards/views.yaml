@@ -1,0 +1,1769 @@
+# =============================================================================
+# HFM Dashboard Views - Hey Farmer Module
+# PaddiSense Farm Management System
+#
+# Views:
+#   1. Overview - Event summary and recent events
+#   2. New Event - Step-by-step event wizard
+#   3. History - View and manage past events
+#   4. Settings - Module configuration
+# =============================================================================
+
+button_card_templates:
+  #---------------------------------------------------------------------------
+  # Section title bar (dark background for contrast)
+  #---------------------------------------------------------------------------
+  hfm_title:
+    color_type: card
+    color: "#1e1e1e"
+    show_icon: false
+    show_state: false
+    styles:
+      card:
+        - height: 50px
+        - border-radius: 12px
+        - padding: 8px
+      name:
+        - font-size: 18px
+        - font-weight: 700
+        - text-align: center
+        - color: white
+
+  #---------------------------------------------------------------------------
+  # Info display block (muted background)
+  #---------------------------------------------------------------------------
+  hfm_info_block:
+    color_type: card
+    color: "#546e7a"
+    show_icon: false
+    show_state: true
+    tap_action:
+      action: none
+    styles:
+      card:
+        - height: 80px
+        - border-radius: 12px
+        - padding: 10px
+      state:
+        - font-size: 32px
+        - font-weight: 800
+        - text-align: center
+        - color: white
+      name:
+        - font-size: 14px
+        - font-weight: 600
+        - text-align: center
+        - color: white
+
+  #---------------------------------------------------------------------------
+  # Action button (primary color) - STANDARD HEIGHT 70px
+  #---------------------------------------------------------------------------
+  hfm_action:
+    color_type: card
+    color: "#0066cc"
+    show_icon: true
+    show_name: true
+    show_state: false
+    styles:
+      card:
+        - height: 70px
+        - border-radius: 12px
+      name:
+        - font-size: 16px
+        - font-weight: 700
+        - color: white
+      icon:
+        - color: white
+        - width: 28px
+
+  #---------------------------------------------------------------------------
+  # Secondary action button - STANDARD HEIGHT 70px (was 60px, now consistent)
+  #---------------------------------------------------------------------------
+  hfm_secondary:
+    color_type: card
+    color: "#555555"
+    show_icon: true
+    show_name: true
+    show_state: false
+    styles:
+      card:
+        - height: 70px
+        - border-radius: 12px
+      name:
+        - font-size: 16px
+        - font-weight: 700
+        - color: white
+      icon:
+        - color: white
+        - width: 28px
+
+  #---------------------------------------------------------------------------
+  # Success button (green) - STANDARD HEIGHT 70px
+  #---------------------------------------------------------------------------
+  hfm_success:
+    color_type: card
+    color: "#28a745"
+    show_icon: true
+    show_name: true
+    show_state: false
+    styles:
+      card:
+        - height: 70px
+        - border-radius: 12px
+      name:
+        - font-size: 16px
+        - font-weight: 700
+        - color: white
+      icon:
+        - color: white
+        - width: 28px
+
+  #---------------------------------------------------------------------------
+  # Danger action button - STANDARD HEIGHT 70px
+  #---------------------------------------------------------------------------
+  hfm_danger:
+    color_type: card
+    color: "#dc3545"
+    show_icon: true
+    show_name: true
+    show_state: false
+    styles:
+      card:
+        - height: 70px
+        - border-radius: 12px
+      name:
+        - font-size: 16px
+        - font-weight: 700
+        - color: white
+      icon:
+        - color: white
+        - width: 28px
+
+  #---------------------------------------------------------------------------
+  # Event type selection button
+  #---------------------------------------------------------------------------
+  hfm_type_btn:
+    show_icon: true
+    show_name: true
+    show_state: false
+    styles:
+      card:
+        - height: 90px
+        - border-radius: 12px
+        - background: '#424242'
+      name:
+        - font-size: 14px
+        - font-weight: 600
+        - color: white
+      icon:
+        - color: white
+        - width: 36px
+
+  #---------------------------------------------------------------------------
+  # Stat chip (Mushroom-style)
+  #---------------------------------------------------------------------------
+  hfm_stat_chip:
+    color_type: card
+    color: "#424242"
+    show_icon: true
+    show_name: true
+    show_state: true
+    styles:
+      card:
+        - height: 50px
+        - border-radius: 25px
+        - padding: 0 16px
+      grid:
+        - grid-template-areas: '"i n s"'
+        - grid-template-columns: 24px auto auto
+        - gap: 8px
+      name:
+        - font-size: 12px
+        - color: rgba(255,255,255,0.7)
+        - justify-self: start
+      state:
+        - font-size: 18px
+        - font-weight: 700
+        - color: var(--text-primary-color, white)
+        - justify-self: end
+      icon:
+        - color: var(--text-primary-color, white)
+        - width: 22px
+
+  #---------------------------------------------------------------------------
+  # Navigation button - STANDARD HEIGHT 70px (was 60px, now consistent)
+  #---------------------------------------------------------------------------
+  hfm_nav:
+    color_type: card
+    color: "#37474f"
+    show_icon: true
+    show_name: true
+    show_state: false
+    styles:
+      card:
+        - height: 70px
+        - border-radius: 12px
+      name:
+        - font-size: 16px
+        - font-weight: 700
+        - color: white
+      icon:
+        - color: white
+        - width: 28px
+
+##############################################################################
+# VIEWS
+##############################################################################
+views:
+  #============================================================================
+  # VIEW 1: OVERVIEW
+  #============================================================================
+  - title: Hey Farmer
+    path: hfm
+    icon: mdi:microphone
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              #----------------------------------------------------------------
+              # TITLE
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                name: HEY FARMER
+
+              #----------------------------------------------------------------
+              # QUICK STATS
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_info_block
+                    entity: sensor.hfm_events
+                    name: Total Events
+                    show_icon: false
+
+                  - type: custom:button-card
+                    template: hfm_info_block
+                    entity: sensor.hfm_events_today
+                    name: Today
+                    show_icon: false
+
+                  - type: custom:button-card
+                    template: hfm_info_block
+                    entity: sensor.hfm_pending_events
+                    name: Pending
+                    show_icon: false
+                    color: |
+                      [[[
+                        return Number(entity.state) > 0 ? '#ffc107' : '#546e7a';
+                      ]]]
+
+              #----------------------------------------------------------------
+              # EVENTS BY TYPE - Color-coded filter buttons
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                name: EVENTS BY TYPE
+
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: sensor.hfm_events
+                    name: Nutrient
+                    icon: mdi:flask
+                    show_icon: true
+                    show_name: true
+                    show_state: true
+                    color_type: card
+                    color: "#43a047"
+                    state_display: |
+                      [[[
+                        const byType = entity.attributes.events_by_type || {};
+                        return byType.nutrient || 0;
+                      ]]]
+                    styles:
+                      card:
+                        - height: 80px
+                        - border-radius: 12px
+                      icon:
+                        - color: white
+                        - width: 28px
+                      name:
+                        - font-size: 12px
+                        - font-weight: 600
+                        - color: white
+                      state:
+                        - font-size: 24px
+                        - font-weight: 800
+                        - color: white
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-history
+
+                  - type: custom:button-card
+                    entity: sensor.hfm_events
+                    name: Chemical
+                    icon: mdi:spray
+                    show_icon: true
+                    show_name: true
+                    show_state: true
+                    color_type: card
+                    color: "#e53935"
+                    state_display: |
+                      [[[
+                        const byType = entity.attributes.events_by_type || {};
+                        return byType.chemical || 0;
+                      ]]]
+                    styles:
+                      card:
+                        - height: 80px
+                        - border-radius: 12px
+                      icon:
+                        - color: white
+                        - width: 28px
+                      name:
+                        - font-size: 12px
+                        - font-weight: 600
+                        - color: white
+                      state:
+                        - font-size: 24px
+                        - font-weight: 800
+                        - color: white
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-history
+
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: sensor.hfm_events
+                    name: Irrigation
+                    icon: mdi:water
+                    show_icon: true
+                    show_name: true
+                    show_state: true
+                    color_type: card
+                    color: "#1e88e5"
+                    state_display: |
+                      [[[
+                        const byType = entity.attributes.events_by_type || {};
+                        return byType.irrigation || 0;
+                      ]]]
+                    styles:
+                      card:
+                        - height: 80px
+                        - border-radius: 12px
+                      icon:
+                        - color: white
+                        - width: 28px
+                      name:
+                        - font-size: 12px
+                        - font-weight: 600
+                        - color: white
+                      state:
+                        - font-size: 24px
+                        - font-weight: 800
+                        - color: white
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-history
+
+                  - type: custom:button-card
+                    entity: sensor.hfm_events
+                    name: Crop Stage
+                    icon: mdi:sprout
+                    show_icon: true
+                    show_name: true
+                    show_state: true
+                    color_type: card
+                    color: "#8d6e63"
+                    state_display: |
+                      [[[
+                        const byType = entity.attributes.events_by_type || {};
+                        return byType.crop_stage || 0;
+                      ]]]
+                    styles:
+                      card:
+                        - height: 80px
+                        - border-radius: 12px
+                      icon:
+                        - color: white
+                        - width: 28px
+                      name:
+                        - font-size: 12px
+                        - font-weight: 600
+                        - color: white
+                      state:
+                        - font-size: 24px
+                        - font-weight: 800
+                        - color: white
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-history
+
+              #----------------------------------------------------------------
+              # QUICK ACTIONS
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_action
+                    name: New Event
+                    icon: mdi:plus
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-new
+
+                  - type: custom:button-card
+                    template: hfm_secondary
+                    name: Export
+                    icon: mdi:export
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_export
+
+  #============================================================================
+  # VIEW 2: NEW EVENT WIZARD
+  #============================================================================
+  - title: New Event
+    path: hfm-new
+    icon: mdi:plus-circle
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              #----------------------------------------------------------------
+              # WIZARD HEADER
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                entity: input_boolean.hfm_edit_mode
+                name: |
+                  [[[
+                    const isEdit = entity.state === 'on';
+                    const step = states['input_number.hfm_wizard_step'].state.split('.')[0];
+                    return (isEdit ? 'EDIT EVENT' : 'NEW EVENT') + ' - STEP ' + step + ' OF 6';
+                  ]]]
+
+              #----------------------------------------------------------------
+              # PROGRESS INDICATOR - With colors
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: input_number.hfm_wizard_step
+                    name: Type
+                    icon: mdi:numeric-1-circle
+                    show_icon: true
+                    show_name: true
+                    styles:
+                      card:
+                        - height: 60px
+                        - border-radius: 12px
+                        - padding: 4px
+                        - background: |
+                            [[[
+                              const step = parseInt(entity.state);
+                              if (step === 1) return '#0066cc';
+                              if (step > 1) return '#28a745';
+                              return '#424242';
+                            ]]]
+                      grid:
+                        - grid-template-areas: '"i" "n"'
+                        - grid-template-rows: 1fr min-content
+                      icon:
+                        - color: white
+                        - width: 24px
+                      name:
+                        - font-size: 10px
+                        - font-weight: 600
+                        - color: white
+                    tap_action:
+                      action: call-service
+                      service: input_number.set_value
+                      target:
+                        entity_id: input_number.hfm_wizard_step
+                      data:
+                        value: 1
+
+                  - type: custom:button-card
+                    entity: input_number.hfm_wizard_step
+                    name: When
+                    icon: mdi:numeric-2-circle
+                    show_icon: true
+                    show_name: true
+                    styles:
+                      card:
+                        - height: 60px
+                        - border-radius: 12px
+                        - padding: 4px
+                        - background: |
+                            [[[
+                              const step = parseInt(entity.state);
+                              if (step === 2) return '#0066cc';
+                              if (step > 2) return '#28a745';
+                              return '#424242';
+                            ]]]
+                      grid:
+                        - grid-template-areas: '"i" "n"'
+                        - grid-template-rows: 1fr min-content
+                      icon:
+                        - color: white
+                        - width: 24px
+                      name:
+                        - font-size: 10px
+                        - font-weight: 600
+                        - color: white
+                    tap_action:
+                      action: call-service
+                      service: input_number.set_value
+                      target:
+                        entity_id: input_number.hfm_wizard_step
+                      data:
+                        value: 2
+
+                  - type: custom:button-card
+                    entity: input_number.hfm_wizard_step
+                    name: Where
+                    icon: mdi:numeric-3-circle
+                    show_icon: true
+                    show_name: true
+                    styles:
+                      card:
+                        - height: 60px
+                        - border-radius: 12px
+                        - padding: 4px
+                        - background: |
+                            [[[
+                              const step = parseInt(entity.state);
+                              if (step === 3) return '#0066cc';
+                              if (step > 3) return '#28a745';
+                              return '#424242';
+                            ]]]
+                      grid:
+                        - grid-template-areas: '"i" "n"'
+                        - grid-template-rows: 1fr min-content
+                      icon:
+                        - color: white
+                        - width: 24px
+                      name:
+                        - font-size: 10px
+                        - font-weight: 600
+                        - color: white
+                    tap_action:
+                      action: call-service
+                      service: input_number.set_value
+                      target:
+                        entity_id: input_number.hfm_wizard_step
+                      data:
+                        value: 3
+
+                  - type: custom:button-card
+                    entity: input_number.hfm_wizard_step
+                    name: Details
+                    icon: mdi:numeric-4-circle
+                    show_icon: true
+                    show_name: true
+                    styles:
+                      card:
+                        - height: 60px
+                        - border-radius: 12px
+                        - padding: 4px
+                        - background: |
+                            [[[
+                              const step = parseInt(entity.state);
+                              if (step === 4) return '#0066cc';
+                              if (step > 4) return '#28a745';
+                              return '#424242';
+                            ]]]
+                      grid:
+                        - grid-template-areas: '"i" "n"'
+                        - grid-template-rows: 1fr min-content
+                      icon:
+                        - color: white
+                        - width: 24px
+                      name:
+                        - font-size: 10px
+                        - font-weight: 600
+                        - color: white
+                    tap_action:
+                      action: call-service
+                      service: input_number.set_value
+                      target:
+                        entity_id: input_number.hfm_wizard_step
+                      data:
+                        value: 4
+
+                  - type: custom:button-card
+                    entity: input_number.hfm_wizard_step
+                    name: Notes
+                    icon: mdi:numeric-5-circle
+                    show_icon: true
+                    show_name: true
+                    styles:
+                      card:
+                        - height: 60px
+                        - border-radius: 12px
+                        - padding: 4px
+                        - background: |
+                            [[[
+                              const step = parseInt(entity.state);
+                              if (step === 5) return '#0066cc';
+                              if (step > 5) return '#28a745';
+                              return '#424242';
+                            ]]]
+                      grid:
+                        - grid-template-areas: '"i" "n"'
+                        - grid-template-rows: 1fr min-content
+                      icon:
+                        - color: white
+                        - width: 24px
+                      name:
+                        - font-size: 10px
+                        - font-weight: 600
+                        - color: white
+                    tap_action:
+                      action: call-service
+                      service: input_number.set_value
+                      target:
+                        entity_id: input_number.hfm_wizard_step
+                      data:
+                        value: 5
+
+                  - type: custom:button-card
+                    entity: input_number.hfm_wizard_step
+                    name: Done
+                    icon: mdi:numeric-6-circle
+                    show_icon: true
+                    show_name: true
+                    styles:
+                      card:
+                        - height: 60px
+                        - border-radius: 12px
+                        - padding: 4px
+                        - background: |
+                            [[[
+                              const step = parseInt(entity.state);
+                              if (step === 6) return '#0066cc';
+                              return '#424242';
+                            ]]]
+                      grid:
+                        - grid-template-areas: '"i" "n"'
+                        - grid-template-rows: 1fr min-content
+                      icon:
+                        - color: white
+                        - width: 24px
+                      name:
+                        - font-size: 10px
+                        - font-weight: 600
+                        - color: white
+                    tap_action:
+                      action: call-service
+                      service: input_number.set_value
+                      target:
+                        entity_id: input_number.hfm_wizard_step
+                      data:
+                        value: 6
+
+              #----------------------------------------------------------------
+              # STEP 1: EVENT TYPE
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_number.hfm_wizard_step
+                    state: "1.0"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_title
+                      name: WHAT TYPE OF EVENT?
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          name: Nutrient
+                          icon: mdi:flask
+                          entity: input_select.hfm_event_type
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Nutrient Application' ? '#43a047' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_event_type
+                            data:
+                              option: "Nutrient Application"
+
+                        - type: custom:button-card
+                          name: Chemical
+                          icon: mdi:spray
+                          entity: input_select.hfm_event_type
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Chemical Application' ? '#e53935' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_event_type
+                            data:
+                              option: "Chemical Application"
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          name: Irrigation
+                          icon: mdi:water
+                          entity: input_select.hfm_event_type
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Irrigation' ? '#1e88e5' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_event_type
+                            data:
+                              option: "Irrigation"
+
+                        - type: custom:button-card
+                          name: Crop Stage
+                          icon: mdi:sprout
+                          entity: input_select.hfm_event_type
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Crop Stage' ? '#8d6e63' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_event_type
+                            data:
+                              option: "Crop Stage"
+
+                    - type: markdown
+                      content: |
+                        **Selected:** {{ states('input_select.hfm_event_type') }}
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            text-align: center;
+                            padding: 8px;
+                          }
+
+              #----------------------------------------------------------------
+              # STEP 2: WHEN
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_number.hfm_wizard_step
+                    state: "2.0"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_title
+                      name: WHEN DID THIS HAPPEN?
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          name: Today
+                          icon: mdi:calendar-today
+                          entity: input_select.hfm_when
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Today' ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_when
+                            data:
+                              option: "Today"
+
+                        - type: custom:button-card
+                          name: Yesterday
+                          icon: mdi:calendar-arrow-left
+                          entity: input_select.hfm_when
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Yesterday' ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_when
+                            data:
+                              option: "Yesterday"
+
+                        - type: custom:button-card
+                          name: Other
+                          icon: mdi:calendar-edit
+                          entity: input_select.hfm_when
+                          show_icon: true
+                          show_name: true
+                          styles:
+                            card:
+                              - height: 90px
+                              - border-radius: 12px
+                              - background: |
+                                  [[[
+                                    return entity.state === 'Specific Date' ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 36px
+                          tap_action:
+                            action: call-service
+                            service: input_select.select_option
+                            target:
+                              entity_id: input_select.hfm_when
+                            data:
+                              option: "Specific Date"
+
+                    - type: conditional
+                      conditions:
+                        - entity: input_select.hfm_when
+                          state: "Specific Date"
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_text.hfm_specific_date
+                            name: Date (YYYY-MM-DD)
+                        card_mod:
+                          style: |
+                            ha-card {
+                              border-radius: 12px;
+                            }
+
+                    - type: markdown
+                      content: |
+                        **Event date:** {{ states('sensor.hfm_event_date') }}
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            text-align: center;
+                            padding: 8px;
+                          }
+
+              #----------------------------------------------------------------
+              # STEP 3: PADDOCK SELECTION
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_number.hfm_wizard_step
+                    state: "3.0"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_title
+                      name: SELECT PADDOCK
+
+                    - type: entities
+                      entities:
+                        - entity: input_select.hfm_selected_paddock
+                          name: Paddock
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                          }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.3rem !important;
+                            font-weight: 600;
+                          }
+
+                    - type: markdown
+                      content: |
+                        {% set paddock = states('input_select.hfm_selected_paddock') %}
+                        {% if paddock != 'Select Paddock' %}
+                        **Selected:** {{ paddock }}
+                        {% else %}
+                        *Please select a paddock*
+                        {% endif %}
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            text-align: center;
+                            padding: 8px;
+                          }
+
+              #----------------------------------------------------------------
+              # STEP 4: DETAILS
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_number.hfm_wizard_step
+                    state: "4.0"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_title
+                      name: EVENT DETAILS
+
+                    # Nutrient/Chemical: Product + Rate + Method
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - entity: input_select.hfm_event_type
+                              state: "Nutrient Application"
+                            - entity: input_select.hfm_event_type
+                              state: "Chemical Application"
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_select.hfm_selected_product
+                            name: Product
+                          - entity: input_text.hfm_product_rate
+                            name: Rate
+                          - entity: input_text.hfm_rate_unit
+                            name: Unit
+                          - entity: input_select.hfm_application_method
+                            name: Application Method
+                        card_mod:
+                          style: |
+                            ha-card {
+                              border-radius: 12px;
+                            }
+                            .mdc-list-item__primary-text {
+                              font-size: 1.2rem !important;
+                            }
+
+                    # Irrigation: Type selection
+                    - type: conditional
+                      conditions:
+                        - entity: input_select.hfm_event_type
+                          state: "Irrigation"
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_select.hfm_irrigation_type
+                            name: Irrigation Type
+                        card_mod:
+                          style: |
+                            ha-card {
+                              border-radius: 12px;
+                            }
+                            .mdc-list-item__primary-text {
+                              font-size: 1.2rem !important;
+                            }
+
+                    # Crop Stage: Stage selection
+                    - type: conditional
+                      conditions:
+                        - entity: input_select.hfm_event_type
+                          state: "Crop Stage"
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_select.hfm_crop_stage
+                            name: Crop Stage
+                        card_mod:
+                          style: |
+                            ha-card {
+                              border-radius: 12px;
+                            }
+                            .mdc-list-item__primary-text {
+                              font-size: 1.2rem !important;
+                            }
+
+              #----------------------------------------------------------------
+              # STEP 5: NOTES
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_number.hfm_wizard_step
+                    state: "5.0"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_title
+                      name: ADDITIONAL NOTES (OPTIONAL)
+
+                    - type: entities
+                      entities:
+                        - entity: input_text.hfm_notes
+                          name: Notes
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                          }
+
+              #----------------------------------------------------------------
+              # STEP 6: CONFIRM
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_number.hfm_wizard_step
+                    state: "6.0"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_title
+                      name: REVIEW & CONFIRM
+
+                    # Summary card like IPM stock cards
+                    - type: custom:button-card
+                      entity: input_select.hfm_event_type
+                      show_icon: false
+                      show_name: false
+                      show_state: false
+                      styles:
+                        card:
+                          - background: transparent
+                          - box-shadow: none
+                          - padding: 0
+                          - margin: 0
+                        grid:
+                          - display: block
+                        custom_fields:
+                          summary:
+                            - width: 100%
+                      custom_fields:
+                        summary: |
+                          [[[
+                            try {
+                              const typeConfig = {
+                                'Nutrient Application': { icon: 'mdi:flask', color: '#43a047', bg: 'rgba(67,160,71,0.15)', label: 'Nutrient' },
+                                'Chemical Application': { icon: 'mdi:spray', color: '#e53935', bg: 'rgba(229,57,53,0.15)', label: 'Chemical' },
+                                'Irrigation': { icon: 'mdi:water', color: '#1e88e5', bg: 'rgba(30,136,229,0.15)', label: 'Irrigation' },
+                                'Crop Stage': { icon: 'mdi:sprout', color: '#8d6e63', bg: 'rgba(141,110,99,0.15)', label: 'Crop Stage' }
+                              };
+
+                              if (!entity || !entity.state) {
+                                return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Loading...</div>`;
+                              }
+
+                              const eventType = entity.state;
+                              const cfg = typeConfig[eventType] || { icon: 'mdi:calendar', color: '#757575', bg: 'rgba(117,117,117,0.15)', label: eventType };
+
+                              const eventDate = states['sensor.hfm_event_date']?.state || '';
+                              const paddock = states['input_select.hfm_selected_paddock']?.state || '';
+                              const product = states['input_select.hfm_selected_product']?.state || '';
+                              const rate = states['input_text.hfm_product_rate']?.state || '';
+                              const rateUnit = states['input_text.hfm_rate_unit']?.state || '';
+                              const method = states['input_select.hfm_application_method']?.state || '';
+                              const irrigation = states['input_select.hfm_irrigation_type']?.state || '';
+                              const cropStage = states['input_select.hfm_crop_stage']?.state || '';
+                              const notes = states['input_text.hfm_notes']?.state || '';
+
+                              let html = `<div style="background:var(--card-background-color,#fff);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">`;
+
+                              // Header
+                              html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">`;
+                              html += `<div style="width:50px;height:50px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;">
+                                        <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:28px;color:${cfg.color};"></ha-icon>
+                                      </div>`;
+                              html += `<div style="flex:1;">`;
+                              html += `<div style="font-size:20px;font-weight:700;color:var(--primary-text-color);">${cfg.label}</div>`;
+                              html += `<div style="font-size:14px;color:var(--secondary-text-color);">${eventDate}</div>`;
+                              html += `</div></div>`;
+
+                              // Details section
+                              html += `<div style="display:grid;gap:8px;">`;
+
+                              // Paddock row
+                              html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                        <span style="font-size:14px;color:var(--secondary-text-color);">Paddock</span>
+                                        <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${paddock}</span>
+                                      </div>`;
+
+                              // Type-specific details
+                              if (eventType === 'Nutrient Application' || eventType === 'Chemical Application') {
+                                if (product && product !== 'Select Product') {
+                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Product</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${product}</span>
+                                          </div>`;
+                                }
+                                if (rate) {
+                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Rate</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${rate} ${rateUnit}</span>
+                                          </div>`;
+                                }
+                                if (method && method !== 'Select Method') {
+                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Method</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${method}</span>
+                                          </div>`;
+                                }
+                              } else if (eventType === 'Irrigation') {
+                                if (irrigation && irrigation !== 'Select Type') {
+                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Irrigation Type</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${irrigation}</span>
+                                          </div>`;
+                                }
+                              } else if (eventType === 'Crop Stage') {
+                                if (cropStage && cropStage !== 'Select Stage') {
+                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Crop Stage</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${cropStage}</span>
+                                          </div>`;
+                                }
+                              }
+
+                              // Notes
+                              if (notes) {
+                                html += `<div style="padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                          <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:4px;">Notes</div>
+                                          <div style="font-size:14px;color:var(--primary-text-color);font-style:italic;">${notes}</div>
+                                        </div>`;
+                              }
+
+                              html += `</div></div>`;
+                              return html;
+                            } catch (err) {
+                              console.error('HFM Summary render error:', err);
+                              return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);color:var(--primary-text-color);">
+                                        <div style="font-weight:700;margin-bottom:6px;">Render error</div>
+                                        <div style="font-family:monospace;font-size:12px;opacity:.85;">${String(err)}</div>
+                                      </div>`;
+                            }
+                          ]]]
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          template: hfm_nav
+                          name: Edit
+                          icon: mdi:pencil
+                          tap_action:
+                            action: call-service
+                            service: input_number.set_value
+                            target:
+                              entity_id: input_number.hfm_wizard_step
+                            data:
+                              value: 1
+
+                        - type: custom:button-card
+                          template: hfm_success
+                          entity: input_boolean.hfm_edit_mode
+                          color_type: card
+                          color: "#28a745"
+                          name: |
+                            [[[
+                              return entity.state === 'on' ? 'Update' : 'Confirm';
+                            ]]]
+                          icon: mdi:check
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_submit_event
+
+              #----------------------------------------------------------------
+              # NAVIGATION BUTTONS (always visible except step 6)
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - condition: numeric_state
+                    entity: input_number.hfm_wizard_step
+                    below: 6
+                card:
+                  type: horizontal-stack
+                  cards:
+                    - type: custom:button-card
+                      template: hfm_nav
+                      name: Back
+                      icon: mdi:arrow-left
+                      tap_action:
+                        action: call-service
+                        service: script.hfm_wizard_prev
+
+                    - type: custom:button-card
+                      template: hfm_action
+                      name: Next
+                      icon: mdi:arrow-right
+                      tap_action:
+                        action: call-service
+                        service: script.hfm_wizard_next
+
+              #----------------------------------------------------------------
+              # CANCEL BUTTON
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_danger
+                name: Cancel
+                icon: mdi:close
+                tap_action:
+                  action: call-service
+                  service: script.hfm_wizard_reset
+                  confirmation:
+                    text: "Discard this event?"
+
+  #============================================================================
+  # VIEW 3: EVENT HISTORY
+  #============================================================================
+  - title: History
+    path: hfm-history
+    icon: mdi:history
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              #----------------------------------------------------------------
+              # HEADER with back button
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_nav
+                    name: Back
+                    icon: mdi:arrow-left
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm
+
+                  - type: custom:button-card
+                    template: hfm_title
+                    name: EVENT HISTORY
+                    styles:
+                      card:
+                        - height: 70px
+                        - flex: 3
+
+              #----------------------------------------------------------------
+              # EDIT/DELETE CONTROLS
+              #----------------------------------------------------------------
+              - type: entities
+                entities:
+                  - entity: input_select.hfm_edit_event
+                    name: Select Event to Manage
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                    }
+                    .mdc-list-item__primary-text {
+                      font-size: 1.2rem !important;
+                    }
+
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_action
+                    name: Edit
+                    icon: mdi:pencil
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_load_event_for_edit
+                    hold_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-new
+
+                  - type: custom:button-card
+                    template: hfm_success
+                    name: Confirm
+                    icon: mdi:check-circle
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_confirm_event
+
+                  - type: custom:button-card
+                    template: hfm_danger
+                    name: Delete
+                    icon: mdi:delete
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_delete_event
+                      confirmation:
+                        text: "Delete this event?"
+
+              # Navigation to edit form after loading event
+              - type: custom:button-card
+                template: hfm_nav
+                name: Go to Edit Form
+                icon: mdi:arrow-right-circle
+                entity: input_boolean.hfm_edit_mode
+                show_entity_picture: false
+                state:
+                  - value: "on"
+                    color: "#0066cc"
+                  - value: "off"
+                    color: "#555555"
+                tap_action:
+                  action: navigate
+                  navigation_path: /hfm-heyfarm/hfm-new
+
+              #----------------------------------------------------------------
+              # ALL EVENTS - IPM-style cards
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                name: ALL EVENTS
+
+              - type: custom:button-card
+                entity: sensor.hfm_events
+                show_icon: false
+                show_name: false
+                show_state: false
+                styles:
+                  card:
+                    - background: transparent
+                    - box-shadow: none
+                    - padding: 0
+                    - margin: 0
+                  grid:
+                    - display: block
+                  custom_fields:
+                    events:
+                      - width: 100%
+                custom_fields:
+                  events: |
+                    [[[
+                      try {
+                        const safeStr = (v) => (v === null || v === undefined) ? '' : String(v);
+
+                        if (!entity || !entity.attributes) {
+                          return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
+                                    Loading events…
+                                  </div>`;
+                        }
+
+                        const events = entity.attributes.all_events || [];
+                        const pmap = entity.attributes.paddock_map || {};
+
+                        if (events.length === 0) {
+                          return `
+                            <div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
+                              <ha-icon icon="mdi:calendar-blank" style="--mdc-icon-size:48px;margin-bottom:12px;"></ha-icon>
+                              <div style="font-size:16px;">No events recorded yet</div>
+                              <div style="font-size:14px;margin-top:8px;">Use <b>New Event</b> to add one</div>
+                            </div>`;
+                        }
+
+                        const typeConfig = {
+                          'nutrient':   { icon: 'mdi:flask',  color: '#43a047', bg: 'rgba(67,160,71,0.15)', label: 'Nutrient' },
+                          'chemical':   { icon: 'mdi:spray',  color: '#e53935', bg: 'rgba(229,57,53,0.15)', label: 'Chemical' },
+                          'irrigation': { icon: 'mdi:water',  color: '#1e88e5', bg: 'rgba(30,136,229,0.15)', label: 'Irrigation' },
+                          'crop_stage': { icon: 'mdi:sprout', color: '#8d6e63', bg: 'rgba(141,110,99,0.15)', label: 'Crop Stage' }
+                        };
+
+                        let html = `<div style="display:grid;grid-template-columns:1fr;gap:12px;padding:4px;">`;
+
+                        for (let i = 0; i < events.length; i++) {
+                          const e = events[i] || {};
+                          const eType = safeStr(e.event_type);
+                          const cfg = typeConfig[eType] || { icon: 'mdi:calendar', color: '#757575', bg: 'rgba(117,117,117,0.15)', label: eType };
+
+                          // Get paddock names
+                          const paddocks = e.paddocks || [];
+                          let paddockNames = [];
+                          for (let p = 0; p < paddocks.length; p++) {
+                            const pid = paddocks[p];
+                            paddockNames.push(pmap[pid] || pid);
+                          }
+                          const paddockStr = paddockNames.join(', ') || 'Unknown';
+
+                          // Status indicator
+                          const status = safeStr(e.confirmation_status);
+                          const isPending = status === 'pending';
+                          const statusColor = isPending ? '#ffc107' : '#28a745';
+                          const statusIcon = isPending ? 'mdi:clock-alert' : 'mdi:check-circle';
+                          const statusLabel = isPending ? 'Pending' : 'Confirmed';
+
+                          // Details based on type
+                          let detailHtml = '';
+                          if (eType === 'nutrient' || eType === 'chemical') {
+                            const products = e.products || [];
+                            if (products.length > 0) {
+                              detailHtml = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">`;
+                              for (let pr = 0; pr < products.length; pr++) {
+                                const prod = products[pr];
+                                const pName = safeStr(prod.product_name);
+                                const pRate = prod.rate || '';
+                                const pUnit = safeStr(prod.rate_unit);
+                                detailHtml += `<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;">
+                                  <span style="color:var(--primary-text-color);">${pName}</span>
+                                  <span style="color:var(--secondary-text-color);font-weight:500;">${pRate} ${pUnit}</span>
+                                </div>`;
+                              }
+                              detailHtml += `</div>`;
+                            }
+                            if (e.application_method) {
+                              detailHtml += `<div style="font-size:12px;color:var(--secondary-text-color);margin-top:4px;">Method: ${safeStr(e.application_method)}</div>`;
+                            }
+                          } else if (eType === 'irrigation' && e.irrigation_type) {
+                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">
+                              Type: ${safeStr(e.irrigation_type)}
+                            </div>`;
+                          } else if (eType === 'crop_stage' && e.crop_stage) {
+                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">
+                              Stage: ${safeStr(e.crop_stage)}
+                            </div>`;
+                          }
+
+                          // Notes
+                          if (e.notes) {
+                            detailHtml += `<div style="font-size:12px;color:var(--secondary-text-color);margin-top:4px;font-style:italic;">${safeStr(e.notes)}</div>`;
+                          }
+
+                          html += `<div style="background:var(--card-background-color,#fff);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">`;
+
+                          // Header row
+                          html += `<div style="display:flex;align-items:center;gap:12px;">`;
+                          html += `<div style="width:44px;height:44px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;">
+                                    <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:24px;color:${cfg.color};"></ha-icon>
+                                  </div>`;
+                          html += `<div style="flex:1;min-width:0;">`;
+                          html += `<div style="font-size:16px;font-weight:600;color:var(--primary-text-color);">${cfg.label}</div>`;
+                          html += `<div style="font-size:13px;color:var(--secondary-text-color);">${paddockStr}</div>`;
+                          html += `</div>`;
+                          html += `<div style="text-align:right;">`;
+                          html += `<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${safeStr(e.event_date)}</div>`;
+                          html += `<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
+                                    <ha-icon icon="${statusIcon}" style="--mdc-icon-size:14px;color:${statusColor};"></ha-icon>
+                                    <span style="font-size:11px;color:${statusColor};font-weight:500;">${statusLabel}</span>
+                                  </div>`;
+                          html += `</div></div>`;
+
+                          // Details
+                          html += detailHtml;
+
+                          html += `</div>`;
+                        }
+
+                        html += `</div>`;
+                        return html;
+
+                      } catch (err) {
+                        console.error('HFM History render error:', err);
+                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);color:var(--primary-text-color);">
+                                  <div style="font-weight:700;margin-bottom:6px;">Render error</div>
+                                  <div style="font-family:monospace;font-size:12px;opacity:.85;">${String(err)}</div>
+                                </div>`;
+                      }
+                    ]]]
+
+  #============================================================================
+  # VIEW 4: SETTINGS
+  #============================================================================
+  - title: Settings
+    path: hfm-settings
+    icon: mdi:cog
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              #----------------------------------------------------------------
+              # HEADER with back button
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_nav
+                    name: Back
+                    icon: mdi:arrow-left
+                    tap_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm
+
+                  - type: custom:button-card
+                    template: hfm_title
+                    name: HFM SETTINGS
+                    styles:
+                      card:
+                        - height: 70px
+                        - flex: 3
+
+              #----------------------------------------------------------------
+              # SYSTEM STATUS - Styled card
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                entity: sensor.hfm_events
+                show_icon: false
+                show_name: false
+                show_state: false
+                tap_action:
+                  action: none
+                styles:
+                  card:
+                    - background: var(--card-background-color,#fff)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                  grid:
+                    - display: block
+                  custom_fields:
+                    status:
+                      - width: 100%
+                custom_fields:
+                  status: |
+                    [[[
+                      try {
+                        const version = states['sensor.hfm_version']?.state || 'unknown';
+                        const status = states['sensor.hfm_system_status']?.state || 'unknown';
+                        const lastBackup = entity?.attributes?.last_backup || 'Never';
+                        const backupCount = entity?.attributes?.backup_count || 0;
+                        const totalEvents = entity?.state || 0;
+                        const statusColor = status === 'ready' ? '#28a745' : '#ffc107';
+                        const statusIcon = status === 'ready' ? 'mdi:check-circle' : 'mdi:alert-circle';
+
+                        return `
+                          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                            <div style="width:50px;height:50px;border-radius:50%;background:rgba(40,167,69,0.15);display:flex;align-items:center;justify-content:center;">
+                              <ha-icon icon="mdi:microphone" style="--mdc-icon-size:28px;color:#28a745;"></ha-icon>
+                            </div>
+                            <div style="flex:1;">
+                              <div style="font-size:20px;font-weight:700;color:var(--primary-text-color);">Hey Farmer Module</div>
+                              <div style="font-size:14px;color:var(--secondary-text-color);">Version ${version}</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:16px;background:${status === 'ready' ? 'rgba(40,167,69,0.15)' : 'rgba(255,193,7,0.15)'};">
+                              <ha-icon icon="${statusIcon}" style="--mdc-icon-size:16px;color:${statusColor};"></ha-icon>
+                              <span style="font-size:13px;font-weight:600;color:${statusColor};text-transform:capitalize;">${status}</span>
+                            </div>
+                          </div>
+                          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                            <div style="text-align:center;padding:12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                              <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">${totalEvents}</div>
+                              <div style="font-size:12px;color:var(--secondary-text-color);">Total Events</div>
+                            </div>
+                            <div style="text-align:center;padding:12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                              <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">${backupCount}</div>
+                              <div style="font-size:12px;color:var(--secondary-text-color);">Backups</div>
+                            </div>
+                            <div style="text-align:center;padding:12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                              <div style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${lastBackup === 'Never' ? 'Never' : lastBackup.split('T')[0]}</div>
+                              <div style="font-size:12px;color:var(--secondary-text-color);">Last Backup</div>
+                            </div>
+                          </div>
+                        `;
+                      } catch (err) {
+                        return `<div style="color:var(--error-color);">Error loading status</div>`;
+                      }
+                    ]]]
+
+              #----------------------------------------------------------------
+              # CROP STAGES - Styled list with delete buttons
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                name: CROP STAGES
+
+              - type: custom:button-card
+                entity: sensor.hfm_events
+                show_icon: false
+                show_name: false
+                show_state: false
+                tap_action:
+                  action: none
+                styles:
+                  card:
+                    - background: transparent
+                    - box-shadow: none
+                    - padding: 0
+                  grid:
+                    - display: block
+                  custom_fields:
+                    stages:
+                      - width: 100%
+                custom_fields:
+                  stages: |
+                    [[[
+                      try {
+                        const stages = entity?.attributes?.crop_stages || [];
+                        if (stages.length === 0) {
+                          return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">No crop stages configured</div>`;
+                        }
+
+                        let html = `<div style="display:grid;gap:8px;">`;
+                        for (const s of stages) {
+                          html += `
+                            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card-background-color,#fff);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                              <div style="width:32px;height:32px;border-radius:50%;background:rgba(141,110,99,0.15);display:flex;align-items:center;justify-content:center;">
+                                <span style="font-size:14px;font-weight:700;color:#8d6e63;">${s.order}</span>
+                              </div>
+                              <div style="flex:1;">
+                                <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${s.name}</div>
+                              </div>
+                              <ha-icon icon="mdi:sprout" style="--mdc-icon-size:20px;color:#8d6e63;"></ha-icon>
+                            </div>
+                          `;
+                        }
+                        html += `</div>`;
+                        return html;
+                      } catch (err) {
+                        return `<div style="color:var(--error-color);">Error loading stages</div>`;
+                      }
+                    ]]]
+
+              - type: custom:button-card
+                template: hfm_title
+                name: ADD NEW STAGE
+                styles:
+                  card:
+                    - height: 40px
+                  name:
+                    - font-size: 14px
+
+              - type: entities
+                entities:
+                  - entity: input_text.hfm_new_stage_id
+                    name: Stage ID (e.g. pre_flood)
+                  - entity: input_text.hfm_new_stage_name
+                    name: Stage Name (e.g. Pre-Flood)
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                    }
+
+              - type: custom:button-card
+                template: hfm_action
+                name: Add Stage
+                icon: mdi:plus
+                tap_action:
+                  action: call-service
+                  service: script.hfm_add_crop_stage
+
+              #----------------------------------------------------------------
+              # BACKUP & EXPORT
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                name: BACKUP & EXPORT
+
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_action
+                    name: Export Events
+                    icon: mdi:export
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_export
+
+                  - type: custom:button-card
+                    template: hfm_secondary
+                    name: Initialize
+                    icon: mdi:cog-refresh
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_init
+                      confirmation:
+                        text: "Re-initialize HFM? This resets config to defaults if missing."
+
+              - type: markdown
+                content: |
+                  Exports save to: `/config/local_data/hfm/backups/`
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 8px;
+                      padding: 8px 12px;
+                      font-size: 12px;
+                      background: var(--secondary-background-color,#f5f5f5);
+                    }
