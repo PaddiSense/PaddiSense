@@ -305,6 +305,10 @@ button_card_templates:
               const available = (attrs.available_modules || []).some(m => m.id === modId);
               return (installed || (licensed && available)) ? '1' : '0.75';
             ]]]
+        - display: |
+            [[[
+              return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'grid' : 'none';
+            ]]]
       grid:
         - grid-template-areas: '"i n action" "i l action"'
         - grid-template-columns: 48px 1fr auto
@@ -342,10 +346,84 @@ views:
         cards:
           - type: vertical-stack
             cards:
+              # ----------------------------------------------------------------
+              # Setup Required Card - Shows when integration not configured
+              # ----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: sensor.paddisense_version
+                    state_not: unavailable
+                card:
+                  type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - display: none
+
               - type: custom:button-card
+                entity: sensor.paddisense_version
+                show_name: false
+                show_icon: false
+                show_state: false
+                tap_action:
+                  action: navigate
+                  navigation_path: /config/integrations/dashboard
+                styles:
+                  card:
+                    - background: var(--card-background-color)
+                    - border-radius: 16px
+                    - padding: 24px
+                    - box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+                    - border-left: 6px solid "#fd7e14"
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'none' : 'block';
+                        ]]]
+                  grid:
+                    - display: block
+                custom_fields:
+                  setup: |
+                    [[[
+                      return `
+                        <div style="text-align:center;">
+                          <div style="width:80px;height:80px;border-radius:50%;background:rgba(253,126,20,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                            <ha-icon icon="mdi:alert-circle-outline" style="--mdc-icon-size:48px;color:#fd7e14;"></ha-icon>
+                          </div>
+                          <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:12px;">Setup Required</div>
+                          <div style="font-size:14px;color:var(--secondary-text-color);line-height:1.6;margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
+                            PaddiSense integration needs to be configured before you can manage modules.
+                            <br><br>
+                            Please complete the setup wizard to register your account and activate your license.
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;">
+                            <div style="background:#0066cc;color:white;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                              <ha-icon icon="mdi:cog" style="--mdc-icon-size:22px;"></ha-icon>
+                              Go to Integrations
+                            </div>
+                            <div style="font-size:12px;color:var(--secondary-text-color);">
+                              Settings → Devices & Services → Add Integration → Search "PaddiSense"
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    ]]]
+
+              # Title - hidden when not configured
+              - type: custom:button-card
+                entity: sensor.paddisense_version
                 template: template_titleblock
                 variables:
                   var_name: MODULE MANAGEMENT
+                styles:
+                  card:
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'flex' : 'none';
+                        ]]]
 
               # Version & Update Status Card (display only)
               - type: custom:button-card
@@ -363,6 +441,10 @@ views:
                     - border-radius: 12px
                     - padding: 16px
                     - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'block' : 'none';
+                        ]]]
                   grid:
                     - display: block
                 custom_fields:
@@ -409,6 +491,10 @@ views:
                     - background: "#0066cc"
                     - border-radius: 12px
                     - padding: 12px
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'grid' : 'none';
+                        ]]]
                   name:
                     - font-size: 14px
                     - font-weight: 700
