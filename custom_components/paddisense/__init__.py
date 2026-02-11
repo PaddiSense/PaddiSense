@@ -1056,6 +1056,10 @@ async def _async_install_required_hacs(hass: HomeAssistant) -> None:
         "kalkih/mini-graph-card": "mini-graph-card",
         "iantrich/restriction-card": "restriction-card",
         "DBuit/flex-table-card": "flex-table-card",
+        # Weather cards
+        "Makin-Things/platinum-weather-card": "platinum-weather-card",
+        "Makin-Things/lovelace-windrose-card": "lovelace-windrose-card",
+        "Makin-Things/weather-radar-card": "weather-radar-card",
     }
 
     cards_to_install = []

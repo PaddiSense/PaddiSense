@@ -235,6 +235,10 @@ REQUIRED_HACS_CARDS = [
     {"repository": "kalkih/mini-graph-card", "category": "plugin"},
     {"repository": "iantrich/restriction-card", "category": "plugin"},
     {"repository": "DBuit/flex-table-card", "category": "plugin"},
+    # Weather cards
+    {"repository": "Makin-Things/platinum-weather-card", "category": "plugin"},
+    {"repository": "Makin-Things/lovelace-windrose-card", "category": "plugin"},
+    {"repository": "Makin-Things/weather-radar-card", "category": "plugin"},
 ]
 
 # Required HACS integrations per module
