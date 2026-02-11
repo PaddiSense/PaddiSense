@@ -324,10 +324,14 @@ button_card_templates:
         - font-size: 15px
         - font-weight: 700
         - align-self: end
+        - justify-self: start
+        - text-align: left
       label:
         - font-size: 12px
         - color: var(--secondary-text-color)
         - align-self: start
+        - justify-self: start
+        - text-align: left
       custom_fields:
         action:
           - align-self: center
@@ -557,67 +561,67 @@ views:
               - type: custom:button-card
                 template: pds_module_row
                 variables:
-                  module_id: ipm
-                  title: Inventory Manager
-                  desc: Chemicals, fertilizers & consumables
-                  icon: mdi:warehouse
-                  color: '#4caf50'
-              - type: custom:button-card
-                template: pds_module_row
-                variables:
-                  module_id: asm
-                  title: Asset Service Manager
-                  desc: Equipment, parts & service history
-                  icon: mdi:tractor
-                  color: '#ff9800'
-              - type: custom:button-card
-                template: pds_module_row
-                variables:
                   module_id: weather
-                  title: Weather Stations
-                  desc: Local gateway & API weather data
+                  title: Weather
+                  desc: Local weather data
                   icon: mdi:weather-cloudy
                   color: '#2196f3'
               - type: custom:button-card
                 template: pds_module_row
                 variables:
-                  module_id: pwm
-                  title: Water Management
-                  desc: Irrigation scheduling & bay monitoring
-                  icon: mdi:water
-                  color: '#00bcd4'
+                  module_id: ipm
+                  title: Inventory Product Management
+                  desc: Farm consumables
+                  icon: mdi:warehouse
+                  color: '#4caf50'
               - type: custom:button-card
                 template: pds_module_row
                 variables:
                   module_id: rtr
                   title: Real Time Rice
-                  desc: Crop growth predictions
+                  desc: Rice prediction model data
                   icon: mdi:rice
                   color: '#43a047'
               - type: custom:button-card
                 template: pds_module_row
                 variables:
+                  module_id: hfm
+                  title: Hey Farmer
+                  desc: Farm event data
+                  icon: mdi:chart-areaspline
+                  color: '#7b1fa2'
+              - type: custom:button-card
+                template: pds_module_row
+                variables:
+                  module_id: asm
+                  title: Asset Service Manager
+                  desc: Farm maintenance & inspections
+                  icon: mdi:tractor
+                  color: '#ff9800'
+              - type: custom:button-card
+                template: pds_module_row
+                variables:
+                  module_id: pwm
+                  title: Precision Water Management
+                  desc: Irrigation automation
+                  icon: mdi:water
+                  color: '#00bcd4'
+              - type: custom:button-card
+                template: pds_module_row
+                variables:
                   module_id: str
                   title: Stock Tracker
-                  desc: Livestock inventory & movement
+                  desc: Manage your mobs
                   icon: mdi:cow
                   color: '#8d6e63'
               - type: custom:button-card
                 template: pds_module_row
                 variables:
                   module_id: wss
-                  title: Worker Safety
-                  desc: Worker check-in/check-out
+                  title: Worker Safety System
+                  desc: Know where your people are
                   icon: mdi:account-hard-hat
                   color: '#e53935'
-              - type: custom:button-card
-                template: pds_module_row
-                variables:
-                  module_id: hfm
-                  title: Hey Farmer
-                  desc: Community insights
-                  icon: mdi:chart-areaspline
-                  color: '#7b1fa2'
 
   # ===========================================================================
   # View 2: Farm Management
