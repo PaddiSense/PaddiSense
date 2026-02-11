@@ -527,6 +527,16 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
         """Check for PaddiSense updates and report telemetry."""
         from .telemetry import report_update_check
 
+        # Show "checking" notification
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": "PaddiSense",
+                "message": "Checking for updates...",
+                "notification_id": "paddisense_update_check",
+            },
+        )
+
         git_manager: GitManager = hass.data[DOMAIN]["git_manager"]
         module_manager: ModuleManager = hass.data[DOMAIN]["module_manager"]
 
@@ -552,31 +562,100 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
         if result.get("success"):
             hass.bus.async_fire(EVENT_MODULES_CHANGED)
 
+        # Show result notification
+        local_ver = result.get("local_version", "unknown")
+        remote_ver = result.get("remote_version", "unknown")
+        update_available = result.get("update_available", False)
+
+        if update_available:
+            msg = f"Update available!\n\nCurrent: v{local_ver}\nLatest: v{remote_ver}\n\nGo to the Modules tab to update."
+        else:
+            msg = f"You're up to date!\n\nVersion: v{local_ver}"
+
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": "PaddiSense Update Check",
+                "message": msg,
+                "notification_id": "paddisense_update_check",
+            },
+        )
+
     async def handle_update_paddisense(call: ServiceCall) -> None:
         """Update PaddiSense to latest version."""
         backup_manager: BackupManager = hass.data[DOMAIN]["backup_manager"]
         git_manager: GitManager = hass.data[DOMAIN]["git_manager"]
 
+        # Show "updating" notification
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": "PaddiSense",
+                "message": "Updating PaddiSense... Please wait.",
+                "notification_id": "paddisense_update",
+            },
+        )
+
         # Create backup first if requested
         if call.data.get("backup_first", True):
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense",
+                    "message": "Creating backup before update...",
+                    "notification_id": "paddisense_update",
+                },
+            )
             backup_result = await hass.async_add_executor_job(
                 backup_manager.create_backup, "pre_update"
             )
             if not backup_result.get("success"):
                 _LOGGER.error("Backup failed, aborting update")
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense Update Failed",
+                        "message": "Backup failed. Update aborted to protect your data.",
+                        "notification_id": "paddisense_update",
+                    },
+                )
                 return
 
         # Pull latest changes
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": "PaddiSense",
+                "message": "Downloading latest version...",
+                "notification_id": "paddisense_update",
+            },
+        )
         result = await hass.async_add_executor_job(git_manager.pull)
         _log_service_result("update_paddisense", result)
 
         if result.get("success"):
             # Trigger restart
             _LOGGER.info("PaddiSense updated, triggering restart")
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense",
+                    "message": "Update complete! Restarting Home Assistant...",
+                    "notification_id": "paddisense_update",
+                },
+            )
             await hass.services.async_call("homeassistant", "restart")
         else:
             # Rollback on failure
             _LOGGER.error("Update failed, attempting rollback")
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense Update Failed",
+                    "message": f"Update failed: {result.get('error', 'Unknown error')}\n\nAttempting rollback...",
+                    "notification_id": "paddisense_update",
+                },
+            )
             await hass.async_add_executor_job(backup_manager.rollback)
 
     async def handle_install_module(call: ServiceCall) -> None:
