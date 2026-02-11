@@ -12,8 +12,11 @@ image/
 
 ########################################
 # Separate repos / dev folders
+# These should be cloned as siblings, not nested
 ########################################
 paddisense-hacs/
+paddisense-release/
+PaddiSense-HACS/
 
 ########################################
 # PaddiSense local data (DO NOT COMMIT)
