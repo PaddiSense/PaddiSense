@@ -386,6 +386,26 @@ install_hacs_cards:
   name: Install Required HACS Cards
   description: Install button-card and card-mod from HACS (required for PaddiSense dashboards)
 
+install_module_hacs:
+  name: Install Module HACS Requirements
+  description: Install HACS integrations and cards required by a module (e.g., BOM, weather cards for Weather module)
+  fields:
+    module_id:
+      name: Module ID
+      description: Module to install HACS integrations for
+      required: true
+      selector:
+        select:
+          options:
+            - "ipm"
+            - "asm"
+            - "weather"
+            - "pwm"
+            - "rtr"
+            - "str"
+            - "wss"
+            - "hfm"
+
 # =============================================================================
 # RTR (REAL TIME RICE) SERVICES
 # =============================================================================

@@ -46,6 +46,9 @@ from .const import (
     SERVICE_CREATE_BACKUP,
     SERVICE_INSTALL_HACS_CARDS,
     SERVICE_INSTALL_MODULE,
+    SERVICE_INSTALL_MODULE_HACS,
+    MODULE_HACS_CARDS,
+    MODULE_HACS_INTEGRATIONS,
     SERVICE_REMOVE_MODULE,
     SERVICE_RESTORE_BACKUP,
     SERVICE_ROLLBACK,
@@ -234,6 +237,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Schedule HACS cards installation after HA is fully started
+    async def _install_hacs_on_start(event):
+        """Install required HACS cards after HA starts."""
+        await _async_install_required_hacs(hass)
+
+    # Check if HA is already running
+    if hass.is_running:
+        hass.async_create_task(_async_install_required_hacs(hass))
+    else:
+        hass.bus.async_listen_once("homeassistant_started", _install_hacs_on_start)
+
     return True
 
 
@@ -254,7 +268,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Installer
             SERVICE_CHECK_UPDATES, SERVICE_UPDATE_PADDISENSE, SERVICE_INSTALL_MODULE,
             SERVICE_REMOVE_MODULE, SERVICE_CREATE_BACKUP, SERVICE_RESTORE_BACKUP,
-            SERVICE_ROLLBACK, SERVICE_INSTALL_HACS_CARDS,
+            SERVICE_ROLLBACK, SERVICE_INSTALL_HACS_CARDS, SERVICE_INSTALL_MODULE_HACS,
             # RTR
             SERVICE_SET_RTR_URL, SERVICE_REFRESH_RTR,
         ]
@@ -670,6 +684,130 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
             },
         )
 
+    async def handle_install_module_hacs(call: ServiceCall) -> None:
+        """Install required HACS integrations and cards for a module."""
+        module_id = call.data["module_id"]
+
+        # Check if HACS is available
+        if not hass.services.has_service("hacs", "install"):
+            _LOGGER.error("HACS is not installed or not ready")
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense",
+                    "message": "HACS is not installed. Please install HACS first.",
+                },
+            )
+            return
+
+        # Get required integrations and cards for this module
+        required_integrations = MODULE_HACS_INTEGRATIONS.get(module_id, [])
+        required_cards = MODULE_HACS_CARDS.get(module_id, [])
+
+        if not required_integrations and not required_cards:
+            _LOGGER.info("Module %s has no HACS requirements", module_id)
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense",
+                    "message": f"Module '{module_id}' has no HACS requirements.",
+                },
+            )
+            return
+
+        # Check what's already installed
+        module_manager: ModuleManager = hass.data[DOMAIN]["module_manager"]
+        installed_domains = await hass.async_add_executor_job(
+            module_manager.get_installed_hacs_integrations
+        )
+        installed_card_folders = await hass.async_add_executor_job(
+            module_manager.get_installed_hacs_cards
+        )
+
+        installed = []
+        failed = []
+        skipped = []
+
+        # Install integrations
+        for integration in required_integrations:
+            domain = integration["domain"]
+            repo = integration["repository"]
+            name = integration.get("name", repo)
+
+            # Skip if already installed
+            if domain in installed_domains:
+                skipped.append(name)
+                _LOGGER.info("HACS integration %s already installed", name)
+                continue
+
+            try:
+                _LOGGER.info("Installing HACS integration: %s", repo)
+                await hass.services.async_call(
+                    "hacs", "install",
+                    {
+                        "repository": repo,
+                        "category": "integration",
+                    },
+                )
+                installed.append(f"{name} (integration)")
+            except Exception as e:
+                _LOGGER.error("Failed to install %s: %s", repo, e)
+                failed.append(name)
+
+        # Install cards
+        repo_to_folder = {
+            "Makin-Things/platinum-weather-card": "platinum-weather-card",
+            "Makin-Things/lovelace-windrose-card": "lovelace-windrose-card",
+            "Makin-Things/weather-radar-card": "weather-radar-card",
+        }
+
+        for card in required_cards:
+            repo = card["repository"]
+            folder = repo_to_folder.get(repo, repo.split("/")[-1])
+            name = folder
+
+            # Skip if already installed
+            if folder in installed_card_folders:
+                skipped.append(name)
+                _LOGGER.info("HACS card %s already installed", name)
+                continue
+
+            try:
+                _LOGGER.info("Installing HACS card: %s", repo)
+                await hass.services.async_call(
+                    "hacs", "install",
+                    {
+                        "repository": repo,
+                        "category": "plugin",
+                    },
+                )
+                installed.append(f"{name} (card)")
+            except Exception as e:
+                _LOGGER.error("Failed to install %s: %s", repo, e)
+                failed.append(name)
+
+        # Build notification message
+        msg_parts = []
+        if installed:
+            msg_parts.append(f"Installed: {', '.join(installed)}")
+        if skipped:
+            msg_parts.append(f"Already installed: {', '.join(skipped)}")
+        if failed:
+            msg_parts.append(f"Failed: {', '.join(failed)}")
+
+        if installed:
+            msg_parts.append("\nPlease restart Home Assistant to activate. Then refresh your browser (Ctrl+F5).")
+
+        msg = "\n".join(msg_parts) if msg_parts else "All requirements already installed."
+
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": f"PaddiSense - {module_id} HACS Requirements",
+                "message": msg,
+            },
+        )
+
     # Register installer services
     hass.services.async_register(DOMAIN, SERVICE_CHECK_UPDATES, handle_check_updates)
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_PADDISENSE, handle_update_paddisense, UPDATE_PADDISENSE_SCHEMA)
@@ -679,6 +817,7 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_RESTORE_BACKUP, handle_restore_backup, RESTORE_BACKUP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_ROLLBACK, handle_rollback)
     hass.services.async_register(DOMAIN, SERVICE_INSTALL_HACS_CARDS, handle_install_hacs_cards)
+    hass.services.async_register(DOMAIN, SERVICE_INSTALL_MODULE_HACS, handle_install_module_hacs, INSTALL_MODULE_SCHEMA)
 
 
 # =============================================================================
@@ -785,6 +924,81 @@ def _log_service_result(service: str, result: dict[str, Any]) -> None:
 async def _async_update_sensors(hass: HomeAssistant) -> None:
     """Trigger sensor update after data change."""
     hass.bus.async_fire(EVENT_DATA_UPDATED)
+
+
+async def _async_install_required_hacs(hass: HomeAssistant) -> None:
+    """Install required HACS cards if HACS is available."""
+    from pathlib import Path
+
+    # Check if HACS is available
+    if not hass.services.has_service("hacs", "install"):
+        _LOGGER.debug("HACS not available, skipping automatic card installation")
+        return
+
+    # Check what's already installed
+    community_dir = Path("/config/www/community")
+    installed_cards = set()
+    if community_dir.exists():
+        installed_cards = {d.name for d in community_dir.iterdir() if d.is_dir()}
+
+    # Map repository to folder name for checking
+    repo_to_folder = {
+        "custom-cards/button-card": "button-card",
+        "thomasloven/lovelace-card-mod": "lovelace-card-mod",
+        "thomasloven/lovelace-auto-entities": "lovelace-auto-entities",
+        "RomRider/apexcharts-card": "apexcharts-card",
+        "piitaya/lovelace-mushroom": "lovelace-mushroom",
+        "kalkih/mini-graph-card": "mini-graph-card",
+        "iantrich/restriction-card": "restriction-card",
+        "DBuit/flex-table-card": "flex-table-card",
+    }
+
+    cards_to_install = []
+    for card in REQUIRED_HACS_CARDS:
+        repo = card["repository"]
+        folder = repo_to_folder.get(repo, repo.split("/")[-1])
+        if folder not in installed_cards:
+            cards_to_install.append(card)
+
+    if not cards_to_install:
+        _LOGGER.debug("All required HACS cards already installed")
+        return
+
+    _LOGGER.info("Installing %d required HACS cards...", len(cards_to_install))
+
+    installed = []
+    failed = []
+
+    for card in cards_to_install:
+        try:
+            _LOGGER.info("Installing HACS card: %s", card["repository"])
+            await hass.services.async_call(
+                "hacs", "install",
+                {
+                    "repository": card["repository"],
+                    "category": card["category"],
+                },
+            )
+            installed.append(card["repository"])
+        except Exception as e:
+            _LOGGER.error("Failed to install %s: %s", card["repository"], e)
+            failed.append(card["repository"])
+
+    # Notify user
+    if installed:
+        msg = f"PaddiSense installed required cards:\n- " + "\n- ".join(installed)
+        if failed:
+            msg += f"\n\nFailed to install:\n- " + "\n- ".join(failed)
+        msg += "\n\nPlease refresh your browser (Ctrl+F5) to load the new cards."
+
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": "PaddiSense - HACS Cards Installed",
+                "message": msg,
+                "notification_id": "paddisense_hacs_install",
+            },
+        )
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:

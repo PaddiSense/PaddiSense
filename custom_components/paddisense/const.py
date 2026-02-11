@@ -223,12 +223,40 @@ SERVICE_CREATE_BACKUP = "create_backup"
 SERVICE_RESTORE_BACKUP = "restore_backup"
 SERVICE_ROLLBACK = "rollback"
 SERVICE_INSTALL_HACS_CARDS = "install_hacs_cards"
+SERVICE_INSTALL_MODULE_HACS = "install_module_hacs"
 
-# Required HACS frontend cards
+# Required HACS frontend cards (installed during first setup)
 REQUIRED_HACS_CARDS = [
     {"repository": "custom-cards/button-card", "category": "plugin"},
     {"repository": "thomasloven/lovelace-card-mod", "category": "plugin"},
+    {"repository": "thomasloven/lovelace-auto-entities", "category": "plugin"},
+    {"repository": "RomRider/apexcharts-card", "category": "plugin"},
+    {"repository": "piitaya/lovelace-mushroom", "category": "plugin"},
+    {"repository": "kalkih/mini-graph-card", "category": "plugin"},
+    {"repository": "iantrich/restriction-card", "category": "plugin"},
+    {"repository": "DBuit/flex-table-card", "category": "plugin"},
 ]
+
+# Required HACS integrations per module
+# Each entry: {"repository": "owner/repo", "domain": "integration_domain"}
+MODULE_HACS_INTEGRATIONS = {
+    "weather": [
+        {
+            "repository": "bremor/bureau_of_meteorology",
+            "domain": "bureau_of_meteorology",
+            "name": "Bureau of Meteorology",
+        },
+    ],
+}
+
+# Required HACS cards per module (in addition to core cards)
+MODULE_HACS_CARDS = {
+    "weather": [
+        {"repository": "Makin-Things/platinum-weather-card", "category": "plugin"},
+        {"repository": "Makin-Things/lovelace-windrose-card", "category": "plugin"},
+        {"repository": "Makin-Things/weather-radar-card", "category": "plugin"},
+    ],
+}
 
 # Registry is always installed (core component) - now includes full management UI
 REGISTRY_MODULE = {

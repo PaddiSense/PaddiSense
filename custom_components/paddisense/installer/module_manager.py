@@ -13,6 +13,8 @@ from ..const import (
     AVAILABLE_MODULES,
     DATA_DIR,
     LOVELACE_DASHBOARDS_YAML,
+    MODULE_HACS_CARDS,
+    MODULE_HACS_INTEGRATIONS,
     MODULE_METADATA,
     MODULES_JSON,
     PACKAGES_DIR,
@@ -149,6 +151,9 @@ class ModuleManager:
                     # Check which dependencies are missing
                     missing_deps = [d for d in dependencies if d not in installed_ids]
 
+                    # Check HACS integrations
+                    hacs_result = self.check_hacs_integrations(module_id)
+
                     available.append({
                         "id": module_id,
                         "name": meta.get("name", module_id),
@@ -157,6 +162,9 @@ class ModuleManager:
                         "icon": meta.get("icon", "mdi:package"),
                         "dependencies": dependencies,
                         "missing_dependencies": missing_deps,
+                        "hacs_integrations": hacs_result.get("all_requirements", []),
+                        "missing_hacs": hacs_result.get("missing", []),
+                        "optional_missing_hacs": hacs_result.get("optional_missing", []),
                     })
 
         return available
@@ -184,6 +192,110 @@ class ModuleManager:
         metadata = self.get_modules_metadata()
         meta = metadata.get(module_id, MODULE_METADATA.get(module_id, {}))
         return meta.get("dependencies", [])
+
+    def get_installed_hacs_integrations(self) -> list[str]:
+        """Get list of installed HACS integrations (custom_components)."""
+        custom_components_dir = Path("/config/custom_components")
+        if not custom_components_dir.exists():
+            return []
+
+        installed = []
+        for item in custom_components_dir.iterdir():
+            if item.is_dir() and (item / "manifest.json").exists():
+                installed.append(item.name)
+        return installed
+
+    def get_installed_hacs_cards(self) -> list[str]:
+        """Get list of installed HACS cards (www/community folder names)."""
+        community_dir = Path("/config/www/community")
+        if not community_dir.exists():
+            return []
+
+        return [d.name for d in community_dir.iterdir() if d.is_dir()]
+
+    def check_hacs_integrations(self, module_id: str) -> dict[str, Any]:
+        """Check if required HACS integrations for a module are installed.
+
+        Returns:
+            dict with 'satisfied', 'missing', 'installed', and 'optional_missing' lists
+        """
+        required_integrations = MODULE_HACS_INTEGRATIONS.get(module_id, [])
+        if not required_integrations:
+            return {
+                "satisfied": True,
+                "missing": [],
+                "optional_missing": [],
+                "installed": [],
+                "all_requirements": [],
+            }
+
+        installed_domains = self.get_installed_hacs_integrations()
+
+        missing = []
+        optional_missing = []
+        installed = []
+
+        for integration in required_integrations:
+            domain = integration["domain"]
+            is_optional = integration.get("optional", False)
+
+            if domain in installed_domains:
+                installed.append(integration)
+            elif is_optional:
+                optional_missing.append(integration)
+            else:
+                missing.append(integration)
+
+        return {
+            "satisfied": len(missing) == 0,  # Only required (non-optional) must be installed
+            "missing": missing,
+            "optional_missing": optional_missing,
+            "installed": installed,
+            "all_requirements": required_integrations,
+        }
+
+    def check_hacs_cards(self, module_id: str) -> dict[str, Any]:
+        """Check if required HACS cards for a module are installed.
+
+        Returns:
+            dict with 'satisfied', 'missing', and 'installed' lists
+        """
+        required_cards = MODULE_HACS_CARDS.get(module_id, [])
+        if not required_cards:
+            return {
+                "satisfied": True,
+                "missing": [],
+                "installed": [],
+                "all_requirements": [],
+            }
+
+        installed_folders = self.get_installed_hacs_cards()
+
+        # Map repository to expected folder name
+        repo_to_folder = {
+            "Makin-Things/platinum-weather-card": "platinum-weather-card",
+            "Makin-Things/lovelace-windrose-card": "lovelace-windrose-card",
+            "Makin-Things/weather-radar-card": "weather-radar-card",
+        }
+
+        missing = []
+        installed = []
+
+        for card in required_cards:
+            repo = card["repository"]
+            folder = repo_to_folder.get(repo, repo.split("/")[-1])
+
+            if folder in installed_folders:
+                installed.append(card)
+            else:
+                missing.append(card)
+
+        return {
+            "satisfied": len(missing) == 0,
+            "missing": missing,
+            "installed": installed,
+            "all_requirements": required_cards,
+        }
 
     def check_dependencies(self, module_id: str) -> dict[str, Any]:
         """Check if all dependencies for a module are installed.
@@ -415,6 +527,7 @@ class ModuleManager:
             "package_yaml_valid": False,
             "dashboard_yaml_valid": False,
             "dependencies_satisfied": True,
+            "hacs_integrations_satisfied": True,
             "no_conflicts": True,
         }
         errors = []
@@ -446,6 +559,27 @@ class ModuleManager:
                 missing_names.append(f"{dep_name} ({dep_id})")
             errors.append(f"Missing required modules: {', '.join(missing_names)}")
 
+        # Check HACS integrations
+        hacs_result = self.check_hacs_integrations(module_id)
+        checks["hacs_integrations_satisfied"] = hacs_result["satisfied"]
+        if not hacs_result["satisfied"]:
+            missing_names = [i["name"] for i in hacs_result["missing"]]
+            errors.append(f"Missing required HACS integrations: {', '.join(missing_names)}")
+        # Add warnings for optional missing integrations
+        if hacs_result.get("optional_missing"):
+            for integration in hacs_result["optional_missing"]:
+                warnings.append(
+                    f"Optional HACS integration not installed: {integration['name']} "
+                    f"(install via HACS for full functionality)"
+                )
+
+        # Check HACS cards for this module
+        hacs_cards_result = self.check_hacs_cards(module_id)
+        checks["hacs_cards_satisfied"] = hacs_cards_result["satisfied"]
+        if not hacs_cards_result["satisfied"]:
+            missing_repos = [c["repository"].split("/")[-1] for c in hacs_cards_result["missing"]]
+            errors.append(f"Missing required HACS cards: {', '.join(missing_repos)}")
+
         # Validate package.yaml
         pkg_result = self.validate_package_yaml(module_id)
         checks["package_yaml_valid"] = pkg_result["valid"]
@@ -465,7 +599,9 @@ class ModuleManager:
 
         ready = (checks["module_exists"] and
                  checks["package_yaml_valid"] and
-                 checks["dependencies_satisfied"])
+                 checks["dependencies_satisfied"] and
+                 checks["hacs_integrations_satisfied"] and
+                 checks["hacs_cards_satisfied"])
 
         return {
             "ready": ready,
@@ -474,6 +610,8 @@ class ModuleManager:
             "warnings": warnings,
             "module_id": module_id,
             "dependencies": dep_result,
+            "hacs_integrations": hacs_result,
+            "hacs_cards": hacs_cards_result,
         }
 
     # =========================================================================

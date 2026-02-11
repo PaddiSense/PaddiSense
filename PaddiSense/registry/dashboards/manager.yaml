@@ -347,7 +347,7 @@ views:
                 variables:
                   var_name: MODULE MANAGEMENT
 
-              # Version & Update Status Card
+              # Version & Update Status Card (display only)
               - type: custom:button-card
                 entity: sensor.paddisense_version
                 show_icon: false
@@ -368,75 +368,104 @@ views:
                 custom_fields:
                   status: |
                     [[[
-                      try {
-                        // Create helper function if not exists
-                        if (!window._pdsCallService) {
-                          window._pdsCallService = function(domain, service, data) {
-                            const ha = document.querySelector('home-assistant');
-                            if (!ha || !ha.hass) {
-                              console.error('PaddiSense: Home Assistant not found');
-                              return Promise.reject(new Error('Home Assistant not available'));
-                            }
-                            console.log('PaddiSense: Calling service', domain + '.' + service, data);
-                            return ha.hass.callService(domain, service, data);
-                          };
-                        }
-
-                        if (!entity || !entity.attributes) {
-                          return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Loading...</div>`;
-                        }
-
-                        const version = entity.state || 'Unknown';
-                        const latestVersion = entity.attributes.latest_version || 'Not checked';
-                        const updateAvailable = entity.attributes.update_available === true;
-                        const lastChecked = entity.attributes.last_checked ? new Date(entity.attributes.last_checked).toLocaleString() : 'Never';
-
-                        const statusBadge = updateAvailable
-                          ? `<span style="background:#fd7e14;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UPDATE AVAILABLE: v${latestVersion}</span>`
-                          : `<span style="background:#4caf50;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UP TO DATE</span>`;
-
-                        return `
-                          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
-                            <div style="display:flex;align-items:center;gap:12px;">
-                              <ha-icon icon="mdi:package-variant" style="--mdc-icon-size:28px;color:#0066cc;"></ha-icon>
-                              <div>
-                                <div style="font-size:14px;font-weight:700;color:var(--primary-text-color);">PaddiSense v${version}</div>
-                                <div style="font-size:11px;color:var(--secondary-text-color);">Last checked: ${lastChecked}</div>
-                              </div>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:10px;">
-                              ${statusBadge}
-                              <button id="check-updates-btn" onclick="
-                                event.stopPropagation();
-                                const btn = this;
-                                const origText = btn.innerHTML;
-                                btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:18px;animation:spin 1s linear infinite;\\'></ha-icon> Checking...';
-                                btn.disabled = true;
-                                window._pdsCallService('paddisense', 'check_for_updates').then(() => {
-                                  setTimeout(() => { btn.innerHTML = origText; btn.disabled = false; }, 2000);
-                                }).catch(() => {
-                                  btn.innerHTML = origText; btn.disabled = false;
-                                });
-                              " style="background:#0066cc;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-                                <ha-icon icon="mdi:cloud-download" style="--mdc-icon-size:18px;"></ha-icon>Check Updates
-                              </button>
-                              ${updateAvailable ? `<button onclick="
-                                event.stopPropagation();
-                                const btn = this;
-                                btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:18px;animation:spin 1s linear infinite;\\'></ha-icon> Updating...';
-                                btn.disabled = true;
-                                window._pdsCallService('paddisense', 'update_paddisense', { backup_first: true });
-                              " style="background:#28a745;color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-                                <ha-icon icon="mdi:download" style="--mdc-icon-size:18px;"></ha-icon>Update Now
-                              </button>` : ''}
-                            </div>
-                          </div>
-                          <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
-                        `;
-                      } catch (e) {
-                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
+                      if (!entity || !entity.attributes) {
+                        return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Loading...</div>`;
                       }
+
+                      const version = entity.state || 'Unknown';
+                      const latestVersion = entity.attributes.latest_version || 'Not checked';
+                      const updateAvailable = entity.attributes.update_available === true;
+                      const lastChecked = entity.attributes.last_checked ? new Date(entity.attributes.last_checked).toLocaleString() : 'Never';
+
+                      const statusBadge = updateAvailable
+                        ? `<span style="background:#fd7e14;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UPDATE AVAILABLE: v${latestVersion}</span>`
+                        : `<span style="background:#4caf50;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UP TO DATE</span>`;
+
+                      return `
+                        <div style="display:flex;align-items:center;gap:12px;">
+                          <ha-icon icon="mdi:package-variant" style="--mdc-icon-size:28px;color:#0066cc;"></ha-icon>
+                          <div style="flex:1;">
+                            <div style="font-size:14px;font-weight:700;color:var(--primary-text-color);">PaddiSense v${version}</div>
+                            <div style="font-size:11px;color:var(--secondary-text-color);">Last checked: ${lastChecked}</div>
+                          </div>
+                          ${statusBadge}
+                        </div>
+                      `;
                     ]]]
+
+              # Check for Updates Button - dedicated button-card
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                name: Check for Updates
+                icon: mdi:cloud-download
+                show_state: false
+                tap_action:
+                  action: call-service
+                  service: paddisense.check_for_updates
+                hold_action:
+                  action: none
+                styles:
+                  card:
+                    - background: "#0066cc"
+                    - border-radius: 12px
+                    - padding: 12px
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                    - width: 22px
+                  grid:
+                    - grid-template-areas: '"i n"'
+                    - grid-template-columns: 32px 1fr
+                    - justify-items: start
+
+              # Update Now Button - only shown when update available
+              - type: conditional
+                conditions:
+                  - entity: sensor.paddisense_version
+                    attribute: update_available
+                    state: true
+                card:
+                  type: custom:button-card
+                  entity: sensor.paddisense_version
+                  name: |
+                    [[[
+                      const latest = entity.attributes.latest_version || 'latest';
+                      return `Update to v${latest}`;
+                    ]]]
+                  icon: mdi:download
+                  show_state: false
+                  tap_action:
+                    action: call-service
+                    service: paddisense.update_paddisense
+                    service_data:
+                      backup_first: true
+                  confirmation:
+                    text: |
+                      [[[
+                        const latest = entity.attributes.latest_version || 'latest';
+                        return `Update PaddiSense to v${latest}? A backup will be created first.`;
+                      ]]]
+                  hold_action:
+                    action: none
+                  styles:
+                    card:
+                      - background: "#28a745"
+                      - border-radius: 12px
+                      - padding: 12px
+                    name:
+                      - font-size: 14px
+                      - font-weight: 700
+                      - color: white
+                    icon:
+                      - color: white
+                      - width: 22px
+                    grid:
+                      - grid-template-areas: '"i n"'
+                      - grid-template-columns: 32px 1fr
+                      - justify-items: start
 
               # Module Cards - Using pds_module_row template
               - type: custom:button-card
