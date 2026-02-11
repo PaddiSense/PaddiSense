@@ -221,8 +221,53 @@ The installer will:
 - Block installation if dependencies are missing
 - Warn before removing a module that others depend on
 
+## Manager Card UI Implementation
+
+### Template-Based Approach (Required)
+
+The Manager Card uses `custom:button-card` templates for module rows. **Do not use raw HTML or custom web components** — they don't work reliably inside Home Assistant.
+
+The `pds_module_row` template provides:
+- Icon with colored left border
+- Module title and dynamic status label
+- Action button (Install/Remove/Locked) based on state
+- Confirmation dialogs before actions
+- Reactive updates when `sensor.paddisense_version` changes
+
+### Key Template: `pds_module_row`
+
+Each module row is declared as:
+```yaml
+- type: custom:button-card
+  template: pds_module_row
+  variables:
+    module_id: ipm
+    title: Inventory Manager
+    desc: Chemicals, fertilizers & consumables
+    icon: mdi:warehouse
+    color: '#4caf50'
+```
+
+The template reads state from `sensor.paddisense_version` attributes:
+- `installed_modules` — Array of `{id, version}` for installed modules
+- `licensed_modules` — Array of module IDs the license permits
+- `available_modules` — Array of `{id, ...}` for modules available to install
+
+See `reference/UI_STYLE_GUIDE.md` for the full template definition.
+
+### Why Not HTML/Web Components
+
+Previous attempts used custom HTML cards and Lit-based web components. These failed because:
+1. HA's card rendering doesn't preserve raw HTML reliably
+2. External JS files in `www/` have loading order issues
+3. Service calls from custom elements require complex HA API wiring
+4. No reactive updates without manual event subscriptions
+
+Button-card templates solve all of these with native HA integration.
+
 ## Version History
 
+- **v1.4.0** - Migrated to button-card templates (no more HTML cards)
 - **v1.3.0** - Added dependency checking and blocking UI
 - **v1.2.0** - Added RTR configuration section
 - **v1.1.0** - Initial module management UI

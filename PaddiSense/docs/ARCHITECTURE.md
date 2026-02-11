@@ -68,6 +68,23 @@ All module dashboards should follow the **IPM card style** (`ipm/dashboards/inve
 
 See `reference/UI_STYLE_GUIDE.md` for detailed template definitions.
 
+## UI Implementation Approach
+
+### Button-Card Templates (Required)
+
+**All dynamic UI in PaddiSense must use `custom:button-card` templates.** Do not use:
+- Raw HTML cards
+- Custom elements with inline HTML
+- Lit-based web components loaded via www/
+
+**Rationale:** HTML-based approaches don't work reliably inside Home Assistant. Button-card provides:
+- Reactive updates via `triggers_update`
+- Native service calls, confirmations, and tap actions
+- CSS variable support for theme compatibility
+- Template inheritance for consistency
+
+See `reference/UI_STYLE_GUIDE.md` for the canonical templates including the `pds_module_row` pattern for list-style management UI.
+
 ## Open Decisions
 Track unresolved architectural questions here:
 - ~~Registry storage location and migration approach~~ (resolved: `local_data/registry/`)

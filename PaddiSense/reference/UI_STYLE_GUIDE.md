@@ -216,3 +216,188 @@ All modules should define templates following this pattern (replace `ipm_` prefi
 - High contrast text (white on dark)
 - Readable at arm's length (16px+ for important text)
 - No hover-only interactions
+
+---
+
+## Module Row Template Pattern
+
+**IMPORTANT:** For complex list-style UI with dynamic state (installed/available/locked), use `custom:button-card` templates with JavaScript logic. **Do not use raw HTML cards** — they don't work reliably inside Home Assistant.
+
+### Template: `pds_module_row`
+
+This pattern displays modules with:
+- Icon with accent color border-left
+- Title and status label (version/available/locked)
+- Dynamic action button (Install/Remove/Locked)
+
+```yaml
+pds_module_row:
+  entity: sensor.paddisense_version
+  triggers_update:
+    - sensor.paddisense_version
+  show_state: false
+  show_icon: true
+  show_name: true
+  show_label: true
+  icon: |
+    [[[
+      return variables.icon || 'mdi:puzzle';
+    ]]]
+  name: |
+    [[[
+      return variables.title || variables.module_id;
+    ]]]
+  label: |
+    [[[
+      const modId = variables.module_id;
+      const attrs = entity?.attributes || {};
+      const installedList = attrs.installed_modules || [];
+      const installedData = installedList.find(m => m.id === modId);
+      const version = installedData?.version || '';
+
+      const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
+      const available = (attrs.available_modules || []).some(m => m.id === modId);
+      const installed = !!installedData;
+
+      const base = variables.desc || '';
+
+      if (installed) return `${base}${version ? ` • v${version}` : ''}`;
+      if (!licensed) return `${base} • Not licensed`;
+      if (available) return `${base} • Available`;
+      return `${base} • Unavailable`;
+    ]]]
+  tap_action:
+    action: call-service
+    service: |
+      [[[
+        const modId = variables.module_id;
+        const attrs = entity?.attributes || {};
+        const installed = (attrs.installed_modules || []).some(m => m.id === modId);
+        const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
+        const available = (attrs.available_modules || []).some(m => m.id === modId);
+
+        if (installed) return 'paddisense.remove_module';
+        if (licensed && available) return 'paddisense.install_module';
+        return 'script.turn_on';  // No-op fallback
+      ]]]
+    service_data: |
+      [[[
+        return { module_id: variables.module_id };
+      ]]]
+  confirmation:
+    text: |
+      [[[
+        const modId = variables.module_id;
+        const attrs = entity?.attributes || {};
+        const installed = (attrs.installed_modules || []).some(m => m.id === modId);
+        return installed
+          ? `Remove module: ${variables.title || modId}?`
+          : `Install module: ${variables.title || modId}?`;
+      ]]]
+  custom_fields:
+    action: |
+      [[[
+        const modId = variables.module_id;
+        const attrs = entity?.attributes || {};
+        const installedList = attrs.installed_modules || [];
+        const installedData = installedList.find(m => m.id === modId);
+
+        const installed = !!installedData;
+        const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
+        const available = (attrs.available_modules || []).some(m => m.id === modId);
+
+        let text = '';
+        let bg = '';
+        let fg = '';
+        let ico = '';
+        let opacity = '1';
+
+        if (installed) {
+          text = 'Remove'; bg = '#dc3545'; fg = 'white'; ico = 'mdi:trash-can-outline';
+        } else if (licensed && available) {
+          text = 'Install'; bg = '#28a745'; fg = 'white'; ico = 'mdi:download';
+        } else if (!licensed) {
+          text = 'Locked'; bg = 'transparent'; fg = 'var(--secondary-text-color)';
+          ico = 'mdi:lock-outline'; opacity = '0.8';
+        } else {
+          text = 'N/A'; bg = 'transparent'; fg = 'var(--secondary-text-color)';
+          ico = 'mdi:minus-circle-outline'; opacity = '0.8';
+        }
+
+        return `
+          <div style="
+            display:flex;align-items:center;gap:8px;
+            padding:8px 12px;border-radius:10px;
+            background:${bg};color:${fg};
+            font-size:13px;font-weight:700;
+            opacity:${opacity};
+          ">
+            <ha-icon icon="${ico}" style="--mdc-icon-size:18px;"></ha-icon>
+            <span>${text}</span>
+          </div>
+        `;
+      ]]]
+  styles:
+    card:
+      - border-radius: 12px
+      - padding: 12px 14px
+      - background: var(--card-background-color)
+      - box-shadow: 0 1px 3px rgba(0,0,0,0.08)
+      - border-left: |
+          [[[
+            return `4px solid ${variables.color || '#0066cc'}`;
+          ]]]
+      - opacity: |
+          [[[
+            const modId = variables.module_id;
+            const attrs = entity?.attributes || {};
+            const installed = (attrs.installed_modules || []).some(m => m.id === modId);
+            const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
+            const available = (attrs.available_modules || []).some(m => m.id === modId);
+            return (installed || (licensed && available)) ? '1' : '0.75';
+          ]]]
+    grid:
+      - grid-template-areas: '"i n action" "i l action"'
+      - grid-template-columns: 48px 1fr auto
+      - grid-template-rows: min-content min-content
+      - column-gap: 12px
+    icon:
+      - width: 26px
+      - color: |
+          [[[
+            return variables.color || '#0066cc';
+          ]]]
+    name:
+      - font-size: 15px
+      - font-weight: 700
+      - align-self: end
+    label:
+      - font-size: 12px
+      - color: var(--secondary-text-color)
+      - align-self: start
+    custom_fields:
+      action:
+        - align-self: center
+        - justify-self: end
+```
+
+### Usage Example
+
+```yaml
+- type: custom:button-card
+  template: pds_module_row
+  variables:
+    module_id: ipm
+    title: Inventory Manager
+    desc: Chemicals, fertilizers & consumables
+    icon: mdi:warehouse
+    color: '#4caf50'
+```
+
+### Why Button-Card Templates (Not Raw HTML)
+
+1. **Reactive updates** — `triggers_update` ensures UI refreshes when entity changes
+2. **HA integration** — Works with `tap_action`, `confirmation`, and service calls
+3. **Theme compatibility** — Uses CSS variables like `var(--card-background-color)`
+4. **Consistent styling** — Follows the same template pattern as other cards
+5. **Maintainability** — All logic in YAML, not scattered JS files
