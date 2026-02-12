@@ -1192,34 +1192,39 @@ async def _async_install_required_hacs(hass: HomeAssistant) -> None:
     import asyncio
     from pathlib import Path
 
-    # Wait for HACS to be ready (it loads after most integrations)
-    max_retries = 6
-    retry_delay = 10  # seconds
+    # Check if HACS is installed by looking for its integration
+    hacs_installed = "hacs" in hass.data or Path("/config/custom_components/hacs").exists()
 
-    for attempt in range(max_retries):
-        if hass.services.has_service("hacs", "install"):
-            _LOGGER.info("HACS is available (attempt %d)", attempt + 1)
-            break
-        if attempt < max_retries - 1:
-            _LOGGER.info("HACS not ready yet, waiting %ds (attempt %d/%d)", retry_delay, attempt + 1, max_retries)
-            await asyncio.sleep(retry_delay)
-    else:
-        _LOGGER.warning("HACS not available after %d attempts", max_retries)
+    if not hacs_installed:
+        _LOGGER.info("HACS not installed, skipping automatic card installation")
         await hass.services.async_call(
             "persistent_notification", "create",
             {
-                "title": "PaddiSense - HACS Required",
+                "title": "PaddiSense - HACS Recommended",
                 "message": (
-                    "HACS (Home Assistant Community Store) is required for PaddiSense dashboards.\n\n"
-                    "Please install HACS first:\n"
-                    "1. Go to https://hacs.xyz/docs/use/download/download\n"
-                    "2. Follow the installation instructions\n"
-                    "3. Restart Home Assistant\n\n"
-                    "After HACS is installed, restart HA again and PaddiSense will automatically install required cards."
+                    "HACS (Home Assistant Community Store) is recommended for PaddiSense dashboards.\n\n"
+                    "Install HACS for automatic dashboard card installation:\n"
+                    "https://hacs.xyz/docs/use/download/download\n\n"
+                    "Or manually install required cards from the Settings tab."
                 ),
                 "notification_id": "paddisense_hacs_required",
             },
         )
+        return
+
+    # Wait for HACS service to be ready (it loads after most integrations)
+    max_retries = 12
+    retry_delay = 10  # seconds
+
+    for attempt in range(max_retries):
+        if hass.services.has_service("hacs", "install"):
+            _LOGGER.info("HACS service available (attempt %d)", attempt + 1)
+            break
+        if attempt < max_retries - 1:
+            _LOGGER.debug("HACS service not ready, waiting %ds (attempt %d/%d)", retry_delay, attempt + 1, max_retries)
+            await asyncio.sleep(retry_delay)
+    else:
+        _LOGGER.info("HACS installed but service not available - may be older version or disabled")
         return
 
     # Check what's already installed
