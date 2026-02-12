@@ -31,6 +31,9 @@ PaddiSense/data/
 # HACS - installed custom components
 ########################################
 www/community/
+custom_components/browser_mod/
+custom_components/bureau_of_meteorology/
+custom_components/hacs/
 
 ########################################
 # ESPHome
