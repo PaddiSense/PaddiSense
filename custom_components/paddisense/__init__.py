@@ -187,7 +187,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PaddiSense from a config entry."""
+    from .const import FREE_MODULES
+
     hass.data.setdefault(DOMAIN, {})
+
+    # Ensure all FREE_MODULES are in license_modules (handles upgrades)
+    stored_modules = set(entry.data.get(CONF_LICENSE_MODULES, []))
+    current_free = set(FREE_MODULES)
+    if not current_free.issubset(stored_modules):
+        # Update config entry with all free modules
+        new_data = {**entry.data, CONF_LICENSE_MODULES: list(current_free | stored_modules)}
+        hass.config_entries.async_update_entry(entry, data=new_data)
+        _LOGGER.info("Updated license_modules to include all free modules")
 
     # Initialize backend
     backend = RegistryBackend()
