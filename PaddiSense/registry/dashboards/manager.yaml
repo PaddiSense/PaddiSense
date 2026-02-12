@@ -570,26 +570,10 @@ views:
                 template: pds_module_row
                 variables:
                   module_id: ipm
-                  title: Inventory Product Management
+                  title: Inventory Product Manager
                   desc: Farm consumables
                   icon: mdi:warehouse
                   color: '#4caf50'
-              - type: custom:button-card
-                template: pds_module_row
-                variables:
-                  module_id: rtr
-                  title: Real Time Rice
-                  desc: Rice prediction model data
-                  icon: mdi:rice
-                  color: '#43a047'
-              - type: custom:button-card
-                template: pds_module_row
-                variables:
-                  module_id: hfm
-                  title: Hey Farmer
-                  desc: Farm event data
-                  icon: mdi:chart-areaspline
-                  color: '#7b1fa2'
               - type: custom:button-card
                 template: pds_module_row
                 variables:
@@ -601,11 +585,19 @@ views:
               - type: custom:button-card
                 template: pds_module_row
                 variables:
-                  module_id: pwm
-                  title: Precision Water Management
-                  desc: Irrigation automation
-                  icon: mdi:water
-                  color: '#00bcd4'
+                  module_id: hfm
+                  title: Hey Farmer
+                  desc: Farm event data
+                  icon: mdi:chart-areaspline
+                  color: '#7b1fa2'
+              - type: custom:button-card
+                template: pds_module_row
+                variables:
+                  module_id: rtr
+                  title: Real Time Rice
+                  desc: Rice prediction model data
+                  icon: mdi:rice
+                  color: '#43a047'
               - type: custom:button-card
                 template: pds_module_row
                 variables:
@@ -614,6 +606,14 @@ views:
                   desc: Manage your mobs
                   icon: mdi:cow
                   color: '#8d6e63'
+              - type: custom:button-card
+                template: pds_module_row
+                variables:
+                  module_id: pwm
+                  title: Precision Water Management
+                  desc: Irrigation automation
+                  icon: mdi:water
+                  color: '#00bcd4'
               - type: custom:button-card
                 template: pds_module_row
                 variables:

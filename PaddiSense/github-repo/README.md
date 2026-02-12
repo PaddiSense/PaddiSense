@@ -1,12 +1,12 @@
 # PaddiSense Farm Management
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/badge/version-1.0.0--rc.1-blue.svg)](https://github.com/PKmac78/PaddiSense/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0--rc.8-blue.svg)](https://github.com/PaddiSense/PaddiSense/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A modular Home Assistant integration for farm management. Built for Australian rice and mixed farming operations.
 
-> **Pre-Release Notice**: Version 1.0.0-rc.1 is a release candidate. Core features are complete but still undergoing testing.
+> **Pre-Release Notice**: Version 1.0.0-rc.8 is a release candidate. Core features are complete but still undergoing testing.
 
 ## Modules
 
@@ -57,7 +57,7 @@ service: paddisense.install_hacs_cards
 2. Go to **Integrations**
 3. Click **⋮** (three dots menu) → **Custom repositories**
 4. Add:
-   - **Repository**: `https://github.com/PKmac78/PaddiSense`
+   - **Repository**: `https://github.com/PaddiSense/PaddiSense`
    - **Category**: Integration
 5. Click **Add**
 
@@ -90,7 +90,7 @@ After restart, module dashboards appear in the sidebar automatically:
 
 ## Manual Installation
 
-1. Download the [latest release](https://github.com/PKmac78/PaddiSense/releases)
+1. Download the [latest release](https://github.com/PaddiSense/PaddiSense/releases)
 2. Copy `custom_components/paddisense/` to your HA `config/custom_components/`
 3. Copy `PaddiSense/` folder to your HA `config/` directory
 4. Restart Home Assistant
@@ -206,8 +206,8 @@ All data is stored locally:
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/PKmac78/PaddiSense/issues)
-- **Documentation**: [docs/](https://github.com/PKmac78/PaddiSense/tree/main/docs)
+- **Issues**: [GitHub Issues](https://github.com/PaddiSense/PaddiSense/issues)
+- **Documentation**: [docs/](https://github.com/PaddiSense/PaddiSense/tree/main/docs)
 
 ---
 

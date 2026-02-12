@@ -660,30 +660,114 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
 
     async def handle_install_module(call: ServiceCall) -> None:
         """Install a PaddiSense module."""
+        module_id = call.data["module_id"]
         module_manager: ModuleManager = hass.data[DOMAIN]["module_manager"]
+
+        # Get module name for notifications
+        metadata = await hass.async_add_executor_job(module_manager.get_modules_metadata)
+        meta = metadata.get(module_id, MODULE_METADATA.get(module_id, {}))
+        module_name = meta.get("name", module_id)
+
+        # Show installing notification
+        await hass.services.async_call(
+            "persistent_notification", "create",
+            {
+                "title": "PaddiSense",
+                "message": f"Installing module '{module_name}'...",
+                "notification_id": "paddisense_module_install",
+            },
+        )
+
         result = await hass.async_add_executor_job(
             module_manager.install_module,
-            call.data["module_id"],
+            module_id,
         )
         _log_service_result("install_module", result)
 
-        if result.get("success") and result.get("restart_required"):
-            hass.bus.async_fire(EVENT_MODULES_CHANGED)
-            await hass.services.async_call("homeassistant", "restart")
+        if result.get("success"):
+            if result.get("restart_required"):
+                # Notify user before restart
+                version = result.get("version", "unknown")
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": f"Module '{module_name}' v{version} installed successfully.\n\nRestarting Home Assistant...",
+                        "notification_id": "paddisense_module_install",
+                    },
+                )
+                hass.bus.async_fire(EVENT_MODULES_CHANGED)
+                await hass.services.async_call("homeassistant", "restart")
+        else:
+            # Show error notification to user
+            error_msg = result.get("error", "Unknown error")
+            preflight = result.get("preflight", {})
+
+            if preflight:
+                errors = preflight.get("errors", [])
+                if errors:
+                    error_msg = f"Installation failed:\n• " + "\n• ".join(errors)
+
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense - Module Installation Failed",
+                    "message": error_msg,
+                    "notification_id": "paddisense_module_install",
+                },
+            )
 
     async def handle_remove_module(call: ServiceCall) -> None:
         """Remove a PaddiSense module."""
+        module_id = call.data["module_id"]
         module_manager: ModuleManager = hass.data[DOMAIN]["module_manager"]
+
+        # Get module name for notifications
+        metadata = await hass.async_add_executor_job(module_manager.get_modules_metadata)
+        meta = metadata.get(module_id, MODULE_METADATA.get(module_id, {}))
+        module_name = meta.get("name", module_id)
+
         result = await hass.async_add_executor_job(
             module_manager.remove_module,
-            call.data["module_id"],
+            module_id,
             call.data.get("force", False),
         )
         _log_service_result("remove_module", result)
 
-        if result.get("success") and result.get("restart_required"):
-            hass.bus.async_fire(EVENT_MODULES_CHANGED)
-            await hass.services.async_call("homeassistant", "restart")
+        if result.get("success"):
+            if result.get("restart_required"):
+                # Notify user before restart
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": f"Module '{module_name}' removed successfully.\n\nRestarting Home Assistant...",
+                        "notification_id": "paddisense_module_remove",
+                    },
+                )
+                hass.bus.async_fire(EVENT_MODULES_CHANGED)
+                await hass.services.async_call("homeassistant", "restart")
+        else:
+            # Show error notification to user
+            error_msg = result.get("error", "Unknown error")
+            dependents = result.get("dependents", [])
+
+            if dependents:
+                # Get dependent module names
+                dep_names = []
+                for dep_id in dependents:
+                    dep_meta = metadata.get(dep_id, MODULE_METADATA.get(dep_id, {}))
+                    dep_names.append(dep_meta.get("name", dep_id))
+                error_msg = f"Cannot remove '{module_name}' because it is required by: {', '.join(dep_names)}.\n\nRemove those modules first, or use force removal."
+
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense - Module Removal Failed",
+                    "message": error_msg,
+                    "notification_id": "paddisense_module_remove",
+                },
+            )
 
     async def handle_create_backup(call: ServiceCall) -> None:
         """Create a PaddiSense backup."""

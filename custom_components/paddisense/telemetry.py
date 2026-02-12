@@ -37,11 +37,11 @@ _LOGGER = logging.getLogger(__name__)
 # To enable telemetry, create /config/local_data/telemetry_config.json:
 # {
 #   "github_token": "github_pat_xxx...",
-#   "repo": "PKmac78/paddisense-registrations"
+#   "repo": "PaddiSense/paddisense-registrations"
 # }
 # =============================================================================
 
-TELEMETRY_REPO = "PKmac78/paddisense-registrations"  # Default repo
+TELEMETRY_REPO = "PaddiSense/paddisense-registrations"  # Default repo
 
 
 def _load_telemetry_config() -> tuple[str | None, str]:

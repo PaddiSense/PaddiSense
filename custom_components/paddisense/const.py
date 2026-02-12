@@ -35,7 +35,7 @@ PACKAGES_DIR = PADDISENSE_DIR / "packages"
 # GIT
 # =============================================================================
 
-PADDISENSE_REPO_URL = "https://github.com/PKmac78/paddisense-release.git"  # Release repo for growers
+PADDISENSE_REPO_URL = "https://github.com/PaddiSense/PaddiSense.git"  # Growers pull from main branch
 PADDISENSE_REPO_BRANCH = "main"
 
 # =============================================================================
