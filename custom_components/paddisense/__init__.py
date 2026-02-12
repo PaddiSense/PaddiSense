@@ -679,6 +679,60 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
             },
         )
 
+        # Install required HACS integrations and cards first
+        required_integrations = MODULE_HACS_INTEGRATIONS.get(module_id, [])
+        required_cards = MODULE_HACS_CARDS.get(module_id, [])
+
+        if required_integrations or required_cards:
+            if hass.services.has_service("hacs", "install"):
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": f"Installing HACS requirements for '{module_name}'...",
+                        "notification_id": "paddisense_module_install",
+                    },
+                )
+
+                # Install integrations
+                for integration in required_integrations:
+                    try:
+                        _LOGGER.info("Installing HACS integration: %s", integration["repository"])
+                        await hass.services.async_call(
+                            "hacs", "install",
+                            {
+                                "repository": integration["repository"],
+                                "category": "integration",
+                            },
+                        )
+                    except Exception as e:
+                        _LOGGER.warning("Could not install %s: %s", integration["repository"], e)
+
+                # Install cards
+                for card in required_cards:
+                    try:
+                        _LOGGER.info("Installing HACS card: %s", card["repository"])
+                        await hass.services.async_call(
+                            "hacs", "install",
+                            {
+                                "repository": card["repository"],
+                                "category": "plugin",
+                            },
+                        )
+                    except Exception as e:
+                        _LOGGER.warning("Could not install %s: %s", card["repository"], e)
+
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": f"Installing module '{module_name}'...",
+                        "notification_id": "paddisense_module_install",
+                    },
+                )
+            else:
+                _LOGGER.warning("HACS not available, skipping HACS requirements for %s", module_id)
+
         result = await hass.async_add_executor_job(
             module_manager.install_module,
             module_id,
