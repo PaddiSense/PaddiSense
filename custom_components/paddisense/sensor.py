@@ -85,8 +85,20 @@ class PaddiSenseVersionSensor(SensorEntity):
         self.async_on_remove(
             self.hass.bus.async_listen(EVENT_MODULES_CHANGED, self._handle_update)
         )
+        self.async_on_remove(
+            self.hass.bus.async_listen(f"{DOMAIN}_update_checked", self._handle_update_checked)
+        )
         # Initial module scan
         await self._async_update_module_info()
+
+    @callback
+    def _handle_update_checked(self, event) -> None:
+        """Handle update check completed event."""
+        data = event.data or {}
+        self._latest_version = data.get("latest_version")
+        self._update_available = data.get("update_available", False)
+        self._last_checked = datetime.now().isoformat()
+        self.async_write_ha_state()
 
     @callback
     def _handle_update(self, event) -> None:
