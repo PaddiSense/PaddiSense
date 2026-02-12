@@ -46,7 +46,10 @@ PADDISENSE_REPO_BRANCH = "main"
 AVAILABLE_MODULES = ["ipm", "asm", "weather", "pwm", "rtr", "str", "wss", "hfm"]
 
 # Free modules - available to all registered users
-FREE_MODULES = ["ipm", "asm", "weather", "pwm", "rtr", "str", "wss", "hfm"]
+FREE_MODULES = ["ipm", "asm", "weather", "rtr", "str", "hfm"]
+
+# Locked modules - not yet available (coming soon / placeholder)
+LOCKED_MODULES = ["pwm", "wss"]
 
 # Data-sharing modules - require agreement to share aggregated data
 DATA_SHARING_MODULES = []
@@ -94,7 +97,8 @@ MODULE_METADATA = {
         "icon": "mdi:water",
         "dashboard_slug": "pwm-irrigation",
         "dashboard_title": "Water Management",
-        "tier": "free",
+        "tier": "coming_soon",
+        "status": "placeholder",
     },
     "rtr": {
         "name": "Real Time Rice",
@@ -123,7 +127,7 @@ MODULE_METADATA = {
         "dashboard_title": "Worker Safety",
         "dashboard_file": "wss/dashboards/views.yaml",
         "status": "placeholder",
-        "tier": "free",
+        "tier": "coming_soon",
     },
     "hfm": {
         "name": "Hey Farmer",

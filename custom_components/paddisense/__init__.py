@@ -573,24 +573,14 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
         # Update version sensor with check results
         if result.get("success"):
             hass.bus.async_fire(EVENT_MODULES_CHANGED)
-            # Find and update the version sensor directly
-            entity_registry = hass.data.get("entity_registry")
-            for state in hass.states.async_all():
-                if state.entity_id == "sensor.paddisense_version":
-                    # Update sensor attributes via entity component
-                    from homeassistant.helpers import entity_registry as er
-                    registry = er.async_get(hass)
-                    entity_entry = registry.async_get("sensor.paddisense_version")
-                    if entity_entry:
-                        # Fire a custom event to update the sensor
-                        hass.bus.async_fire(
-                            f"{DOMAIN}_update_checked",
-                            {
-                                "latest_version": result.get("remote_version"),
-                                "update_available": result.get("update_available", False),
-                            }
-                        )
-                    break
+            # Fire event to update the version sensor
+            hass.bus.async_fire(
+                f"{DOMAIN}_update_checked",
+                {
+                    "latest_version": result.get("remote_version"),
+                    "update_available": result.get("update_available", False),
+                }
+            )
 
         # Show result notification
         local_ver = result.get("local_version", "unknown")
