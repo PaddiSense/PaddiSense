@@ -12,7 +12,7 @@ views:
     path: predictions
     icon: mdi:rice
     cards:
-      # Header with title and refresh button
+      # Header with title
       - type: custom:button-card
         entity: sensor.paddisense_real_time_rice
         show_name: false
@@ -24,7 +24,7 @@ views:
           card:
             - background: transparent
             - box-shadow: none
-            - padding: 0 0 16px 0
+            - padding: 0 0 8px 0
           grid:
             - display: block
         custom_fields:
@@ -61,35 +61,41 @@ views:
               }
 
               return `
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <ha-icon icon="mdi:rice" style="--mdc-icon-size:32px;color:#43a047;"></ha-icon>
-                    <div>
-                      <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">Real Time Rice</div>
-                      <div style="font-size:13px;color:var(--secondary-text-color);">
-                        Crop growth predictions${lastUpdateText ? ` · <span style="color:#43a047;">${lastUpdateText}</span>` : ''}
-                      </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <ha-icon icon="mdi:rice" style="--mdc-icon-size:32px;color:#43a047;"></ha-icon>
+                  <div>
+                    <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">Real Time Rice</div>
+                    <div style="font-size:13px;color:var(--secondary-text-color);">
+                      Crop growth predictions${lastUpdateText ? ` · <span style="color:#43a047;">${lastUpdateText}</span>` : ''}
                     </div>
                   </div>
-                  <button onclick="
-                    event.stopPropagation();
-                    const btn = this;
-                    const origHtml = btn.innerHTML;
-                    btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:18px;animation:spin 1s linear infinite;\\'></ha-icon> Refreshing...';
-                    btn.disabled = true;
-                    const ha = document.querySelector('home-assistant');
-                    if (ha && ha.hass) {
-                      ha.hass.callService('paddisense', 'refresh_rtr_data').then(() => {
-                        setTimeout(() => { btn.innerHTML = origHtml; btn.disabled = false; }, 3000);
-                      }).catch(() => { btn.innerHTML = origHtml; btn.disabled = false; });
-                    }
-                  " style="background:#0066cc;color:white;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
-                    <ha-icon icon="mdi:refresh" style="--mdc-icon-size:20px;"></ha-icon>Refresh Data
-                  </button>
                 </div>
-                <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
               `;
             ]]]
+
+      # Refresh Data Button
+      - type: custom:button-card
+        entity: script.rtr_refresh_data
+        name: Refresh Data
+        icon: mdi:refresh
+        show_state: false
+        tap_action:
+          action: call-service
+          service: script.rtr_refresh_data
+        styles:
+          card:
+            - background: "#0066cc"
+            - border-radius: 12px
+            - padding: 12px 20px
+            - margin-bottom: 16px
+          icon:
+            - color: white
+            - width: 20px
+            - height: 20px
+          name:
+            - color: white
+            - font-size: 14px
+            - font-weight: 600
 
       # Paddock Predictions - filtered by RTR Year matching active season
       - type: custom:button-card
@@ -357,86 +363,120 @@ views:
             entity: sensor.paddisense_real_time_rice
             state: "Not configured"
         card:
-          type: custom:button-card
-          entity: sensor.paddisense_real_time_rice
-          show_name: false
-          show_state: false
-          show_icon: false
-          tap_action:
-            action: none
-          styles:
-            card:
-              - background: var(--card-background-color)
-              - box-shadow: 0 2px 8px rgba(0,0,0,0.1)
-              - border-radius: 16px
-              - padding: 24px
-              - border-left: 4px solid #ff9800
-          custom_fields:
-            setup: |
-              [[[
-                return `
-                  <div style="text-align:center;">
-                    <div style="width:80px;height:80px;margin:0 auto 16px;border-radius:50%;background:rgba(255,152,0,0.15);display:flex;align-items:center;justify-content:center;">
-                      <ha-icon icon="mdi:cog-outline" style="--mdc-icon-size:40px;color:#ff9800;"></ha-icon>
-                    </div>
-                    <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">Set Up Real Time Rice</div>
-                    <div style="font-size:14px;color:var(--secondary-text-color);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
-                      Connect your RTR dashboard to display crop growth predictions for your paddocks.
-                    </div>
+          type: vertical-stack
+          cards:
+            - type: custom:button-card
+              show_name: false
+              show_state: false
+              show_icon: false
+              tap_action:
+                action: none
+              styles:
+                card:
+                  - background: var(--card-background-color)
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+                  - border-radius: 16px 16px 0 0
+                  - padding: 24px
+                  - border-left: 4px solid #ff9800
+              custom_fields:
+                setup: |
+                  [[[
+                    return `
+                      <div style="text-align:center;">
+                        <div style="width:80px;height:80px;margin:0 auto 16px;border-radius:50%;background:rgba(255,152,0,0.15);display:flex;align-items:center;justify-content:center;">
+                          <ha-icon icon="mdi:cog-outline" style="--mdc-icon-size:40px;color:#ff9800;"></ha-icon>
+                        </div>
+                        <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">Set Up Real Time Rice</div>
+                        <div style="font-size:14px;color:var(--secondary-text-color);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
+                          Connect your RTR dashboard to display crop growth predictions for your paddocks.
+                        </div>
 
-                    <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:20px;text-align:left;max-width:500px;margin:0 auto;">
-                      <div style="font-weight:600;color:var(--primary-text-color);margin-bottom:16px;">How to set up:</div>
+                        <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:20px;text-align:left;max-width:500px;margin:0 auto;">
+                          <div style="font-weight:600;color:var(--primary-text-color);margin-bottom:16px;">How to set up:</div>
 
-                      <div style="display:flex;gap:12px;margin-bottom:16px;">
-                        <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
-                        <div style="padding-top:2px;">
-                          <div style="font-weight:600;color:var(--primary-text-color);">Find your RTR link</div>
-                          <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Open the email from Real Time Rice containing your dashboard link</div>
+                          <div style="display:flex;gap:12px;margin-bottom:16px;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
+                            <div style="padding-top:2px;">
+                              <div style="font-weight:600;color:var(--primary-text-color);">Find your RTR link</div>
+                              <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Open the email from Real Time Rice containing your dashboard link</div>
+                            </div>
+                          </div>
+
+                          <div style="display:flex;gap:12px;margin-bottom:16px;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
+                            <div style="padding-top:2px;">
+                              <div style="font-weight:600;color:var(--primary-text-color);">Copy the URL</div>
+                              <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Copy the full link (ends with .html or .csv)</div>
+                            </div>
+                          </div>
+
+                          <div style="display:flex;gap:12px;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
+                            <div style="padding-top:2px;">
+                              <div style="font-weight:600;color:var(--primary-text-color);">Enter the URL below</div>
+                              <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Paste your RTR URL and tap Save</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
+                    `;
+                  ]]]
 
-                      <div style="display:flex;gap:12px;margin-bottom:16px;">
-                        <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
-                        <div style="padding-top:2px;">
-                          <div style="font-weight:600;color:var(--primary-text-color);">Copy the URL</div>
-                          <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Copy the full link (ends with .html or .csv)</div>
-                        </div>
-                      </div>
+            # URL Input Field
+            - type: entities
+              entities:
+                - entity: input_text.rtr_url_input
+                  name: RTR URL
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 0;
+                    box-shadow: none;
+                    border-left: 4px solid #ff9800;
+                  }
 
-                      <div style="display:flex;gap:12px;margin-bottom:20px;">
-                        <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
-                        <div style="padding-top:2px;">
-                          <div style="font-weight:600;color:var(--primary-text-color);">Enter the URL</div>
-                          <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Click the button below and paste your RTR URL</div>
-                        </div>
-                      </div>
+            # Save URL Button
+            - type: custom:button-card
+              entity: script.rtr_set_url
+              name: Save RTR URL
+              icon: mdi:content-save
+              show_state: false
+              tap_action:
+                action: call-service
+                service: script.rtr_set_url
+              styles:
+                card:
+                  - background: "#ff9800"
+                  - border-radius: 0 0 16px 16px
+                  - padding: 14px 20px
+                  - border-left: 4px solid #ff9800
+                icon:
+                  - color: white
+                  - width: 20px
+                  - height: 20px
+                name:
+                  - color: white
+                  - font-size: 15px
+                  - font-weight: 600
 
-                      <button onclick="
-                        event.stopPropagation();
-                        const ha = document.querySelector('home-assistant');
-                        if (ha && ha.hass) {
-                          const url = prompt('Paste your Real Time Rice URL here:\\n\\n(The link from your RTR email ending in .html or .csv)');
-                          if (url && url.trim()) {
-                            ha.hass.callService('paddisense', 'set_rtr_url', { url: url.trim() }).then(() => {
-                              alert('RTR URL saved! Fetching data...');
-                              ha.hass.callService('paddisense', 'refresh_rtr_data');
-                            }).catch((err) => {
-                              alert('Error: ' + (err.message || 'Failed to save URL'));
-                            });
-                          }
-                        }
-                      " style="width:100%;background:#ff9800;color:white;border:none;border-radius:10px;padding:14px 20px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <ha-icon icon="mdi:link-plus" style="--mdc-icon-size:20px;"></ha-icon>
-                        Enter RTR URL
-                      </button>
-                    </div>
-
-                    <div style="margin-top:16px;font-size:12px;color:var(--secondary-text-color);">
+            - type: custom:button-card
+              show_name: false
+              show_icon: false
+              show_state: false
+              tap_action:
+                action: none
+              styles:
+                card:
+                  - background: transparent
+                  - box-shadow: none
+                  - padding: 8px 0
+              custom_fields:
+                note: |
+                  [[[
+                    return `<div style="text-align:center;font-size:12px;color:var(--secondary-text-color);">
                       Data will refresh automatically each day at 6am
-                    </div>
-                  </div>
-                `;
-              ]]]
+                    </div>`;
+                  ]]]
 
       # Notice when no active season is set
       - type: conditional
@@ -562,7 +602,7 @@ views:
         styles:
           card:
             - background: var(--card-background-color)
-            - border-radius: 16px
+            - border-radius: 16px 16px 0 0
             - padding: 20px
         custom_fields:
           status: |
@@ -572,7 +612,6 @@ views:
               const configured = state !== 'Not configured';
               const lastUpdated = attrs.last_updated || 'Never';
               const paddockCount = attrs.paddock_count || 0;
-              const csvUrl = attrs.csv_url || '';
 
               const statusColor = configured ? '#43a047' : '#ff9800';
               const statusIcon = configured ? 'mdi:check-circle' : 'mdi:alert-circle-outline';
@@ -591,7 +630,7 @@ views:
                   </div>
 
                   ${configured ? `
-                    <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:16px;margin-bottom:16px;">
+                    <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:16px;">
                       <div style="display:grid;gap:12px;">
                         <div>
                           <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Last Updated</div>
@@ -604,50 +643,68 @@ views:
                       </div>
                     </div>
                   ` : ''}
-
-                  <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                    <button onclick="
-                      event.stopPropagation();
-                      const ha = document.querySelector('home-assistant');
-                      if (ha && ha.hass) {
-                        const url = prompt('Enter your Real Time Rice URL:\\n\\n(Paste the link from your RTR email)');
-                        if (url && url.trim()) {
-                          ha.hass.callService('paddisense', 'set_rtr_url', { url: url.trim() }).then(() => {
-                            alert('RTR URL saved! Fetching data...');
-                            ha.hass.callService('paddisense', 'refresh_rtr_data');
-                          }).catch((err) => {
-                            alert('Error: ' + (err.message || 'Failed to save URL'));
-                          });
-                        }
-                      }
-                    " style="flex:1;min-width:140px;background:#43a047;color:white;border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                      <ha-icon icon="mdi:${configured ? 'pencil' : 'link-plus'}" style="--mdc-icon-size:18px;"></ha-icon>
-                      ${configured ? 'Update URL' : 'Enter URL'}
-                    </button>
-
-                    ${configured ? `
-                      <button onclick="
-                        event.stopPropagation();
-                        const btn = this;
-                        const origHtml = btn.innerHTML;
-                        btn.innerHTML = '<ha-icon icon=\\'mdi:loading\\' style=\\'--mdc-icon-size:18px;animation:spin 1s linear infinite;\\'></ha-icon>';
-                        btn.disabled = true;
-                        const ha = document.querySelector('home-assistant');
-                        if (ha && ha.hass) {
-                          ha.hass.callService('paddisense', 'refresh_rtr_data').then(() => {
-                            setTimeout(() => { btn.innerHTML = origHtml; btn.disabled = false; }, 2000);
-                          }).catch(() => { btn.innerHTML = origHtml; btn.disabled = false; });
-                        }
-                      " style="flex:1;min-width:140px;background:#0066cc;color:white;border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <ha-icon icon="mdi:refresh" style="--mdc-icon-size:18px;"></ha-icon>
-                        Refresh Data
-                      </button>
-                    ` : ''}
-                  </div>
                 </div>
-                <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
               `;
             ]]]
+
+      # URL Input Field
+      - type: entities
+        entities:
+          - entity: input_text.rtr_url_input
+            name: RTR URL (paste to update)
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 0;
+              box-shadow: none;
+            }
+
+      # Action Buttons
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            entity: script.rtr_set_url
+            name: Save URL
+            icon: mdi:content-save
+            show_state: false
+            tap_action:
+              action: call-service
+              service: script.rtr_set_url
+            styles:
+              card:
+                - background: "#43a047"
+                - border-radius: 0 0 0 16px
+                - padding: 14px 16px
+              icon:
+                - color: white
+                - width: 18px
+                - height: 18px
+              name:
+                - color: white
+                - font-size: 14px
+                - font-weight: 600
+
+          - type: custom:button-card
+            entity: script.rtr_refresh_data
+            name: Refresh Data
+            icon: mdi:refresh
+            show_state: false
+            tap_action:
+              action: call-service
+              service: script.rtr_refresh_data
+            styles:
+              card:
+                - background: "#0066cc"
+                - border-radius: 0 0 16px 0
+                - padding: 14px 16px
+              icon:
+                - color: white
+                - width: 18px
+                - height: 18px
+              name:
+                - color: white
+                - font-size: 14px
+                - font-weight: 600
 
       # Help section
       - type: markdown

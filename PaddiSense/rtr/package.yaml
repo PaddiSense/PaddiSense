@@ -84,3 +84,56 @@ automation:
           minutes: 2
       - service: paddisense.refresh_rtr_data
     mode: single
+
+# -----------------------------------------------------------------------------
+# INPUT HELPERS
+# -----------------------------------------------------------------------------
+input_text:
+  rtr_url_input:
+    name: RTR URL Input
+    icon: mdi:link
+    max: 500
+    initial: ""
+
+# -----------------------------------------------------------------------------
+# SCRIPTS
+# -----------------------------------------------------------------------------
+script:
+  rtr_refresh_data:
+    alias: RTR Refresh Data
+    icon: mdi:refresh
+    mode: single
+    sequence:
+      - service: paddisense.refresh_rtr_data
+
+  rtr_set_url:
+    alias: RTR Set URL
+    icon: mdi:link-plus
+    mode: single
+    sequence:
+      - variables:
+          url: "{{ states('input_text.rtr_url_input') | trim }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ url == '' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "Real Time Rice"
+                  message: "Please enter a URL first."
+              - stop: "No URL"
+      - service: paddisense.set_rtr_url
+        data:
+          url: "{{ url }}"
+      - delay: "00:00:01"
+      - service: paddisense.refresh_rtr_data
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.rtr_url_input
+        data:
+          value: ""
+      - service: persistent_notification.create
+        data:
+          title: "Real Time Rice"
+          message: "RTR URL saved and data refreshed."
