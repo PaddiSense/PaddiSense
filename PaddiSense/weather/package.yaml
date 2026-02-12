@@ -479,15 +479,24 @@ template:
 # =============================================================================
   - sensor:
       # Auto-detect BOM location prefix from available entities
+      # Checks observations first, then forecast entities, then defaults to "home"
       - name: "BOM Detected Prefix"
         unique_id: bom_detected_prefix
         icon: mdi:map-marker
         state: >-
           {% set ns = namespace(prefix='') %}
+          {# Try observations first #}
           {% for entity in states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
             {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_observations_temp', '') %}
           {% endfor %}
-          {{ ns.prefix }}
+          {# Fallback: try forecast entities if no observations found #}
+          {% if ns.prefix == '' %}
+            {% for entity in states.sensor | selectattr('entity_id', 'search', '_forecast_temp_min_0$') | list %}
+              {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_forecast_temp_min_0', '') %}
+            {% endfor %}
+          {% endif %}
+          {# Final fallback: default to "home" for backward compatibility #}
+          {{ ns.prefix if ns.prefix != '' else 'home' }}
 
   - binary_sensor:
       # BOM Configuration Status - auto-detects if any BOM entities exist
@@ -2399,6 +2408,16 @@ input_number:
     step: 0.0001
     mode: box
     icon: mdi:latitude
+    initial: -35.0
+
+  weather_api_station_longitude:
+    name: Weather API Station Longitude
+    icon: mdi:longitude
+    min: -180
+    max: 180
+    step: 0.0001
+    mode: box
+    initial: 149.0
 
   weather_api_station_elevation:
     name: Weather API Station Elevation
@@ -3169,116 +3188,3 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.weather_local_config
-
-
-# =============================================================================
-# INPUT HELPERS - For Settings UI
-# =============================================================================
-
-input_text:
-  weather_api_station_name:
-    name: Weather API Station Name
-    icon: mdi:label
-    initial: ""
-    max: 100
-
-  weather_api_station_imei:
-    name: Weather API Station IMEI
-    icon: mdi:identifier
-    initial: ""
-    max: 20
-
-  weather_local_station_name:
-    name: Weather Local Station Name
-    icon: mdi:label
-    initial: ""
-    max: 100
-
-input_number:
-  weather_api_station_slot:
-    name: Weather API Station Slot
-    icon: mdi:numeric
-    min: 1
-    max: 4
-    step: 1
-    mode: box
-    initial: 1
-
-  weather_api_station_latitude:
-    name: Weather API Station Latitude
-    icon: mdi:latitude
-    min: -90
-    max: 90
-    step: 0.0001
-    mode: box
-    initial: -35.0
-
-  weather_api_station_longitude:
-    name: Weather API Station Longitude
-    icon: mdi:longitude
-    min: -180
-    max: 180
-    step: 0.0001
-    mode: box
-    initial: 149.0
-
-  weather_api_station_elevation:
-    name: Weather API Station Elevation
-    icon: mdi:elevation-rise
-    min: 0
-    max: 5000
-    step: 1
-    mode: box
-    unit_of_measurement: m
-    initial: 0
-
-  # CDD Accumulators
-  weather_station_1_cdd:
-    name: Weather Station 1 Cumulative Degree Days
-    icon: mdi:chart-line
-    min: 0
-    max: 10000
-    step: 0.01
-    mode: box
-    unit_of_measurement: "°C-d"
-    initial: 0
-
-  weather_api_station_1_cdd:
-    name: Weather API Station 1 CDD
-    icon: mdi:chart-line
-    min: 0
-    max: 10000
-    step: 0.01
-    mode: box
-    unit_of_measurement: "°C-d"
-    initial: 0
-
-  weather_api_station_2_cdd:
-    name: Weather API Station 2 CDD
-    icon: mdi:chart-line
-    min: 0
-    max: 10000
-    step: 0.01
-    mode: box
-    unit_of_measurement: "°C-d"
-    initial: 0
-
-  weather_api_station_3_cdd:
-    name: Weather API Station 3 CDD
-    icon: mdi:chart-line
-    min: 0
-    max: 10000
-    step: 0.01
-    mode: box
-    unit_of_measurement: "°C-d"
-    initial: 0
-
-  weather_api_station_4_cdd:
-    name: Weather API Station 4 CDD
-    icon: mdi:chart-line
-    min: 0
-    max: 10000
-    step: 0.01
-    mode: box
-    unit_of_measurement: "°C-d"
-    initial: 0
