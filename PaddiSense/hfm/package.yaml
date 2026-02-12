@@ -273,6 +273,32 @@ input_select:
     options:
       - Select Event
 
+  # Applicator Management
+  hfm_applicator_type:
+    name: HFM Applicator Type
+    icon: mdi:shape
+    options:
+      - Select Type
+      - boom_spray
+      - broadcast
+      - aerial
+      - fertigation
+      - seed_treatment
+      - foliar
+
+  hfm_selected_applicator:
+    name: HFM Selected Applicator
+    icon: mdi:tractor
+    options:
+      - Select Applicator
+
+  # Farm Selection
+  hfm_selected_farm:
+    name: HFM Selected Farm
+    icon: mdi:barn
+    options:
+      - Select Farm
+
 input_text:
   hfm_notes:
     name: HFM Notes
@@ -381,6 +407,34 @@ input_text:
     icon: mdi:identifier
     max: 50
 
+  # Draft System (Multi-user)
+  hfm_current_device:
+    name: HFM Current Device
+    icon: mdi:cellphone-link
+    max: 100
+
+  # Applicator Management
+  hfm_applicator_name:
+    name: HFM Applicator Name
+    icon: mdi:tractor
+    max: 100
+
+  hfm_applicator_id:
+    name: HFM Applicator ID
+    icon: mdi:identifier
+    max: 50
+
+  hfm_applicator_attributes:
+    name: HFM Applicator Attributes
+    icon: mdi:code-json
+    max: 1000
+
+  # Application Timing
+  hfm_start_time:
+    name: HFM Start Time
+    icon: mdi:clock-start
+    max: 5
+
 input_number:
   hfm_product_count:
     name: HFM Product Count
@@ -398,67 +452,7 @@ input_number:
     mode: box
     icon: mdi:step-forward
 
-input_boolean:
-  hfm_edit_mode:
-    name: HFM Edit Mode
-    icon: mdi:pencil
-
-# -----------------------------------------------------------------------------
-# Input Helpers - Draft System (Multi-user)
-# -----------------------------------------------------------------------------
-input_text:
-  hfm_current_device:
-    name: HFM Current Device
-    icon: mdi:cellphone-link
-    max: 100
-
-# -----------------------------------------------------------------------------
-# Input Helpers - Applicator Management
-# -----------------------------------------------------------------------------
-  hfm_applicator_name:
-    name: HFM Applicator Name
-    icon: mdi:tractor
-    max: 100
-
-  hfm_applicator_id:
-    name: HFM Applicator ID
-    icon: mdi:identifier
-    max: 50
-
-  hfm_applicator_attributes:
-    name: HFM Applicator Attributes
-    icon: mdi:code-json
-    max: 1000
-
-input_select:
-  hfm_applicator_type:
-    name: HFM Applicator Type
-    icon: mdi:shape
-    options:
-      - Select Type
-      - boom_spray
-      - broadcast
-      - aerial
-      - fertigation
-      - seed_treatment
-      - foliar
-
-  hfm_selected_applicator:
-    name: HFM Selected Applicator
-    icon: mdi:tractor
-    options:
-      - Select Applicator
-
-# -----------------------------------------------------------------------------
-# Input Helpers - Application Timing
-# -----------------------------------------------------------------------------
-input_text:
-  hfm_start_time:
-    name: HFM Start Time
-    icon: mdi:clock-start
-    max: 5
-
-input_number:
+  # Application Timing
   hfm_duration_minutes:
     name: HFM Duration (minutes)
     icon: mdi:timer
@@ -468,15 +462,10 @@ input_number:
     mode: box
     unit_of_measurement: "min"
 
-# -----------------------------------------------------------------------------
-# Input Helpers - Farm & Paddock Selection (Multi-select)
-# -----------------------------------------------------------------------------
-input_select:
-  hfm_selected_farm:
-    name: HFM Selected Farm
-    icon: mdi:barn
-    options:
-      - Select Farm
+input_boolean:
+  hfm_edit_mode:
+    name: HFM Edit Mode
+    icon: mdi:pencil
 
 
 # -----------------------------------------------------------------------------
