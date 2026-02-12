@@ -204,13 +204,10 @@ class PaddiSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[CONF_SELECTED_MODULES] = []
                 self._data[CONF_AGREEMENTS] = {}
 
-                # In dev mode, allow all modules and skip license
-                if is_dev_mode:
-                    self._data[CONF_LICENSE_MODULES] = list(AVAILABLE_MODULES)
-                    return await self.async_step_git_check()
-
-                # Proceed to license key step
-                return await self.async_step_license()
+                # All modules are free - skip license step
+                # (License step kept for future premium features)
+                self._data[CONF_LICENSE_MODULES] = list(FREE_MODULES)
+                return await self.async_step_git_check()
 
         # Try to get defaults from server.yaml
         server_config = await self.hass.async_add_executor_job(load_server_yaml)
