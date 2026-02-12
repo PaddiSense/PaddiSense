@@ -625,8 +625,8 @@ views:
                   name: "Bureau of Meteorology"
                   state_display: >
                     [[[
-                      const prefix = hass.states['input_text.bom_location_prefix']?.state || 'home';
-                      return `Location: ${prefix}`;
+                      const prefix = hass.states['sensor.bom_detected_prefix']?.state || '';
+                      return prefix ? `Location: ${prefix}` : 'Auto-detected';
                     ]]]
                   styles:
                     card:
@@ -775,10 +775,10 @@ views:
                 To use BOM observations:
 
                 1. Install the **Bureau of Meteorology** integration via HACS
-                2. Configure it with your location name (e.g., "home", "farm")
-                3. Set the location prefix in **Settings** > **Helpers** > **bom_location_prefix**
+                2. Configure it with your location name
+                3. Restart Home Assistant
 
-                The prefix must match exactly what you used when setting up the BOM integration.
+                The weather module will automatically detect your BOM location.
 
 
   ###########################################################################
@@ -786,7 +786,6 @@ views:
   ###########################################################################
   - title: Radar
     path: radar
-    icon: mdi:radar
     type: sections
     max_columns: 1
     sections:
@@ -1046,6 +1045,50 @@ views:
       # LEFT COLUMN
       - type: grid
         cards:
+
+          # --------------------------
+          # NO STATIONS CONFIGURED MESSAGE
+          # --------------------------
+          - type: custom:button-card
+            entity: sensor.weather_api_data
+            show_name: false
+            show_state: false
+            show_icon: false
+            tap_action:
+              action: navigate
+              navigation_path: /weather-station/settings
+            styles:
+              card:
+                - background: var(--card-background-color)
+                - border-radius: 16px
+                - padding: 24px
+                - border-left: 4px solid #ff9800
+                - cursor: pointer
+                - display: >
+                    [[[
+                      const attrs = entity?.attributes || {};
+                      const count = attrs.station_count || 0;
+                      return count > 0 ? 'none' : 'block';
+                    ]]]
+            custom_fields:
+              content: |
+                [[[
+                  return `
+                    <div style="text-align:center;">
+                      <div style="width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:rgba(255,152,0,0.15);display:flex;align-items:center;justify-content:center;">
+                        <ha-icon icon="mdi:weather-station" style="--mdc-icon-size:32px;color:#ff9800;"></ha-icon>
+                      </div>
+                      <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">No Remote Stations Configured</div>
+                      <div style="font-size:14px;color:var(--secondary-text-color);margin-bottom:16px;">
+                        Add your Ecowitt API stations to view remote weather data.
+                      </div>
+                      <div style="display:inline-flex;align-items:center;gap:6px;color:#ff9800;font-weight:600;font-size:14px;">
+                        <span>Go to Settings</span>
+                        <ha-icon icon="mdi:arrow-right" style="--mdc-icon-size:18px;"></ha-icon>
+                      </div>
+                    </div>
+                  `;
+                ]]]
 
           # --------------------------
           # STATION 1
@@ -2154,15 +2197,6 @@ views:
                 1. Install **Bureau of Meteorology** from HACS
                 2. Configure with your location name (e.g., "home", "farm")
                 3. Set the location prefix below to match
-
-          # BOM Location Prefix Setting
-          - type: entities
-            title: BOM Configuration
-            show_header_toggle: false
-            entities:
-              - entity: input_text.bom_location_prefix
-                name: BOM Location Prefix
-                icon: mdi:map-marker
 
           - type: entities
             title: API System Status

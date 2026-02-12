@@ -754,11 +754,25 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
             if result.get("restart_required"):
                 # Notify user before restart
                 version = result.get("version", "unknown")
+
+                # Module-specific post-install messages
+                post_install_msg = ""
+                if module_id == "rtr":
+                    post_install_msg = (
+                        "\n\n**Next Step:** After restart, go to the RTR dashboard "
+                        "and enter your Real Time Rice URL to see predictions."
+                    )
+                elif module_id == "weather":
+                    post_install_msg = (
+                        "\n\n**Next Step:** After restart, configure the Bureau of Meteorology "
+                        "integration in Settings → Devices & Services."
+                    )
+
                 await hass.services.async_call(
                     "persistent_notification", "create",
                     {
                         "title": "PaddiSense",
-                        "message": f"Module '{module_name}' v{version} installed successfully.\n\nRestarting Home Assistant...",
+                        "message": f"Module '{module_name}' v{version} installed successfully.{post_install_msg}\n\nRestarting Home Assistant...",
                         "notification_id": "paddisense_module_install",
                     },
                 )

@@ -3009,27 +3009,27 @@ script:
         target:
           entity_id: input_text.weather_api_station_name
         data:
-          value: "{{ s.get('name', '') }}"
+          value: "{{ s.get('name') | default('', true) }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.weather_api_station_imei
         data:
-          value: "{{ s.get('imei', '') }}"
+          value: "{{ s.get('imei') | default('', true) }}"
       - service: input_number.set_value
         target:
           entity_id: input_number.weather_api_station_latitude
         data:
-          value: "{{ s.get('latitude', -35.0) }}"
+          value: "{{ s.get('latitude') | default(-35.0, true) }}"
       - service: input_number.set_value
         target:
           entity_id: input_number.weather_api_station_longitude
         data:
-          value: "{{ s.get('longitude', 149.0) }}"
+          value: "{{ s.get('longitude') | default(149.0, true) }}"
       - service: input_number.set_value
         target:
           entity_id: input_number.weather_api_station_elevation
         data:
-          value: "{{ s.get('elevation', 0) }}"
+          value: "{{ s.get('elevation') | default(0, true) }}"
       - service: persistent_notification.create
         data:
           title: "Weather API"
