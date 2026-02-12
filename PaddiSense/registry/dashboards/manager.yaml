@@ -479,83 +479,59 @@ views:
                       `;
                     ]]]
 
-              # Check for Updates Button - dedicated button-card
+              # Update Buttons Row
               - type: custom:button-card
                 entity: sensor.paddisense_version
-                name: Check for Updates
-                icon: mdi:cloud-download
+                show_name: false
+                show_icon: false
                 show_state: false
                 tap_action:
-                  action: call-service
-                  service: paddisense.check_for_updates
-                hold_action:
                   action: none
                 styles:
                   card:
-                    - background: "#0066cc"
-                    - border-radius: 12px
-                    - padding: 12px
+                    - background: transparent
+                    - box-shadow: none
+                    - padding: 0
                     - display: |
                         [[[
-                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'grid' : 'none';
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'block' : 'none';
                         ]]]
-                  name:
-                    - font-size: 14px
-                    - font-weight: 700
-                    - color: white
-                  icon:
-                    - color: white
-                    - width: 22px
                   grid:
-                    - grid-template-areas: '"i n"'
-                    - grid-template-columns: 32px 1fr
-                    - justify-items: start
-
-              # Update Now Button - only shown when update available
-              - type: conditional
-                conditions:
-                  - entity: sensor.paddisense_version
-                    attribute: update_available
-                    state: true
-                card:
-                  type: custom:button-card
-                  entity: sensor.paddisense_version
-                  name: |
+                    - display: block
+                custom_fields:
+                  buttons: |
                     [[[
-                      const latest = entity.attributes.latest_version || 'latest';
-                      return `Update to v${latest}`;
+                      const updateAvailable = entity.attributes.update_available === true;
+                      const latestVersion = entity.attributes.latest_version || 'latest';
+
+                      return `
+                        <div style="display:flex;gap:12px;">
+                          <button onclick="
+                            event.stopPropagation();
+                            const ha = document.querySelector('home-assistant');
+                            if (ha && ha.hass) {
+                              ha.hass.callService('paddisense', 'check_for_updates', {});
+                            }
+                          " style="flex:1;background:#0066cc;color:white;border:none;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                            <ha-icon icon="mdi:cloud-download" style="--mdc-icon-size:22px;"></ha-icon>
+                            Check for Updates
+                          </button>
+                          ${updateAvailable ? `
+                          <button onclick="
+                            event.stopPropagation();
+                            if (!confirm('Update PaddiSense to v${latestVersion}? A backup will be created first.')) return;
+                            const ha = document.querySelector('home-assistant');
+                            if (ha && ha.hass) {
+                              ha.hass.callService('paddisense', 'update_paddisense', { backup_first: true });
+                            }
+                          " style="flex:1;background:#28a745;color:white;border:none;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                            <ha-icon icon="mdi:download" style="--mdc-icon-size:22px;"></ha-icon>
+                            Update to v${latestVersion}
+                          </button>
+                          ` : ''}
+                        </div>
+                      `;
                     ]]]
-                  icon: mdi:download
-                  show_state: false
-                  tap_action:
-                    action: call-service
-                    service: paddisense.update_paddisense
-                    service_data:
-                      backup_first: true
-                  confirmation:
-                    text: |
-                      [[[
-                        const latest = entity.attributes.latest_version || 'latest';
-                        return `Update PaddiSense to v${latest}? A backup will be created first.`;
-                      ]]]
-                  hold_action:
-                    action: none
-                  styles:
-                    card:
-                      - background: "#28a745"
-                      - border-radius: 12px
-                      - padding: 12px
-                    name:
-                      - font-size: 14px
-                      - font-weight: 700
-                      - color: white
-                    icon:
-                      - color: white
-                      - width: 22px
-                    grid:
-                      - grid-template-areas: '"i n"'
-                      - grid-template-columns: 32px 1fr
-                      - justify-items: start
 
               # Module Cards - Using pds_module_row template
               - type: custom:button-card
