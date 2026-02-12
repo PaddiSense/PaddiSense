@@ -1,11 +1,20 @@
-# PaddiSense Farm Management
+<p align="center">
+  <img src="icon.png" alt="PaddiSense Logo" width="200">
+</p>
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/badge/version-1.0.0--rc.8-blue.svg)](https://github.com/PaddiSense/PaddiSense/releases)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1+-blue.svg)](https://www.home-assistant.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<h1 align="center">PaddiSense Farm Management</h1>
 
-A modular farm management platform for Home Assistant. Built for Australian rice and mixed farming operations.
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-orange.svg" alt="HACS Custom"></a>
+  <a href="https://github.com/PaddiSense/PaddiSense/releases"><img src="https://img.shields.io/badge/version-1.0.0--rc.8-blue.svg" alt="Version"></a>
+  <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-2024.1+-blue.svg" alt="Home Assistant"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
+
+<p align="center">
+  A modular farm management platform for Home Assistant.<br>
+  Built for Australian rice and mixed farming operations.
+</p>
 
 ## Modules
 
