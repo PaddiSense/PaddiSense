@@ -427,7 +427,7 @@ input_text:
   hfm_applicator_attributes:
     name: HFM Applicator Attributes
     icon: mdi:code-json
-    max: 1000
+    max: 255
 
   # Application Timing
   hfm_start_time:

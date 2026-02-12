@@ -92,7 +92,7 @@ input_text:
   rtr_url_input:
     name: RTR URL Input
     icon: mdi:link
-    max: 500
+    max: 255
     initial: ""
 
 # -----------------------------------------------------------------------------
