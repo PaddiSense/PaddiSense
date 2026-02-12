@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-orange.svg" alt="HACS Custom"></a>
-  <a href="https://github.com/PaddiSense/PaddiSense/releases"><img src="https://img.shields.io/badge/version-1.0.0--rc.8-blue.svg" alt="Version"></a>
+  <a href="https://github.com/PaddiSense/PaddiSense/releases"><img src="https://img.shields.io/badge/version-1.0.0--rc.9-blue.svg" alt="Version"></a>
   <a href="https://www.home-assistant.io/"><img src="https://img.shields.io/badge/Home%20Assistant-2024.1+-blue.svg" alt="Home Assistant"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 </p>
