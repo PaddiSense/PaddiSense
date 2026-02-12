@@ -92,144 +92,27 @@ template:
 # =============================================================================
 # BOM CONFIGURATION - Bureau of Meteorology Integration
 # =============================================================================
-# The BOM integration creates sensors with a location prefix (e.g., "home", "farm").
-# Configure input_text.bom_location_prefix to match your BOM integration location.
-
+# The BOM integration creates sensors with a location prefix.
+# PaddiSense uses the standard "home" prefix for all BOM sensors.
+# When setting up the BOM integration, use "home" as the location name.
+#
+# Required HACS integration: bureau_of_meteorology
+# Install via HACS -> Integrations -> Search "Bureau of Meteorology"
 # =============================================================================
-# BOM TEMPLATE SENSORS - Dynamic mapping to BOM integration entities
-# These sensors use the configured prefix to resolve actual BOM entity names
+# BOM FORECAST SENSORS - 7-Day Forecast (Temp, Rain, UV, Fire Danger)
+# Observation sensors are defined in the later BOM TEMPLATE SENSORS section
 # =============================================================================
   - sensor:
-      # Current Observations
-      - name: "BOM Observations Temperature"
-        unique_id: bom_observations_temperature
-        icon: mdi:thermometer
-        unit_of_measurement: "°C"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_temp') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_temp') }}
-
-      - name: "BOM Observations Feels Like"
-        unique_id: bom_observations_feels_like
-        icon: mdi:thermometer-check
-        unit_of_measurement: "°C"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_feels_like') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_feels_like') }}
-
-      - name: "BOM Observations Humidity"
-        unique_id: bom_observations_humidity
-        icon: mdi:water-percent
-        unit_of_measurement: "%"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_humidity') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_humidity') }}
-
-      - name: "BOM Observations Wind Speed"
-        unique_id: bom_observations_wind_speed
-        icon: mdi:weather-windy
-        unit_of_measurement: "km/h"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_wind_speed_kilometre') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_wind_speed_kilometre') }}
-
-      - name: "BOM Observations Wind Gust"
-        unique_id: bom_observations_wind_gust
-        icon: mdi:weather-windy-variant
-        unit_of_measurement: "km/h"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_wind_gust_kilometre') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_wind_gust_kilometre') }}
-
-      - name: "BOM Observations Wind Direction"
-        unique_id: bom_observations_wind_direction
-        icon: mdi:compass
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_wind_direction') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_wind_direction') }}
-
-      - name: "BOM Observations Pressure"
-        unique_id: bom_observations_pressure
-        icon: mdi:gauge
-        unit_of_measurement: "hPa"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_pressure') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_pressure') }}
-
-      - name: "BOM Observations Dew Point"
-        unique_id: bom_observations_dew_point
-        icon: mdi:water-thermometer
-        unit_of_measurement: "°C"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_dew_point') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_dew_point') }}
-
-      - name: "BOM Observations Rain Since 9am"
-        unique_id: bom_observations_rain_since_9am
-        icon: mdi:water
-        unit_of_measurement: "mm"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ states('sensor.' ~ prefix ~ '_observations_rain_since_9am') }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_rain_since_9am') }}
-
-      # Delta T (calculated from observations)
-      - name: "BOM Observations Delta T"
-        unique_id: bom_observations_delta_t
-        icon: mdi:delta
-        unit_of_measurement: "°C"
-        state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {% set t = states('sensor.' ~ prefix ~ '_observations_temp') | float(0)
-             if has_value('sensor.' ~ prefix ~ '_observations_temp') else 0 %}
-          {% set rh = states('sensor.' ~ prefix ~ '_observations_humidity') | float(0)
-             if has_value('sensor.' ~ prefix ~ '_observations_humidity') else 0 %}
-          {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
-          {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
-          {% set c = atan(rh - 1.676331) %}
-          {% set d = atan(t + rh) %}
-          {{ (t - (a + b - c + d - 4.686035)) | round(2) }}
-        availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_temp') and
-             has_value('sensor.' ~ prefix ~ '_observations_humidity') }}
-
       # 7-Day Forecast Min/Max Temps (for Temp & Rain view)
       - name: "BOM Forecast Temp Min 0"
         unique_id: bom_forecast_temp_min_0
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_0') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_0') }}
 
       - name: "BOM Forecast Temp Max 0"
@@ -237,10 +120,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_0') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_0') }}
 
       - name: "BOM Forecast Rain 0"
@@ -248,12 +131,12 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_0') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_0') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_0') }}
 
       - name: "BOM Forecast Temp Min 1"
@@ -261,10 +144,10 @@ template:
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_1') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_1') }}
 
       - name: "BOM Forecast Temp Max 1"
@@ -272,10 +155,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_1') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_1') }}
 
       - name: "BOM Forecast Rain 1"
@@ -283,12 +166,12 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_1') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_1') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_1') }}
 
       - name: "BOM Forecast Temp Min 2"
@@ -296,10 +179,10 @@ template:
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_2') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_2') }}
 
       - name: "BOM Forecast Temp Max 2"
@@ -307,10 +190,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_2') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_2') }}
 
       - name: "BOM Forecast Rain 2"
@@ -318,12 +201,12 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_2') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_2') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_2') }}
 
       - name: "BOM Forecast Temp Min 3"
@@ -331,10 +214,10 @@ template:
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_3') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_3') }}
 
       - name: "BOM Forecast Temp Max 3"
@@ -342,10 +225,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_3') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_3') }}
 
       - name: "BOM Forecast Rain 3"
@@ -353,12 +236,12 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_3') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_3') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_3') }}
 
       - name: "BOM Forecast Temp Min 4"
@@ -366,10 +249,10 @@ template:
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_4') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_4') }}
 
       - name: "BOM Forecast Temp Max 4"
@@ -377,10 +260,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_4') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_4') }}
 
       - name: "BOM Forecast Rain 4"
@@ -388,12 +271,12 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_4') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_4') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_4') }}
 
       - name: "BOM Forecast Temp Min 5"
@@ -401,10 +284,10 @@ template:
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_5') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_5') }}
 
       - name: "BOM Forecast Temp Max 5"
@@ -412,10 +295,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_5') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_5') }}
 
       - name: "BOM Forecast Rain 5"
@@ -423,12 +306,12 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_5') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_5') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_5') }}
 
       - name: "BOM Forecast Temp Min 6"
@@ -436,10 +319,10 @@ template:
         icon: mdi:thermometer-low
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_6') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_6') }}
 
       - name: "BOM Forecast Temp Max 6"
@@ -447,10 +330,10 @@ template:
         icon: mdi:thermometer-high
         unit_of_measurement: "°C"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_6') }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_6') }}
 
       - name: "BOM Forecast Rain 6"
@@ -458,26 +341,161 @@ template:
         icon: mdi:weather-rainy
         unit_of_measurement: "mm"
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_6') | float(0) %}
           {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_6') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_6') }}
+
+      # UV Index Forecasts (0-6)
+      - name: "BOM Forecast UV 0"
+        unique_id: bom_forecast_uv_0
+        icon: mdi:sun-wireless
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_uv_0') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_0') }}
+        attributes:
+          category: >-
+            {% set uv = states('sensor.home_forecast_uv_0') | float(0) %}
+            {% if uv < 3 %}Low
+            {% elif uv < 6 %}Moderate
+            {% elif uv < 8 %}High
+            {% elif uv < 11 %}Very High
+            {% else %}Extreme{% endif %}
+
+      - name: "BOM Forecast UV 1"
+        unique_id: bom_forecast_uv_1
+        icon: mdi:sun-wireless
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_uv_1') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_1') }}
+
+      - name: "BOM Forecast UV 2"
+        unique_id: bom_forecast_uv_2
+        icon: mdi:sun-wireless
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_uv_2') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_2') }}
+
+      # Rain Chance Forecasts (0-6)
+      - name: "BOM Forecast Rain Chance 0"
+        unique_id: bom_forecast_rain_chance_0
+        icon: mdi:weather-pouring
+        unit_of_measurement: "%"
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_rain_chance_0') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_chance_0') }}
+
+      - name: "BOM Forecast Rain Chance 1"
+        unique_id: bom_forecast_rain_chance_1
+        icon: mdi:weather-pouring
+        unit_of_measurement: "%"
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_rain_chance_1') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_chance_1') }}
+
+      - name: "BOM Forecast Rain Chance 2"
+        unique_id: bom_forecast_rain_chance_2
+        icon: mdi:weather-pouring
+        unit_of_measurement: "%"
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_rain_chance_2') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_chance_2') }}
+
+      # Fire Danger Forecasts (important for farm safety)
+      - name: "BOM Forecast Fire Danger 0"
+        unique_id: bom_forecast_fire_danger_0
+        icon: mdi:fire-alert
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_fire_danger_0') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_fire_danger_0') }}
+
+      - name: "BOM Forecast Fire Danger 1"
+        unique_id: bom_forecast_fire_danger_1
+        icon: mdi:fire-alert
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_fire_danger_1') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_fire_danger_1') }}
+
+      - name: "BOM Forecast Fire Danger 2"
+        unique_id: bom_forecast_fire_danger_2
+        icon: mdi:fire-alert
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_fire_danger_2') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_fire_danger_2') }}
+
+      # Forecast Short Text (weather description)
+      - name: "BOM Forecast Short Text 0"
+        unique_id: bom_forecast_short_text_0
+        icon: mdi:text-short
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_short_text_0') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_short_text_0') }}
+
+      - name: "BOM Forecast Short Text 1"
+        unique_id: bom_forecast_short_text_1
+        icon: mdi:text-short
+        state: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ states('sensor.' ~ prefix ~ '_forecast_short_text_1') }}
+        availability: >-
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {{ has_value('sensor.' ~ prefix ~ '_forecast_short_text_1') }}
 
 # =============================================================================
 # BINARY SENSORS - For dashboard conditional cards
 # =============================================================================
+  - sensor:
+      # Auto-detect BOM location prefix from available entities
+      - name: "BOM Detected Prefix"
+        unique_id: bom_detected_prefix
+        icon: mdi:map-marker
+        state: >-
+          {% set ns = namespace(prefix='') %}
+          {% for entity in states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
+            {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_observations_temp', '') %}
+          {% endfor %}
+          {{ ns.prefix }}
+
   - binary_sensor:
-      # BOM Configuration Status
+      # BOM Configuration Status - auto-detects if any BOM entities exist
       - name: "BOM Observations Available"
         unique_id: bom_observations_available
         icon: mdi:weather-cloudy
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
-          {% set temp_entity = 'sensor.' ~ prefix ~ '_observations_temp' %}
-          {{ has_value(temp_entity) }}
+          {{ states('sensor.bom_detected_prefix') | length > 0 }}
       # API Station Configuration Status (for Settings conditional cards)
       - name: "Weather API Station 1 Configured"
         unique_id: weather_api_station_1_configured
@@ -577,8 +595,8 @@ template:
 # BOM TEMPLATE SENSORS - Bureau of Meteorology Observations
 # =============================================================================
 # These sensors normalize BOM data to standardized entity names.
-# The source entities are determined by the bom_location_prefix input_text.
-# BOM sensors follow pattern: sensor.<prefix>_observations_<metric>
+# PaddiSense uses "home" as the standard BOM location prefix.
+# BOM sensors follow pattern: sensor.home_observations_<metric>
 
   - sensor:
       - name: "BOM Observations Temperature"
@@ -588,10 +606,10 @@ template:
         unit_of_measurement: "°C"
         icon: mdi:thermometer
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_temp') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_temp') | float(none) }}
 
       - name: "BOM Observations Feels Like"
@@ -601,10 +619,10 @@ template:
         unit_of_measurement: "°C"
         icon: mdi:thermometer-lines
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_temp_feels_like') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_temp_feels_like') | float(none) }}
 
       - name: "BOM Observations Humidity"
@@ -614,10 +632,10 @@ template:
         unit_of_measurement: "%"
         icon: mdi:water-percent
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_humidity') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_humidity') | float(none) }}
 
       - name: "BOM Observations Dew Point"
@@ -627,10 +645,10 @@ template:
         unit_of_measurement: "°C"
         icon: mdi:water-thermometer
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_dew_point') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_dew_point') | float(none) }}
 
       - name: "BOM Observations Wind Speed"
@@ -640,10 +658,10 @@ template:
         unit_of_measurement: "km/h"
         icon: mdi:weather-windy
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_wind_speed_kilometre') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_wind_speed_kilometre') | float(none) }}
 
       - name: "BOM Observations Wind Gust"
@@ -653,20 +671,20 @@ template:
         unit_of_measurement: "km/h"
         icon: mdi:weather-windy-variant
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_gust_speed_kilometre') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_gust_speed_kilometre') | float(none) }}
 
       - name: "BOM Observations Wind Direction"
         unique_id: bom_observations_wind_direction
         icon: mdi:compass
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_wind_direction') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_wind_direction') }}
 
       - name: "BOM Observations Pressure"
@@ -676,10 +694,10 @@ template:
         unit_of_measurement: "hPa"
         icon: mdi:gauge
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_pressure') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_pressure') | float(none) }}
 
       - name: "BOM Observations Rain Since 9am"
@@ -689,10 +707,10 @@ template:
         unit_of_measurement: "mm"
         icon: mdi:water
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_rain_since_9am') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ states('sensor.' ~ prefix ~ '_observations_rain_since_9am') | float(none) }}
 
       # Calculated: Delta T from BOM observations
@@ -702,11 +720,11 @@ template:
         unit_of_measurement: "°C"
         icon: mdi:delta
         availability: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {{ has_value('sensor.' ~ prefix ~ '_observations_temp') and
              has_value('sensor.' ~ prefix ~ '_observations_humidity') }}
         state: >-
-          {% set prefix = states('input_text.bom_location_prefix') | default('home', true) %}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
           {% set t = states('sensor.' ~ prefix ~ '_observations_temp') | float(0) %}
           {% set rh = states('sensor.' ~ prefix ~ '_observations_humidity') | float(0) %}
           {% if rh > 0 %}
@@ -2431,14 +2449,6 @@ input_number:
 
 
 input_text:
-  # BOM Configuration
-  bom_location_prefix:
-    name: "BOM Location Prefix"
-    icon: mdi:map-marker
-    initial: "home"
-    min: 1
-    max: 50
-
   # Weather API Station Configuration
   weather_api_station_name:
     name: Weather API Station Name
@@ -3166,12 +3176,6 @@ script:
 # =============================================================================
 
 input_text:
-  bom_location_prefix:
-    name: BOM Location Prefix
-    icon: mdi:map-marker
-    initial: "home"
-    max: 50
-
   weather_api_station_name:
     name: Weather API Station Name
     icon: mdi:label
