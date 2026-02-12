@@ -46,10 +46,10 @@ PADDISENSE_REPO_BRANCH = "main"
 AVAILABLE_MODULES = ["ipm", "asm", "weather", "pwm", "rtr", "str", "wss", "hfm"]
 
 # Free modules - available to all registered users
-FREE_MODULES = ["ipm", "asm", "weather", "pwm", "rtr", "str", "wss"]
+FREE_MODULES = ["ipm", "asm", "weather", "pwm", "rtr", "str", "wss", "hfm"]
 
 # Data-sharing modules - require agreement to share aggregated data
-DATA_SHARING_MODULES = ["hfm"]
+DATA_SHARING_MODULES = []
 
 # Module folder paths (relative to PADDISENSE_DIR) for cleanup of unlicensed modules
 MODULE_FOLDERS = {
@@ -133,10 +133,8 @@ MODULE_METADATA = {
         "dashboard_title": "Hey Farmer",
         "dashboard_file": "hfm/dashboards/views.yaml",
         "status": "rc",
-        "tier": "data_sharing",
+        "tier": "free",
         "dependencies": ["ipm"],
-        "agreement_required": True,
-        "agreement_text": "By enabling Hey Farmer, you agree to share aggregated, anonymized farm data (nutrient applications, yields, etc.) to help improve recommendations for all growers.",
     },
 }
 
