@@ -53,7 +53,11 @@
 
 ## Documentation
 
-- [Installation Guide](https://github.com/PaddiSense/PaddiSense/blob/main/docs/GROWER_INSTALLATION.md)
+Full documentation is available in the [PaddiSense Documentation](https://github.com/PaddiSense/documentation) repository:
+
+- [Installation Guide](https://github.com/PaddiSense/documentation/blob/main/getting-started/INSTALLATION.md)
+- [Quick Start](https://github.com/PaddiSense/documentation/blob/main/getting-started/QUICK_START.md)
+- [Module Documentation](https://github.com/PaddiSense/documentation/tree/main/modules)
 - [GitHub Issues](https://github.com/PaddiSense/PaddiSense/issues)
 
 ## License
