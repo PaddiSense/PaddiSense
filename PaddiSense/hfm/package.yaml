@@ -2966,10 +2966,13 @@ script:
     sequence:
       - variables:
           device_id: "{{ states('input_text.hfm_current_device') }}"
-          # Check if local station is available
-          local_available: >
-            {{ states('sensor.weather_api_station_1_wind_speed') not in ['unavailable', 'unknown', ''] }}
-          source: "{{ 'Local Station' if local_available else 'BOM' }}"
+          # Check if local station is available and determine source
+          source: >
+            {% if states('sensor.weather_api_station_1_wind_speed') not in ['unavailable', 'unknown', ''] %}
+              Local Station
+            {% else %}
+              BOM
+            {% endif %}
           # Get delta_t from local station or BOM
           delta_t_val: >
             {% set local = states('sensor.weather_api_station_1_delta_t') %}
