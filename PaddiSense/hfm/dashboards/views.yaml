@@ -946,6 +946,653 @@ views:
                             padding: 8px;
                           }
 
+                    # Time and Duration (Chemical/Nutrient only)
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - entity: input_select.hfm_event_type
+                              state: "Chemical Application"
+                            - entity: input_select.hfm_event_type
+                              state: "Nutrient Application"
+                      card:
+                        type: vertical-stack
+                        cards:
+                          # Time Selection Title
+                          - type: custom:button-card
+                            template: hfm_title
+                            name: SELECT START TIME
+
+                          # Hour buttons - Row 1 (1-4)
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "1"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 1 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 1
+                              - type: custom:button-card
+                                name: "2"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 2 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 2
+                              - type: custom:button-card
+                                name: "3"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 3 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 3
+                              - type: custom:button-card
+                                name: "4"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 4 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 4
+
+                          # Hour buttons - Row 2 (5-8)
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "5"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 5 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 5
+                              - type: custom:button-card
+                                name: "6"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 6 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 6
+                              - type: custom:button-card
+                                name: "7"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 7 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 7
+                              - type: custom:button-card
+                                name: "8"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 8 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 8
+
+                          # Hour buttons - Row 3 (9-12)
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "9"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 9 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 9
+                              - type: custom:button-card
+                                name: "10"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 10 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 10
+                              - type: custom:button-card
+                                name: "11"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 11 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 11
+                              - type: custom:button-card
+                                name: "12"
+                                entity: input_number.hfm_hour
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 12 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_hour
+                                  data:
+                                    value: 12
+
+                          # AM/PM Toggle
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "AM"
+                                entity: input_select.hfm_ampm
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return entity.state === 'AM' ? '#1976D2' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_select.select_option
+                                  target:
+                                    entity_id: input_select.hfm_ampm
+                                  data:
+                                    option: "AM"
+                              - type: custom:button-card
+                                name: "PM"
+                                entity: input_select.hfm_ampm
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return entity.state === 'PM' ? '#1976D2' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 18px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_select.select_option
+                                  target:
+                                    entity_id: input_select.hfm_ampm
+                                  data:
+                                    option: "PM"
+
+                          # Duration Title
+                          - type: custom:button-card
+                            template: hfm_title
+                            name: DURATION
+
+                          # Duration buttons - Row 1
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "15m"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 15 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 15
+                              - type: custom:button-card
+                                name: "30m"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 30 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 30
+                              - type: custom:button-card
+                                name: "45m"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 45 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 45
+                              - type: custom:button-card
+                                name: "1hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 60 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 60
+
+                          # Duration buttons - Row 2
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "1.5hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 90 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 90
+                              - type: custom:button-card
+                                name: "2hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 120 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 120
+                              - type: custom:button-card
+                                name: "3hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 180 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 180
+                              - type: custom:button-card
+                                name: "4hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 240 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 240
+
+                          # Duration buttons - Row 3
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                name: "5hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 300 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 300
+                              - type: custom:button-card
+                                name: "6hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 360 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 360
+                              - type: custom:button-card
+                                name: "8hr"
+                                entity: input_number.hfm_duration_minutes
+                                show_icon: false
+                                styles:
+                                  card:
+                                    - height: 50px
+                                    - border-radius: 10px
+                                    - background: |
+                                        [[[
+                                          return parseInt(entity.state) === 480 ? '#43A047' : '#424242';
+                                        ]]]
+                                  name:
+                                    - font-size: 16px
+                                    - font-weight: 600
+                                    - color: white
+                                tap_action:
+                                  action: call-service
+                                  service: input_number.set_value
+                                  target:
+                                    entity_id: input_number.hfm_duration_minutes
+                                  data:
+                                    value: 480
+
+                          # Time/Duration Summary
+                          - type: markdown
+                            content: |
+                              {% set hour = states('input_number.hfm_hour') | int %}
+                              {% set ampm = states('input_select.hfm_ampm') %}
+                              {% set dur = states('input_number.hfm_duration_minutes') | int %}
+                              {% set dur_hr = dur // 60 %}
+                              {% set dur_min = dur % 60 %}
+                              {% set dur_str = '' %}
+                              {% if dur_hr > 0 %}{% set dur_str = dur_hr ~ 'hr' %}{% endif %}
+                              {% if dur_min > 0 %}{% set dur_str = dur_str ~ ' ' ~ dur_min ~ 'min' %}{% endif %}
+                              {% if hour > 0 %}**Start:** {{ hour }}:00 {{ ampm }}{% endif %}
+                              {% if dur > 0 %} | **Duration:** {{ dur_str | trim }}{% endif %}
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  border-radius: 12px;
+                                  text-align: center;
+                                  padding: 8px;
+                                  background: rgba(25, 118, 210, 0.2);
+                                }
+
               #----------------------------------------------------------------
               # STEP 3: PADDOCK SELECTION (Multi-Farm, Multi-Paddock)
               #----------------------------------------------------------------
@@ -1060,9 +1707,6 @@ views:
                                 - padding: 0
                               grid:
                                 - display: block
-                              custom_fields:
-                                paddocks:
-                                  - width: 100%
                             custom_fields:
                               paddocks: |
                                 [[[
@@ -1116,7 +1760,7 @@ views:
                           {% set paddocks = draft.get('data', {}).get('paddocks', []) %}
                           {% set pmap = state_attr('sensor.hfm_drafts', 'paddock_map') or {} %}
                           {% if paddocks | length > 0 %}
-                          **Selected ({{ paddocks | length }}):** {{ paddocks | map('extract', pmap) | join(', ') }}
+                          **Selected ({{ paddocks | length }}):** {% for pid in paddocks %}{{ pmap.get(pid, pid) }}{% if not loop.last %}, {% endif %}{% endfor %}
                           {% else %}
                           *Tap paddocks to select them*
                           {% endif %}

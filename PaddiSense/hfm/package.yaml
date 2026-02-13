@@ -74,6 +74,16 @@ shell_command:
     --device-id "{{ device_id }}"
     --data '{{ data }}'
 
+  hfm_update_draft_weather_phase: >-
+    python3 /config/PaddiSense/hfm/python/hfm_backend.py update_draft
+    --device-id "{{ device_id }}"
+    --data '{"data": {"weather_{{ phase }}": {{ weather }}}}'
+
+  hfm_clear_draft_weather_phase: >-
+    python3 /config/PaddiSense/hfm/python/hfm_backend.py update_draft
+    --device-id "{{ device_id }}"
+    --data '{"data": {"weather_{{ phase }}": null}}'
+
   hfm_clear_draft: >-
     python3 /config/PaddiSense/hfm/python/hfm_backend.py clear_draft
     --device-id "{{ device_id }}"
@@ -206,6 +216,14 @@ input_select:
       - Yesterday
       - Specific Date
 
+  hfm_ampm:
+    name: HFM AM/PM
+    icon: mdi:clock-time-eight-outline
+    options:
+      - AM
+      - PM
+    initial: AM
+
   hfm_application_method:
     name: HFM Application Method
     icon: mdi:spray
@@ -298,6 +316,13 @@ input_select:
     icon: mdi:barn
     options:
       - Select Farm
+
+  # Paddock toggle dropdown (populated by automation)
+  hfm_paddock_to_toggle:
+    name: HFM Paddock to Toggle
+    icon: mdi:grass
+    options:
+      - Select Paddock
 
 input_text:
   hfm_notes:
@@ -453,6 +478,15 @@ input_number:
     icon: mdi:step-forward
 
   # Application Timing
+  hfm_hour:
+    name: HFM Hour
+    min: 1
+    max: 12
+    step: 1
+    initial: 8
+    mode: box
+    icon: mdi:clock-outline
+
   hfm_duration_minutes:
     name: HFM Duration (minutes)
     icon: mdi:timer
@@ -466,6 +500,29 @@ input_boolean:
   hfm_edit_mode:
     name: HFM Edit Mode
     icon: mdi:pencil
+
+  hfm_weather_capture_enabled:
+    name: HFM Weather Capture Enabled
+    icon: mdi:weather-partly-cloudy
+
+input_datetime:
+  hfm_weather_capture_start:
+    name: HFM Weather Capture Start Time
+    has_date: true
+    has_time: true
+    icon: mdi:play-circle
+
+  hfm_weather_capture_middle:
+    name: HFM Weather Capture Middle Time
+    has_date: true
+    has_time: true
+    icon: mdi:pause-circle
+
+  hfm_weather_capture_end:
+    name: HFM Weather Capture End Time
+    has_date: true
+    has_time: true
+    icon: mdi:stop-circle
 
 
 # -----------------------------------------------------------------------------
@@ -958,6 +1015,162 @@ automation:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.hfm_drafts
+      # Update paddock dropdown options
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_paddock_to_toggle
+        data:
+          options: >
+            {% set farm_id = states('sensor.hfm_selected_farm_id') %}
+            {% set by_farm = state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} %}
+            {% set paddocks = by_farm.get(farm_id, []) %}
+            {% set names = paddocks | map(attribute='name') | list | sort %}
+            {{ ['Select Paddock'] + names if names else ['Select Paddock'] }}
+
+  - id: hfm_populate_paddock_dropdown
+    alias: "HFM Populate Paddock Dropdown on Sensor Update"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_selected_farm_id
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_paddock_to_toggle
+        data:
+          options: >
+            {% set farm_id = states('sensor.hfm_selected_farm_id') %}
+            {% set by_farm = state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} %}
+            {% set paddocks = by_farm.get(farm_id, []) %}
+            {% set names = paddocks | map(attribute='name') | list | sort %}
+            {{ ['Select Paddock'] + names if names else ['Select Paddock'] }}
+
+  - id: hfm_auto_toggle_paddock_on_select
+    alias: "HFM Auto-Toggle Paddock When Selected"
+    trigger:
+      - platform: state
+        entity_id: input_select.hfm_paddock_to_toggle
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'Select Paddock' and trigger.to_state.state != trigger.from_state.state }}"
+    action:
+      - service: script.hfm_toggle_selected_paddock
+      - delay:
+          milliseconds: 300
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_paddock_to_toggle
+        data:
+          option: "Select Paddock"
+
+  # --- Weather Auto-Capture Automations ---
+
+  - id: hfm_schedule_weather_captures
+    alias: "HFM Schedule Weather Captures"
+    description: "Calculate and schedule weather capture times based on Step 2 data"
+    trigger:
+      - platform: state
+        entity_id: input_text.hfm_start_time
+      - platform: state
+        entity_id: input_number.hfm_duration_minutes
+      - platform: state
+        entity_id: input_text.hfm_event_date
+      - platform: state
+        entity_id: input_number.hfm_wizard_step
+        to: "4"
+    condition:
+      - condition: template
+        value_template: >
+          {{ states('input_text.hfm_start_time') | regex_match('^[0-9]{1,2}:[0-9]{2}$')
+             and states('input_text.hfm_event_date') | regex_match('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') }}
+    action:
+      - variables:
+          event_date: "{{ states('input_text.hfm_event_date') }}"
+          start_time: "{{ states('input_text.hfm_start_time') }}"
+          duration: "{{ states('input_number.hfm_duration_minutes') | float(60) }}"
+          start_dt: "{{ strptime(event_date ~ ' ' ~ start_time, '%Y-%m-%d %H:%M') }}"
+          middle_dt: "{{ start_dt + timedelta(minutes=(duration/2)|int) }}"
+          end_dt: "{{ start_dt + timedelta(minutes=duration|int) }}"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.hfm_weather_capture_start
+        data:
+          datetime: "{{ start_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.hfm_weather_capture_middle
+        data:
+          datetime: "{{ middle_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.hfm_weather_capture_end
+        data:
+          datetime: "{{ end_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.hfm_weather_capture_enabled
+
+  - id: hfm_auto_capture_weather_start
+    alias: "HFM Auto Capture Weather - Start"
+    description: "Automatically capture weather at start time"
+    trigger:
+      - platform: time
+        at: input_datetime.hfm_weather_capture_start
+    condition:
+      - condition: state
+        entity_id: input_boolean.hfm_weather_capture_enabled
+        state: "on"
+      - condition: template
+        value_template: "{{ states('input_text.hfm_current_device') != '' }}"
+    action:
+      - service: script.hfm_capture_weather_start
+      - service: persistent_notification.create
+        data:
+          title: "Weather Captured - Start"
+          message: "Start weather conditions recorded automatically"
+          notification_id: hfm_weather_start
+
+  - id: hfm_auto_capture_weather_middle
+    alias: "HFM Auto Capture Weather - Middle"
+    description: "Automatically capture weather at middle time"
+    trigger:
+      - platform: time
+        at: input_datetime.hfm_weather_capture_middle
+    condition:
+      - condition: state
+        entity_id: input_boolean.hfm_weather_capture_enabled
+        state: "on"
+      - condition: template
+        value_template: "{{ states('input_text.hfm_current_device') != '' }}"
+    action:
+      - service: script.hfm_capture_weather_middle
+      - service: persistent_notification.create
+        data:
+          title: "Weather Captured - Middle"
+          message: "Middle weather conditions recorded automatically"
+          notification_id: hfm_weather_middle
+
+  - id: hfm_auto_capture_weather_end
+    alias: "HFM Auto Capture Weather - End"
+    description: "Automatically capture weather at end time"
+    trigger:
+      - platform: time
+        at: input_datetime.hfm_weather_capture_end
+    condition:
+      - condition: state
+        entity_id: input_boolean.hfm_weather_capture_enabled
+        state: "on"
+      - condition: template
+        value_template: "{{ states('input_text.hfm_current_device') != '' }}"
+    action:
+      - service: script.hfm_capture_weather_end
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.hfm_weather_capture_enabled
+      - service: persistent_notification.create
+        data:
+          title: "Weather Capture Complete"
+          message: "All 3 weather records captured automatically"
+          notification_id: hfm_weather_complete
 
 
 # -----------------------------------------------------------------------------
@@ -1009,7 +1222,7 @@ script:
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ effective_device_id }}"
-          data: '{"wizard_step": 1, "data": {"event_type": null, "date": null, "start_time": null, "duration_minutes": null, "farm_id": null, "paddocks": [], "products": [], "applicator_id": null, "application_method": null, "crop_stage": null, "irrigation_type": null, "notes": "", "weather": null}}'
+          data: '{"wizard_step": 1, "data": {"event_type": null, "date": null, "start_time": null, "duration_minutes": null, "farm_id": null, "paddocks": [], "products": [], "applicator_id": null, "application_method": null, "crop_stage": null, "irrigation_type": null, "notes": "", "weather_start": null, "weather_middle": null, "weather_end": null}}'
       # Reset UI helpers
       - service: script.hfm_wizard_reset
       # Update sensors
@@ -1897,8 +2110,220 @@ script:
           message: "{{ selected_name }} has been deactivated."
           notification_id: hfm_applicator_deleted
 
-  # --- Weather Capture Scripts ---
+  # --- Weather Capture Scripts (3-Phase Compliance) ---
 
+  hfm_capture_weather_phase:
+    alias: "HFM Capture Weather Phase"
+    icon: mdi:weather-partly-cloudy
+    description: "Capture weather for start/middle/end of application (legal compliance)"
+    fields:
+      device_id:
+        description: "Device ID for the draft"
+        example: "browser_abc123"
+      phase:
+        description: "Phase of application: start, middle, or end"
+        example: "start"
+    sequence:
+      - variables:
+          # Check if local station is available (has valid data)
+          local_available: >
+            {{ has_value('sensor.weather_api_station_1_wind_speed')
+               and states('sensor.weather_api_station_1_wind_speed') not in ['unavailable', 'unknown', ''] }}
+          # Get wind speed - local first, then BOM
+          wind_speed: >
+            {% if local_available %}
+              {{ states('sensor.weather_api_station_1_wind_speed') | float(0) | round(1) }}
+            {% else %}
+              {{ states('sensor.bom_observations_wind_speed') | float(states('sensor.bom_wind_speed_kilometre') | float(0)) | round(1) }}
+            {% endif %}
+          # Get wind gust - local first, then BOM
+          wind_gust: >
+            {% if local_available %}
+              {{ states('sensor.weather_api_station_1_wind_gust') | float(0) | round(1) }}
+            {% else %}
+              {{ states('sensor.bom_observations_wind_gust') | float(states('sensor.bom_gust_speed_kilometre') | float(0)) | round(1) }}
+            {% endif %}
+          # Get wind direction - local first, then BOM
+          wind_direction_deg: >
+            {% if local_available %}
+              {{ states('sensor.weather_api_station_1_wind_direction') | float(0) | round(0) }}
+            {% else %}
+              {{ states('sensor.bom_observations_wind_direction') | float(states('sensor.bom_wind_direction') | float(0)) | round(0) }}
+            {% endif %}
+          wind_direction: >
+            {% set deg = wind_direction_deg | float(0) %}
+            {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
+            {{ dirs[((deg + 11.25) % 360 / 22.5) | int] }}
+          # Get humidity - local first, then BOM
+          humidity: >
+            {% if local_available %}
+              {{ states('sensor.weather_api_station_1_humidity') | float(0) | round(0) }}
+            {% else %}
+              {{ states('sensor.bom_observations_humidity') | float(states('sensor.bom_humidity') | float(0)) | round(0) }}
+            {% endif %}
+          # Get temperature - local first, then BOM
+          temperature: >
+            {% if local_available %}
+              {{ states('sensor.weather_api_station_1_temperature') | float(0) | round(1) }}
+            {% else %}
+              {{ states('sensor.bom_temp') | float(0) | round(1) }}
+            {% endif %}
+          # Get delta T - local first, then BOM calculated
+          delta_t: >
+            {% if local_available and has_value('sensor.weather_api_station_1_delta_t') %}
+              {{ states('sensor.weather_api_station_1_delta_t') | float(0) | round(1) }}
+            {% elif has_value('sensor.bom_observations_delta_t') %}
+              {{ states('sensor.bom_observations_delta_t') | float(0) | round(1) }}
+            {% else %}
+              {{ none }}
+            {% endif %}
+          source: "{{ 'local' if local_available else 'bom' }}"
+          captured_at: "{{ now().strftime('%Y-%m-%d %H:%M') }}"
+          weather_record: >
+            {
+              "phase": "{{ phase }}",
+              "source": "{{ source }}",
+              "captured_at": "{{ captured_at }}",
+              "wind_speed_kmh": {{ wind_speed }},
+              "wind_gust_kmh": {{ wind_gust }},
+              "wind_direction_deg": {{ wind_direction_deg }},
+              "wind_direction": "{{ wind_direction }}",
+              "humidity_pct": {{ humidity }},
+              "temperature_c": {{ temperature }},
+              "delta_t": {{ delta_t if delta_t is not none else 'null' }}
+            }
+      - service: shell_command.hfm_update_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "{{ phase }}"
+          weather: "{{ weather_record }}"
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_capture_weather_start:
+    alias: "HFM Capture Weather - Start"
+    icon: mdi:play-circle
+    description: "Capture weather at start of application"
+    sequence:
+      - service: script.hfm_capture_weather_phase
+        data:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          phase: "start"
+
+  hfm_capture_weather_middle:
+    alias: "HFM Capture Weather - Middle"
+    icon: mdi:pause-circle
+    description: "Capture weather at middle of application"
+    sequence:
+      - service: script.hfm_capture_weather_phase
+        data:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          phase: "middle"
+
+  hfm_capture_weather_end:
+    alias: "HFM Capture Weather - End"
+    icon: mdi:stop-circle
+    description: "Capture weather at end of application"
+    sequence:
+      - service: script.hfm_capture_weather_phase
+        data:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          phase: "end"
+
+  hfm_capture_weather_now:
+    alias: "HFM Capture Weather Now"
+    icon: mdi:weather-windy
+    description: "Capture weather for next pending phase (smart detection)"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          drafts: "{{ state_attr('sensor.hfm_drafts', 'drafts') or {} }}"
+          draft: "{{ drafts.get(device_id, {}) if device_id else {} }}"
+          data: "{{ draft.get('data', {}) if draft else {} }}"
+          has_start: "{{ data.get('weather_start') is not none }}"
+          has_middle: "{{ data.get('weather_middle') is not none }}"
+          has_end: "{{ data.get('weather_end') is not none }}"
+          next_phase: >
+            {% if not has_start %}start
+            {% elif not has_middle %}middle
+            {% elif not has_end %}end
+            {% else %}none{% endif %}
+      - condition: template
+        value_template: "{{ device_id != '' and next_phase != 'none' }}"
+      - service: script.hfm_capture_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "{{ next_phase }}"
+      - service: persistent_notification.create
+        data:
+          title: "Weather Captured"
+          message: "{{ next_phase | capitalize }} weather recorded"
+          notification_id: "hfm_weather_{{ next_phase }}"
+
+  hfm_clear_weather_phase:
+    alias: "HFM Clear Weather Phase"
+    icon: mdi:weather-cloudy-alert
+    description: "Clear captured weather for a specific phase"
+    fields:
+      phase:
+        description: "Phase to clear: start, middle, or end"
+        example: "start"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+      - condition: template
+        value_template: "{{ device_id != '' and phase in ['start', 'middle', 'end'] }}"
+      - service: shell_command.hfm_clear_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "{{ phase }}"
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+      - service: persistent_notification.create
+        data:
+          title: "Weather Cleared"
+          message: "{{ phase | capitalize }} weather record cleared"
+          notification_id: "hfm_weather_clear_{{ phase }}"
+
+  hfm_clear_all_weather:
+    alias: "HFM Clear All Weather"
+    icon: mdi:weather-cloudy-alert
+    description: "Clear all captured weather records"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+      - condition: template
+        value_template: "{{ device_id != '' }}"
+      - service: shell_command.hfm_clear_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "start"
+      - service: shell_command.hfm_clear_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "middle"
+      - service: shell_command.hfm_clear_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "end"
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+      - service: persistent_notification.create
+        data:
+          title: "Weather Cleared"
+          message: "All weather records cleared"
+          notification_id: "hfm_weather_clear_all"
+
+  # Legacy single capture (for backwards compatibility)
   hfm_capture_weather:
     alias: "HFM Capture Current Weather"
     icon: mdi:weather-partly-cloudy
@@ -1908,32 +2333,10 @@ script:
         description: "Device ID for the draft"
         example: "browser_abc123"
     sequence:
-      - variables:
-          wind_speed: "{{ states('sensor.bom_wind_speed_kilometre') | float(0) | round(1) }}"
-          wind_direction_deg: "{{ states('sensor.bom_wind_direction') | float(0) | round(0) }}"
-          wind_direction: >
-            {% set deg = wind_direction_deg | float(0) %}
-            {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
-            {{ dirs[((deg + 11.25) % 360 / 22.5) | int] }}
-          wind_gust: "{{ states('sensor.bom_gust_speed_kilometre') | float(0) | round(1) }}"
-          temperature: "{{ states('sensor.bom_temp') | float(0) | round(1) }}"
-          humidity: "{{ states('sensor.bom_humidity') | float(0) | round(0) }}"
-          captured_at: "{{ now().isoformat() }}"
-          weather_json: >
-            {
-              "source": "bom",
-              "captured_at": "{{ captured_at }}",
-              "wind_speed_kmh": {{ wind_speed }},
-              "wind_direction_deg": {{ wind_direction_deg }},
-              "wind_direction": "{{ wind_direction }}",
-              "wind_gust_kmh": {{ wind_gust }},
-              "temperature_c": {{ temperature }},
-              "humidity_pct": {{ humidity }}
-            }
-      - service: shell_command.hfm_update_draft
+      - service: script.hfm_capture_weather_phase
         data:
           device_id: "{{ device_id }}"
-          data: '{"data": {"weather": {{ weather_json }}}}'
+          phase: "start"
 
   hfm_capture_weather_for_current_device:
     alias: "HFM Capture Weather for Current Device"
@@ -1944,9 +2347,10 @@ script:
           device_id: "{{ states('input_text.hfm_current_device') }}"
       - condition: template
         value_template: "{{ device_id != '' }}"
-      - service: script.hfm_capture_weather
+      - service: script.hfm_capture_weather_phase
         data:
           device_id: "{{ device_id }}"
+          phase: "start"
       - delay: 1
       - service: homeassistant.update_entity
         target:
@@ -1964,7 +2368,24 @@ script:
         example: "sw5"
     sequence:
       - variables:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
+          existing_device_id: "{{ states('input_text.hfm_current_device') }}"
+          device_id: "{{ existing_device_id if existing_device_id != '' else 'device_' ~ now().strftime('%Y%m%d%H%M%S') }}"
+      # Auto-set device_id if missing
+      - if:
+          - condition: template
+            value_template: "{{ existing_device_id == '' }}"
+        then:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.hfm_current_device
+            data:
+              value: "{{ device_id }}"
+          - service: shell_command.hfm_load_draft
+            data:
+              device_id: "{{ device_id }}"
+          - delay:
+              milliseconds: 300
+      - variables:
           drafts: "{{ state_attr('sensor.hfm_drafts', 'drafts') or {} }}"
           draft: "{{ drafts.get(device_id, {}) }}"
           current_paddocks: "{{ draft.get('data', {}).get('paddocks', []) }}"
@@ -1975,8 +2396,6 @@ script:
             {% else %}
               {{ current_paddocks + [paddock_id] }}
             {% endif %}
-      - condition: template
-        value_template: "{{ device_id != '' }}"
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ device_id }}"
@@ -1986,6 +2405,24 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.hfm_drafts
+
+  hfm_toggle_selected_paddock:
+    alias: "HFM Toggle Selected Paddock from Dropdown"
+    icon: mdi:plus-minus
+    description: "Toggle the paddock selected in hfm_paddock_to_toggle dropdown"
+    sequence:
+      - variables:
+          paddock_name: "{{ states('input_select.hfm_paddock_to_toggle') }}"
+          farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
+          by_farm: "{{ state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} }}"
+          paddocks: "{{ by_farm.get(farm_id, []) }}"
+          paddock_id: >
+            {% for p in paddocks if p.name == paddock_name %}{{ p.id }}{% endfor %}
+      - condition: template
+        value_template: "{{ paddock_name != 'Select Paddock' and paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
 
   hfm_add_paddock:
     alias: "HFM Add Paddock to Selection"
@@ -2050,7 +2487,8 @@ script:
     description: "Select all paddocks for the currently selected farm"
     sequence:
       - variables:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
+          existing_device_id: "{{ states('input_text.hfm_current_device') }}"
+          device_id: "{{ existing_device_id if existing_device_id != '' else 'device_' ~ now().strftime('%Y%m%d%H%M%S') }}"
           farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
           by_farm: "{{ state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} }}"
           farm_paddocks: "{{ by_farm.get(farm_id, []) }}"
@@ -2060,8 +2498,21 @@ script:
               {% set ns.ids = ns.ids + [p.id] %}
             {% endfor %}
             {{ ns.ids }}
+      # Auto-set device_id if missing
+      - if:
+          - condition: template
+            value_template: "{{ existing_device_id == '' }}"
+        then:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.hfm_current_device
+            data:
+              value: "{{ device_id }}"
+          - service: shell_command.hfm_load_draft
+            data:
+              device_id: "{{ device_id }}"
       - condition: template
-        value_template: "{{ device_id != '' and all_paddock_ids | length > 0 }}"
+        value_template: "{{ all_paddock_ids | length > 0 }}"
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ device_id }}"
@@ -2078,9 +2529,21 @@ script:
     description: "Clear all selected paddocks"
     sequence:
       - variables:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
-      - condition: template
-        value_template: "{{ device_id != '' }}"
+          existing_device_id: "{{ states('input_text.hfm_current_device') }}"
+          device_id: "{{ existing_device_id if existing_device_id != '' else 'device_' ~ now().strftime('%Y%m%d%H%M%S') }}"
+      # Auto-set device_id if missing
+      - if:
+          - condition: template
+            value_template: "{{ existing_device_id == '' }}"
+        then:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.hfm_current_device
+            data:
+              value: "{{ device_id }}"
+          - service: shell_command.hfm_load_draft
+            data:
+              device_id: "{{ device_id }}"
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ device_id }}"
@@ -2097,7 +2560,8 @@ script:
     description: "Select only paddocks marked as current season for the selected farm"
     sequence:
       - variables:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
+          existing_device_id: "{{ states('input_text.hfm_current_device') }}"
+          device_id: "{{ existing_device_id if existing_device_id != '' else 'device_' ~ now().strftime('%Y%m%d%H%M%S') }}"
           farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
           by_farm: "{{ state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} }}"
           farm_paddocks: "{{ by_farm.get(farm_id, []) }}"
@@ -2107,8 +2571,21 @@ script:
               {% set ns.ids = ns.ids + [p.id] %}
             {% endfor %}
             {{ ns.ids }}
+      # Auto-set device_id if missing
+      - if:
+          - condition: template
+            value_template: "{{ existing_device_id == '' }}"
+        then:
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.hfm_current_device
+            data:
+              value: "{{ device_id }}"
+          - service: shell_command.hfm_load_draft
+            data:
+              device_id: "{{ device_id }}"
       - condition: template
-        value_template: "{{ device_id != '' and season_paddock_ids | length > 0 }}"
+        value_template: "{{ season_paddock_ids | length > 0 }}"
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ device_id }}"
@@ -2118,3 +2595,148 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.hfm_drafts
+
+  # --- Paddock Slot Toggle Scripts (for UI buttons) ---
+  hfm_toggle_paddock_slot_0:
+    alias: "Toggle Paddock Slot 0"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[0].id if paddocks | length > 0 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_1:
+    alias: "Toggle Paddock Slot 1"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[1].id if paddocks | length > 1 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_2:
+    alias: "Toggle Paddock Slot 2"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[2].id if paddocks | length > 2 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_3:
+    alias: "Toggle Paddock Slot 3"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[3].id if paddocks | length > 3 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_4:
+    alias: "Toggle Paddock Slot 4"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[4].id if paddocks | length > 4 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_5:
+    alias: "Toggle Paddock Slot 5"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[5].id if paddocks | length > 5 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_6:
+    alias: "Toggle Paddock Slot 6"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[6].id if paddocks | length > 6 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_7:
+    alias: "Toggle Paddock Slot 7"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[7].id if paddocks | length > 7 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_8:
+    alias: "Toggle Paddock Slot 8"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[8].id if paddocks | length > 8 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_9:
+    alias: "Toggle Paddock Slot 9"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[9].id if paddocks | length > 9 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_10:
+    alias: "Toggle Paddock Slot 10"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[10].id if paddocks | length > 10 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"
+
+  hfm_toggle_paddock_slot_11:
+    alias: "Toggle Paddock Slot 11"
+    sequence:
+      - variables:
+          paddocks: "{{ state_attr('sensor.hfm_paddocks_for_selected_farm', 'paddocks') or [] }}"
+          paddock_id: "{{ paddocks[11].id if paddocks | length > 11 else '' }}"
+      - condition: template
+        value_template: "{{ paddock_id != '' }}"
+      - service: script.hfm_toggle_paddock
+        data:
+          paddock_id: "{{ paddock_id }}"

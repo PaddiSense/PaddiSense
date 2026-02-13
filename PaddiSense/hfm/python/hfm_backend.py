@@ -166,7 +166,9 @@ def get_default_draft(device_id: str) -> dict:
             "crop_stage": None,
             "irrigation_type": None,
             "notes": "",
-            "weather": None
+            "weather_start": None,
+            "weather_middle": None,
+            "weather_end": None
         }
     }
 
@@ -875,8 +877,15 @@ def cmd_submit_draft(args: argparse.Namespace) -> int:
         if not applicator_snapshot:
             print(f"WARNING: Applicator '{applicator_id}' not found, continuing without.", file=sys.stderr)
 
-    # Get weather data from draft
-    weather_data = data.get("weather")
+    # Get weather data from draft (3-phase capture)
+    weather_data = {
+        "start": data.get("weather_start"),
+        "middle": data.get("weather_middle"),
+        "end": data.get("weather_end")
+    }
+    # Only include if at least one phase captured
+    if not any([weather_data["start"], weather_data["middle"], weather_data["end"]]):
+        weather_data = None
 
     # Calculate end_time if start_time and duration provided
     start_time = data.get("start_time")
