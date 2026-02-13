@@ -3541,40 +3541,89 @@ views:
                                   confirmation:
                                     text: "Clear END weather data?"
 
-                          # Weather Data Table (Markdown)
-                          - type: markdown
-                            content: |
-                              {% set device_id = states('input_text.hfm_current_device') %}
-                              {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
-                              {% set draft = drafts.get(device_id, {}) %}
-                              {% set data = draft.get('data', {}) %}
-                              {% set ws = data.get('weather_start') %}
-                              {% set wm = data.get('weather_mid') %}
-                              {% set we = data.get('weather_end') %}
-                              {% set source = ws.source if ws else (wm.source if wm else (we.source if we else none)) %}
-                              {% if source %}**Data Source:** {{ source }}{% endif %}
+                          # Weather Data Table (Styled HTML)
+                          - type: custom:button-card
+                            entity: sensor.hfm_drafts
+                            show_name: false
+                            show_icon: false
+                            show_state: false
+                            triggers_update:
+                              - sensor.hfm_drafts
+                              - input_text.hfm_current_device
+                            styles:
+                              card:
+                                - border-radius: 0 0 12px 12px
+                                - padding: 12px
+                                - background: var(--ha-card-background, var(--card-background-color, white))
+                            custom_fields:
+                              weather_table: |
+                                [[[
+                                  try {
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const drafts = entity?.attributes?.drafts || {};
+                                    const draft = drafts[deviceId] || {};
+                                    const data = draft.data || {};
+                                    const ws = data.weather_start;
+                                    const wm = data.weather_mid;
+                                    const we = data.weather_end;
+                                    const source = ws?.source || wm?.source || we?.source || '';
 
-                              | | START | MID | END |
-                              |:--|:--:|:--:|:--:|
-                              | **Wind** | {{ ws.wind_speed if ws else '-' }} | {{ wm.wind_speed if wm else '-' }} | {{ we.wind_speed if we else '-' }} |
-                              | **Gust** | {{ ws.wind_gust if ws else '-' }} | {{ wm.wind_gust if wm else '-' }} | {{ we.wind_gust if we else '-' }} |
-                              | **Dir** | {{ ws.wind_direction if ws else '-' }} | {{ wm.wind_direction if wm else '-' }} | {{ we.wind_direction if we else '-' }} |
-                              | **ΔT** | {{ ws.delta_t if ws else '-' }} | {{ wm.delta_t if wm else '-' }} | {{ we.delta_t if we else '-' }} |
-                              | **Hum** | {{ ws.humidity if ws else '-' }}% | {{ wm.humidity if wm else '-' }}% | {{ we.humidity if we else '-' }}% |
-                              | **Rain** | {{ ws.rain_chance_pct if ws else '-' }}% | {{ wm.rain_chance_pct if wm else '-' }}% | {{ we.rain_chance_pct if we else '-' }}% |
-                            card_mod:
-                              style: |
-                                ha-card {
-                                  border-radius: 0 0 12px 12px;
-                                  padding: 12px;
-                                }
-                                table {
-                                  width: 100%;
-                                  font-size: 14px;
-                                }
-                                th, td {
-                                  padding: 4px 6px;
-                                }
+                                    let html = '';
+                                    if (source) {
+                                      html += `<div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:8px;">
+                                                <ha-icon icon="mdi:antenna" style="--mdc-icon-size:14px;"></ha-icon> Data Source: <strong>${source}</strong>
+                                              </div>`;
+                                    }
+
+                                    html += `<table style="width:100%;font-size:14px;border-collapse:collapse;">
+                                              <tr style="border-bottom:1px solid rgba(128,128,128,0.3);">
+                                                <th style="text-align:left;padding:6px 8px;font-weight:600;"></th>
+                                                <th style="text-align:center;padding:6px 8px;font-weight:600;">START</th>
+                                                <th style="text-align:center;padding:6px 8px;font-weight:600;">MID</th>
+                                                <th style="text-align:center;padding:6px 8px;font-weight:600;">END</th>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:6px 8px;font-weight:600;">Wind</td>
+                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.wind_speed + ' km/h' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.wind_speed + ' km/h' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${we ? we.wind_speed + ' km/h' : '-'}</td>
+                                              </tr>
+                                              <tr style="background:rgba(128,128,128,0.05);">
+                                                <td style="padding:6px 8px;font-weight:600;">Gust</td>
+                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.wind_gust + ' km/h' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.wind_gust + ' km/h' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${we ? we.wind_gust + ' km/h' : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:6px 8px;font-weight:600;">Direction</td>
+                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.wind_direction : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.wind_direction : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${we ? we.wind_direction : '-'}</td>
+                                              </tr>
+                                              <tr style="background:rgba(128,128,128,0.05);">
+                                                <td style="padding:6px 8px;font-weight:600;">Delta T</td>
+                                                <td style="text-align:center;padding:6px 8px;">${ws && ws.delta_t != null ? ws.delta_t + '°' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${wm && wm.delta_t != null ? wm.delta_t + '°' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${we && we.delta_t != null ? we.delta_t + '°' : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:6px 8px;font-weight:600;">Humidity</td>
+                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.humidity + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.humidity + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${we ? we.humidity + '%' : '-'}</td>
+                                              </tr>
+                                              <tr style="background:rgba(128,128,128,0.05);">
+                                                <td style="padding:6px 8px;font-weight:600;">Rain %</td>
+                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.rain_chance_pct + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.rain_chance_pct + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:6px 8px;">${we ? we.rain_chance_pct + '%' : '-'}</td>
+                                              </tr>
+                                            </table>`;
+                                    return html;
+                                  } catch (e) {
+                                    return '<div style="color:var(--error-color);">Error loading weather data</div>';
+                                  }
+                                ]]]
 
                     # Irrigation: Type selection
                     - type: conditional
