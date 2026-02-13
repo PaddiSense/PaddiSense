@@ -3541,7 +3541,7 @@ views:
                                   confirmation:
                                     text: "Clear END weather data?"
 
-                          # Weather Data Table (Styled HTML)
+                          # Weather Data Table (Same style as Summary card)
                           - type: custom:button-card
                             entity: sensor.hfm_drafts
                             show_name: false
@@ -3553,8 +3553,9 @@ views:
                             styles:
                               card:
                                 - border-radius: 0 0 12px 12px
-                                - padding: 12px
-                                - background: var(--ha-card-background, var(--card-background-color, white))
+                                - padding: 0
+                                - background: none
+                                - box-shadow: none
                             custom_fields:
                               weather_table: |
                                 [[[
@@ -3568,57 +3569,55 @@ views:
                                     const we = data.weather_end;
                                     const source = ws?.source || wm?.source || we?.source || '';
 
-                                    let html = '';
-                                    if (source) {
-                                      html += `<div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:8px;">
-                                                <ha-icon icon="mdi:antenna" style="--mdc-icon-size:14px;"></ha-icon> Data Source: <strong>${source}</strong>
-                                              </div>`;
-                                    }
-
-                                    html += `<table style="width:100%;font-size:14px;border-collapse:collapse;">
-                                              <tr style="border-bottom:1px solid rgba(128,128,128,0.3);">
-                                                <th style="text-align:left;padding:6px 8px;font-weight:600;"></th>
-                                                <th style="text-align:center;padding:6px 8px;font-weight:600;">START</th>
-                                                <th style="text-align:center;padding:6px 8px;font-weight:600;">MID</th>
-                                                <th style="text-align:center;padding:6px 8px;font-weight:600;">END</th>
-                                              </tr>
-                                              <tr>
-                                                <td style="padding:6px 8px;font-weight:600;">Wind</td>
-                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.wind_speed + ' km/h' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.wind_speed + ' km/h' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${we ? we.wind_speed + ' km/h' : '-'}</td>
-                                              </tr>
-                                              <tr style="background:rgba(128,128,128,0.05);">
-                                                <td style="padding:6px 8px;font-weight:600;">Gust</td>
-                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.wind_gust + ' km/h' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.wind_gust + ' km/h' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${we ? we.wind_gust + ' km/h' : '-'}</td>
-                                              </tr>
-                                              <tr>
-                                                <td style="padding:6px 8px;font-weight:600;">Direction</td>
-                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.wind_direction : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.wind_direction : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${we ? we.wind_direction : '-'}</td>
-                                              </tr>
-                                              <tr style="background:rgba(128,128,128,0.05);">
-                                                <td style="padding:6px 8px;font-weight:600;">Delta T</td>
-                                                <td style="text-align:center;padding:6px 8px;">${ws && ws.delta_t != null ? ws.delta_t + '°' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${wm && wm.delta_t != null ? wm.delta_t + '°' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${we && we.delta_t != null ? we.delta_t + '°' : '-'}</td>
-                                              </tr>
-                                              <tr>
-                                                <td style="padding:6px 8px;font-weight:600;">Humidity</td>
-                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.humidity + '%' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.humidity + '%' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${we ? we.humidity + '%' : '-'}</td>
-                                              </tr>
-                                              <tr style="background:rgba(128,128,128,0.05);">
-                                                <td style="padding:6px 8px;font-weight:600;">Rain %</td>
-                                                <td style="text-align:center;padding:6px 8px;">${ws ? ws.rain_chance_pct + '%' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${wm ? wm.rain_chance_pct + '%' : '-'}</td>
-                                                <td style="text-align:center;padding:6px 8px;">${we ? we.rain_chance_pct + '%' : '-'}</td>
-                                              </tr>
-                                            </table>`;
+                                    let html = `<div style="padding:8px 12px;background:rgba(199,127,0,0.12);border-radius:8px;">
+                                      <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:6px;">
+                                        <ha-icon icon="mdi:weather-windy" style="--mdc-icon-size:14px;"></ha-icon> Weather Phases${source ? ' (' + source + ')' : ''}
+                                      </div>
+                                      <table style="width:100%;font-size:11px;border-collapse:collapse;">
+                                        <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
+                                          <th style="text-align:left;padding:2px 4px;"></th>
+                                          <th style="text-align:center;padding:2px 4px;">START</th>
+                                          <th style="text-align:center;padding:2px 4px;">MID</th>
+                                          <th style="text-align:center;padding:2px 4px;">END</th>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:2px 4px;font-weight:600;">Wind</td>
+                                          <td style="text-align:center;padding:2px 4px;">${ws ? ws.wind_speed : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${wm ? wm.wind_speed : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${we ? we.wind_speed : '-'}</td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:2px 4px;font-weight:600;">Gust</td>
+                                          <td style="text-align:center;padding:2px 4px;">${ws ? ws.wind_gust : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${wm ? wm.wind_gust : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${we ? we.wind_gust : '-'}</td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:2px 4px;font-weight:600;">Dir</td>
+                                          <td style="text-align:center;padding:2px 4px;">${ws ? ws.wind_direction : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${wm ? wm.wind_direction : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${we ? we.wind_direction : '-'}</td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:2px 4px;font-weight:600;">ΔT</td>
+                                          <td style="text-align:center;padding:2px 4px;">${ws && ws.delta_t != null ? ws.delta_t + '°' : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${wm && wm.delta_t != null ? wm.delta_t + '°' : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${we && we.delta_t != null ? we.delta_t + '°' : '-'}</td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:2px 4px;font-weight:600;">Hum</td>
+                                          <td style="text-align:center;padding:2px 4px;">${ws ? ws.humidity + '%' : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${wm ? wm.humidity + '%' : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${we ? we.humidity + '%' : '-'}</td>
+                                        </tr>
+                                        <tr>
+                                          <td style="padding:2px 4px;font-weight:600;">Rain</td>
+                                          <td style="text-align:center;padding:2px 4px;">${ws ? ws.rain_chance_pct + '%' : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${wm ? wm.rain_chance_pct + '%' : '-'}</td>
+                                          <td style="text-align:center;padding:2px 4px;">${we ? we.rain_chance_pct + '%' : '-'}</td>
+                                        </tr>
+                                      </table>
+                                    </div>`;
                                     return html;
                                   } catch (e) {
                                     return '<div style="color:var(--error-color);">Error loading weather data</div>';
