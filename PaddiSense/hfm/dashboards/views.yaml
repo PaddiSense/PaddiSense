@@ -3415,20 +3415,8 @@ views:
                         type: vertical-stack
                         cards:
                           - type: custom:button-card
-                            color_type: card
-                            color: "#c77f00"
-                            show_icon: false
-                            show_name: true
+                            template: hfm_title
                             name: "SPRAY WEATHER PHASES"
-                            styles:
-                              card:
-                                - height: 40px
-                                - border-radius: 12px 12px 0 0
-                                - margin-top: 12px
-                              name:
-                                - font-size: 16px
-                                - font-weight: 700
-                                - color: white
 
                           # Capture Buttons Row
                           - type: horizontal-stack
