@@ -3135,18 +3135,20 @@ views:
                                   action: call-service
                                   service: script.hfm_remove_product_slot
 
-                          # Applicator Selection
+                          # Applicator Selection (styled like Product card)
                           - type: custom:button-card
                             color_type: card
                             color: "#0066cc"
                             show_icon: false
                             show_name: true
-                            name: "Equipment / Applicator"
+                            show_state: false
+                            name: "Applicator / Equipment"
                             styles:
                               card:
                                 - height: 36px
                                 - border-radius: 12px 12px 0 0
                                 - margin-top: 8px
+                                - margin-bottom: 0
                               name:
                                 - font-size: 14px
                                 - font-weight: 600
@@ -3155,60 +3157,108 @@ views:
                           - type: entities
                             entities:
                               - entity: input_select.hfm_selected_applicator
-                                name: Applicator
+                                name: Select Applicator
                             card_mod:
                               style: |
                                 ha-card {
                                   border-radius: 0;
+                                  margin-top: 0;
+                                  margin-bottom: 0;
                                 }
                                 .mdc-list-item__primary-text {
-                                  font-size: 1.2rem !important;
+                                  font-size: 1.1rem !important;
                                 }
 
-                          # Applicator Details Card
-                          - type: markdown
-                            content: |
-                              {% set selected = states('input_select.hfm_selected_applicator') %}
-                              {% set applicators = state_attr('sensor.hfm_events', 'applicators') or [] %}
-                              {% set app = namespace(found=none) %}
-                              {% for a in applicators %}
-                                {% if a.name == selected %}
-                                  {% set app.found = a %}
-                                {% endif %}
-                              {% endfor %}
-                              {% if app.found %}
-                              **{{ app.found.name }}** ({{ app.found.type | replace('_', ' ') | title }})
+                          # Applicator Details (read-only display like IPM stock cards)
+                          - type: custom:button-card
+                            entity: input_select.hfm_selected_applicator
+                            show_icon: false
+                            show_name: false
+                            show_state: false
+                            styles:
+                              card:
+                                - background: rgba(0, 102, 204, 0.1)
+                                - border-radius: 0 0 12px 12px
+                                - padding: 12px
+                                - margin-top: 0
+                              grid:
+                                - display: block
+                              custom_fields:
+                                details:
+                                  - width: 100%
+                            custom_fields:
+                              details: |
+                                [[[
+                                  const selected = entity?.state || '';
+                                  if (!selected || selected === 'Select Applicator') {
+                                    return `<div style="text-align:center;color:#888;padding:8px;">Select an applicator above</div>`;
+                                  }
 
-                              | Attribute | Value |
-                              |:--|:--|
-                              | **Method** | {{ app.found.application_method or 'Not set' }} |
-                              {% if app.found.attributes %}
-                              {% if app.found.attributes.nozzle_type %}| **Nozzle** | {{ app.found.attributes.nozzle_type }} |{% endif %}
-                              {% if app.found.attributes.spray_width_m %}| **Width** | {{ app.found.attributes.spray_width_m }}m |{% endif %}
-                              {% if app.found.attributes.water_rate_l_ha %}| **Water Rate** | {{ app.found.attributes.water_rate_l_ha }} L/ha |{% endif %}
-                              {% if app.found.attributes.tank_size_l %}| **Tank** | {{ app.found.attributes.tank_size_l }}L |{% endif %}
-                              {% if app.found.attributes.spread_width_m %}| **Spread Width** | {{ app.found.attributes.spread_width_m }}m |{% endif %}
-                              {% if app.found.attributes.capacity_t %}| **Capacity** | {{ app.found.attributes.capacity_t }}t |{% endif %}
-                              {% if app.found.attributes.vehicle %}| **Vehicle** | {{ app.found.attributes.vehicle }} |{% endif %}
-                              {% endif %}
-                              {% else %}
-                              *Select an applicator to see details*
-                              {% endif %}
-                            card_mod:
-                              style: |
-                                ha-card {
-                                  border-radius: 0 0 12px 12px;
-                                  padding: 12px;
-                                  background: rgba(0, 102, 204, 0.1);
-                                }
-                                table {
-                                  width: 100%;
-                                  font-size: 14px;
-                                }
-                                th, td {
-                                  padding: 4px 8px;
-                                  text-align: left;
-                                }
+                                  const applicators = states['sensor.hfm_events']?.attributes?.applicators || [];
+                                  let app = null;
+                                  for (const a of applicators) {
+                                    if (a.name === selected) { app = a; break; }
+                                  }
+
+                                  if (!app) {
+                                    return `<div style="text-align:center;color:#888;">Applicator not found</div>`;
+                                  }
+
+                                  const attr = app.attributes || {};
+                                  let rows = '';
+
+                                  // Always show method
+                                  rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                    <span style="color:#aaa;">Method</span>
+                                    <span style="font-weight:600;">${app.application_method || 'Not set'}</span>
+                                  </div>`;
+
+                                  // Show available attributes
+                                  if (attr.nozzle_type) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                      <span style="color:#aaa;">Nozzle</span>
+                                      <span style="font-weight:600;">${attr.nozzle_type}</span>
+                                    </div>`;
+                                  }
+                                  if (attr.spray_width_m) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                      <span style="color:#aaa;">Spray Width</span>
+                                      <span style="font-weight:600;">${attr.spray_width_m}m</span>
+                                    </div>`;
+                                  }
+                                  if (attr.water_rate_l_ha) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                      <span style="color:#aaa;">Water Rate</span>
+                                      <span style="font-weight:600;">${attr.water_rate_l_ha} L/ha</span>
+                                    </div>`;
+                                  }
+                                  if (attr.tank_size_l) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                      <span style="color:#aaa;">Tank Size</span>
+                                      <span style="font-weight:600;">${attr.tank_size_l}L</span>
+                                    </div>`;
+                                  }
+                                  if (attr.spread_width_m) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                      <span style="color:#aaa;">Spread Width</span>
+                                      <span style="font-weight:600;">${attr.spread_width_m}m</span>
+                                    </div>`;
+                                  }
+                                  if (attr.capacity_t) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+                                      <span style="color:#aaa;">Capacity</span>
+                                      <span style="font-weight:600;">${attr.capacity_t}t</span>
+                                    </div>`;
+                                  }
+                                  if (attr.vehicle) {
+                                    rows += `<div style="display:flex;justify-content:space-between;padding:6px 0;">
+                                      <span style="color:#aaa;">Vehicle</span>
+                                      <span style="font-weight:600;">${attr.vehicle}</span>
+                                    </div>`;
+                                  }
+
+                                  return `<div style="font-size:14px;">${rows}</div>`;
+                                ]]]
 
                     # Weather Phases Card (Chemical Application only)
                     - type: conditional
