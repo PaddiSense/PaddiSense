@@ -1,0 +1,80 @@
+# PaddiSense License Generator
+# Home Assistant package for generating grower licenses
+
+input_text:
+  license_email:
+    name: Grower Email
+    initial: ""
+    max: 200
+
+  license_season:
+    name: Season
+    initial: "2025-26"
+    max: 20
+
+input_select:
+  license_modules:
+    name: Modules
+    options:
+      - weather
+      - weather,ipm
+      - weather,hfm,ipm
+      - weather,hfm,ipm,asm
+      - weather,hfm,ipm,asm,pwm
+      - weather,hfm,ipm,asm,pwm,rtr,str,wss
+    initial: weather
+
+input_number:
+  license_days:
+    name: Valid Days
+    min: 30
+    max: 730
+    step: 30
+    initial: 365
+    unit_of_measurement: "days"
+    mode: slider
+
+input_boolean:
+  license_generating:
+    name: Generating License
+    initial: off
+
+shell_command:
+  generate_paddisense_license: >
+    /config/PaddiSense/scripts/ha-generate-license.sh
+    "{{ states('input_text.license_email') }}"
+    "{{ states('input_text.license_season') }}"
+    "{{ states('input_select.license_modules') }}"
+    "{{ states('input_number.license_days') | int }}"
+  read_license_file: "cat /config/PaddiSense/scripts/last-license.txt"
+
+script:
+  generate_license:
+    alias: Generate PaddiSense License
+    sequence:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.license_generating
+      - service: shell_command.generate_paddisense_license
+      - delay:
+          seconds: 2
+      - service: shell_command.read_license_file
+        response_variable: license_response
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.license_generating
+      - service: persistent_notification.create
+        data:
+          title: "License Generated"
+          message: >
+            **License for {{ states('input_text.license_email') }}**
+
+
+            ```
+
+            {{ license_response.stdout | default('Generation failed') }}
+
+            ```
+
+
+            Copy the key above and send to grower.

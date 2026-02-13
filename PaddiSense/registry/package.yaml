@@ -300,6 +300,12 @@ input_text:
     icon: mdi:calendar
     max: 20
 
+  # Excel import helper
+  registry_excel_filename:
+    name: "Excel/CSV Filename"
+    icon: mdi:file-excel
+    max: 100
+
 # -----------------------------------------------------------------------------
 # INPUT NUMBER (for add paddock form)
 # -----------------------------------------------------------------------------

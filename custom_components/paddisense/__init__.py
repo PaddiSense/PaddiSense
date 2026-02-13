@@ -40,6 +40,7 @@ from .const import (
     SERVICE_EDIT_SEASON,
     SERVICE_EXPORT_REGISTRY,
     SERVICE_IMPORT_REGISTRY,
+    SERVICE_IMPORT_FROM_EXCEL,
     SERVICE_SET_ACTIVE_SEASON,
     SERVICE_SET_CURRENT_SEASON,
     # Installer services
@@ -148,6 +149,10 @@ DELETE_FARM_SCHEMA = vol.Schema({
 })
 
 IMPORT_REGISTRY_SCHEMA = vol.Schema({
+    vol.Required("filename"): cv.string,
+})
+
+IMPORT_FROM_EXCEL_SCHEMA = vol.Schema({
     vol.Required("filename"): cv.string,
 })
 
@@ -276,7 +281,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_DELETE_BAY, SERVICE_ADD_SEASON, SERVICE_EDIT_SEASON,
             SERVICE_DELETE_SEASON, SERVICE_SET_ACTIVE_SEASON, SERVICE_ADD_FARM,
             SERVICE_EDIT_FARM, SERVICE_DELETE_FARM, SERVICE_EXPORT_REGISTRY,
-            SERVICE_IMPORT_REGISTRY,
+            SERVICE_IMPORT_REGISTRY, SERVICE_IMPORT_FROM_EXCEL,
             # Installer
             SERVICE_CHECK_UPDATES, SERVICE_UPDATE_PADDISENSE, SERVICE_INSTALL_MODULE,
             SERVICE_REMOVE_MODULE, SERVICE_CREATE_BACKUP, SERVICE_RESTORE_BACKUP,
@@ -509,6 +514,14 @@ async def _async_register_registry_services(
         _log_service_result("import_registry", result)
         await _async_update_sensors(hass)
 
+    async def handle_import_from_excel(call: ServiceCall) -> None:
+        result = await hass.async_add_executor_job(
+            backend.import_from_excel,
+            call.data["filename"],
+        )
+        _log_service_result("import_from_excel", result)
+        await _async_update_sensors(hass)
+
     # Register all registry services
     hass.services.async_register(DOMAIN, SERVICE_ADD_PADDOCK, handle_add_paddock, ADD_PADDOCK_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_EDIT_PADDOCK, handle_edit_paddock, EDIT_PADDOCK_SCHEMA)
@@ -526,6 +539,7 @@ async def _async_register_registry_services(
     hass.services.async_register(DOMAIN, SERVICE_DELETE_FARM, handle_delete_farm, DELETE_FARM_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_EXPORT_REGISTRY, handle_export_registry)
     hass.services.async_register(DOMAIN, SERVICE_IMPORT_REGISTRY, handle_import_registry, IMPORT_REGISTRY_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_IMPORT_FROM_EXCEL, handle_import_from_excel, IMPORT_FROM_EXCEL_SCHEMA)
 
 
 # =============================================================================

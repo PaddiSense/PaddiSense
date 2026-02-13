@@ -298,6 +298,18 @@ import_registry:
       selector:
         text:
 
+import_from_excel:
+  name: Import from Excel
+  description: Import farms and paddocks from an Excel/CSV file. Columns required - Business Name, Farm Number, Paddock Name
+  fields:
+    filename:
+      name: Filename
+      description: Name of Excel (.xlsx) or CSV (.csv) file in /config directory
+      required: true
+      example: "growers.csv"
+      selector:
+        text:
+
 # =============================================================================
 # INSTALLER SERVICES
 # =============================================================================

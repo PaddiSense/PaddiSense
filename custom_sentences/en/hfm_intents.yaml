@@ -1,0 +1,182 @@
+# =============================================================================
+# HFM - Hey Farmer Voice Commands
+# Custom sentences for Assist integration
+# =============================================================================
+
+language: "en"
+intents:
+  HfmNewEvent:
+    data:
+      - sentences:
+          - "(hey farmer|farm) new event"
+          - "(hey farmer|farm) start [new] event"
+          - "(hey farmer|farm) record [new] event"
+          - "new farm event"
+          - "start farm event"
+          - "log [a] [new] event"
+
+  HfmFertilizer:
+    data:
+      - sentences:
+          - "(hey farmer|farm) fertilizer [application]"
+          - "(hey farmer|farm) nutrient [application]"
+          - "(hey farmer|farm) spreading fertilizer"
+          - "(hey farmer|farm) fert [application]"
+          - "log fertilizer"
+          - "record fertilizer [application]"
+          - "nutrient application"
+          - "nutrient"
+          - "fertilizer"
+          - "fert"
+          - "spreading"
+
+  HfmSpray:
+    data:
+      - sentences:
+          - "(hey farmer|farm) spray [application]"
+          - "(hey farmer|farm) chemical [application]"
+          - "(hey farmer|farm) spraying"
+          - "(hey farmer|farm) herbicide"
+          - "(hey farmer|farm) pesticide"
+          - "log spray"
+          - "record spray [application]"
+          - "chemical application"
+          - "chemical"
+          - "spray"
+          - "spraying"
+          - "herbicide"
+          - "pesticide"
+          - "fungicide"
+
+  HfmIrrigation:
+    data:
+      - sentences:
+          - "(hey farmer|farm) irrigation"
+          - "(hey farmer|farm) watering"
+          - "(hey farmer|farm) irrigate"
+          - "log irrigation"
+          - "record irrigation"
+          - "irrigation"
+          - "irrigate"
+          - "watering"
+          - "water"
+
+  HfmCropStage:
+    data:
+      - sentences:
+          - "(hey farmer|farm) crop stage"
+          - "(hey farmer|farm) growth stage"
+          - "(hey farmer|farm) record stage"
+          - "log crop stage"
+          - "record [crop] stage"
+          - "crop stage"
+          - "crop"
+          - "growth stage"
+          - "stage"
+
+  HfmNextStep:
+    data:
+      - sentences:
+          - "(hey farmer|farm) next [step]"
+          - "(hey farmer|farm) continue"
+          - "(hey farmer|farm) go next"
+          - "next step"
+          - "continue"
+          - "next"
+          - "forward"
+          - "go on"
+
+  HfmPreviousStep:
+    data:
+      - sentences:
+          - "(hey farmer|farm) (back|previous) [step]"
+          - "(hey farmer|farm) go back"
+          - "previous step"
+          - "go back"
+          - "back"
+          - "previous"
+          - "undo"
+
+  HfmConfirm:
+    data:
+      - sentences:
+          - "(hey farmer|farm) confirm"
+          - "(hey farmer|farm) submit"
+          - "(hey farmer|farm) save [event]"
+          - "(hey farmer|farm) done"
+          - "confirm event"
+          - "submit event"
+          - "save event"
+          - "confirm"
+          - "submit"
+          - "save"
+          - "done"
+          - "yes"
+
+  HfmCancel:
+    data:
+      - sentences:
+          - "(hey farmer|farm) cancel"
+          - "(hey farmer|farm) reset"
+          - "(hey farmer|farm) start over"
+          - "(hey farmer|farm) clear"
+          - "cancel event"
+          - "reset wizard"
+          - "cancel"
+          - "reset"
+          - "start over"
+          - "nevermind"
+          - "never mind"
+          - "no"
+
+  HfmSelectAllPaddocks:
+    data:
+      - sentences:
+          - "(hey farmer|farm) [select] all paddocks"
+          - "(hey farmer|farm) all fields"
+          - "select all paddocks"
+          - "all paddocks"
+          - "all fields"
+          - "everywhere"
+          - "all of them"
+
+  HfmSelectActivePaddocks:
+    data:
+      - sentences:
+          - "(hey farmer|farm) [select] active paddocks"
+          - "(hey farmer|farm) [select] (current|this) season [paddocks]"
+          - "active paddocks"
+          - "current season"
+
+  HfmClearPaddocks:
+    data:
+      - sentences:
+          - "(hey farmer|farm) clear paddocks"
+          - "(hey farmer|farm) deselect [all] [paddocks]"
+          - "clear paddock selection"
+          - "clear selection"
+
+  HfmToday:
+    data:
+      - sentences:
+          - "(hey farmer|farm) [set] [date] today"
+          - "(hey farmer|farm) today"
+          - "set date today"
+          - "[it was] today"
+          - "today"
+          - "just now"
+          - "right now"
+          - "this morning"
+          - "this afternoon"
+
+  HfmYesterday:
+    data:
+      - sentences:
+          - "(hey farmer|farm) [set] [date] yesterday"
+          - "(hey farmer|farm) yesterday"
+          - "set date yesterday"
+          - "[it was] yesterday"
+          - "yesterday"
+          - "last night"
+          - "yesterday morning"
+          - "yesterday afternoon"

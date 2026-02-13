@@ -713,6 +713,183 @@ class RegistryBackend:
 
         return {"backups": backup_list}
 
+    def import_from_excel(self, filename: str) -> dict[str, Any]:
+        """Import farms and paddocks from an Excel/CSV file.
+
+        Expected columns: Business Name, Farm Number, Paddock Name
+        Bays will be set to 0 for later configuration by the grower.
+        """
+        import csv
+        from pathlib import Path
+
+        # Look for file in config directory
+        file_path = Path("/config") / filename
+
+        if not file_path.exists():
+            # Also check in local_data/registry
+            file_path = REGISTRY_DATA_DIR / filename
+            if not file_path.exists():
+                return {
+                    "success": False,
+                    "error": f"File '{filename}' not found in /config or {REGISTRY_DATA_DIR}"
+                }
+
+        # Backup existing config before import
+        if REGISTRY_CONFIG_FILE.exists():
+            create_backup("pre_excel_import")
+
+        try:
+            # Read the file (CSV or Excel)
+            rows = []
+            if file_path.suffix.lower() == '.csv':
+                with open(file_path, 'r', encoding='utf-8-sig') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        rows.append(row)
+            elif file_path.suffix.lower() in ['.xlsx', '.xls']:
+                try:
+                    import openpyxl
+                    wb = openpyxl.load_workbook(file_path, read_only=True)
+                    ws = wb.active
+                    headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+                    for row in ws.iter_rows(min_row=2, values_only=True):
+                        row_dict = dict(zip(headers, row))
+                        if any(row_dict.values()):  # Skip empty rows
+                            rows.append(row_dict)
+                    wb.close()
+                except ImportError:
+                    return {
+                        "success": False,
+                        "error": "openpyxl not installed. Use CSV format or install openpyxl."
+                    }
+            else:
+                return {
+                    "success": False,
+                    "error": f"Unsupported file format: {file_path.suffix}. Use .csv or .xlsx"
+                }
+
+            if not rows:
+                return {"success": False, "error": "No data rows found in file"}
+
+            # Validate required columns
+            required_cols = ['Business Name', 'Farm Number', 'Paddock Name']
+            first_row_keys = list(rows[0].keys())
+            missing = [col for col in required_cols if col not in first_row_keys]
+            if missing:
+                return {
+                    "success": False,
+                    "error": f"Missing required columns: {', '.join(missing)}. Found: {', '.join(first_row_keys)}"
+                }
+
+            # Load existing config or create new
+            config = load_registry_config()
+            if not config.get("initialized"):
+                now = datetime.now().isoformat(timespec="seconds")
+                config = {
+                    "initialized": True,
+                    "version": "1.0.0",
+                    "paddocks": {},
+                    "bays": {},
+                    "seasons": {},
+                    "farms": {},
+                    "transactions": [],
+                    "created": now,
+                    "modified": now,
+                }
+
+            farms = config.setdefault("farms", {})
+            paddocks = config.setdefault("paddocks", {})
+
+            now = datetime.now().isoformat(timespec="seconds")
+            farms_added = 0
+            paddocks_added = 0
+            skipped = 0
+
+            # Track farm mapping: (business_name, farm_number) -> farm_id
+            farm_map = {}
+
+            for row in rows:
+                business_name = str(row.get('Business Name', '')).strip()
+                farm_number = str(row.get('Farm Number', '')).strip()
+                paddock_name = str(row.get('Paddock Name', '')).strip()
+
+                if not business_name or not paddock_name:
+                    skipped += 1
+                    continue
+
+                # Create farm key from business name + farm number
+                farm_key = (business_name, farm_number)
+
+                if farm_key not in farm_map:
+                    # Create farm name
+                    if farm_number:
+                        farm_name = f"{business_name} - {farm_number}"
+                    else:
+                        farm_name = business_name
+
+                    farm_id = generate_id(farm_name)
+
+                    # Handle duplicate farm IDs
+                    base_id = farm_id
+                    counter = 1
+                    while farm_id in farms:
+                        farm_id = f"{base_id}_{counter}"
+                        counter += 1
+
+                    farms[farm_id] = {
+                        "name": farm_name,
+                        "business_name": business_name,
+                        "farm_number": farm_number,
+                        "created": now,
+                        "modified": now,
+                    }
+                    farm_map[farm_key] = farm_id
+                    farms_added += 1
+
+                    self._log_transaction(
+                        config, "add", "farm", farm_id, farm_name, "Excel import"
+                    )
+
+                # Create paddock
+                farm_id = farm_map[farm_key]
+                paddock_id = generate_id(paddock_name)
+
+                # Handle duplicate paddock IDs
+                base_id = paddock_id
+                counter = 1
+                while paddock_id in paddocks:
+                    paddock_id = f"{base_id}_{counter}"
+                    counter += 1
+
+                paddocks[paddock_id] = {
+                    "farm_id": farm_id,
+                    "name": paddock_name,
+                    "bay_prefix": "B-",
+                    "bay_count": 0,  # To be configured later
+                    "current_season": False,
+                    "created": now,
+                    "modified": now,
+                }
+                paddocks_added += 1
+
+                self._log_transaction(
+                    config, "add", "paddock", paddock_id, paddock_name, "Excel import"
+                )
+
+            config["modified"] = now
+            save_registry_config(config)
+
+            return {
+                "success": True,
+                "message": f"Import complete",
+                "farms_added": farms_added,
+                "paddocks_added": paddocks_added,
+                "rows_skipped": skipped,
+            }
+
+        except Exception as e:
+            return {"success": False, "error": f"Import failed: {str(e)}"}
+
     def reset(self, token: str) -> dict[str, Any]:
         """Reset the system (requires confirmation token)."""
         if token != "CONFIRM_RESET":

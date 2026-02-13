@@ -95,6 +95,25 @@ button_card_templates:
         - width: 24px
 
   #---------------------------------------------------------------------------
+  # Product Card - Mobile-first asset display
+  #---------------------------------------------------------------------------
+  asm_product_card:
+    show_icon: false
+    show_name: false
+    show_state: false
+    tap_action:
+      action: none
+    styles:
+      card:
+        - background: var(--card-background-color)
+        - border-radius: 16px
+        - padding: 16px
+        - box-shadow: 0 4px 12px rgba(0,0,0,0.1)
+        - margin-bottom: 12px
+      grid:
+        - display: block
+
+  #---------------------------------------------------------------------------
   # Stat chip (like IPM)
   #---------------------------------------------------------------------------
   asm_stat_chip:
@@ -149,28 +168,17 @@ views:
         cards:
           - type: vertical-stack
             cards:
-              - type: custom:button-card
-                template: asm_title
-                name: ASSET MANAGER
+              - type: custom:mushroom-title-card
+                title: Asset Manager
+                subtitle: Manage farm equipment & machinery
 
               #----------------------------------------------------------------
               # SELECT ASSET
               #----------------------------------------------------------------
-              - type: entities
-                entities:
-                  - entity: input_select.asm_asset
-                    name: Select Asset
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 4px;
-                      background: --card-background-color;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.3rem !important;
-                      font-weight: 600;
-                    }
+              - type: custom:mushroom-select-card
+                entity: input_select.asm_asset
+                icon: mdi:tractor
+                fill_container: true
 
               #----------------------------------------------------------------
               # ASSET INFO CARD (shows when asset is selected and mode is View)
@@ -271,33 +279,52 @@ views:
                   - entity: input_select.asm_editor_mode
                     state: "View"
                 card:
-                  type: horizontal-stack
+                  type: grid
+                  columns: 3
+                  square: false
                   cards:
                     - type: custom:button-card
-                      template: asm_action
-                      name: EDIT
+                      name: Edit
                       icon: mdi:pencil
                       tap_action:
                         action: call-service
                         service: script.asm_load_asset
                       styles:
                         card:
-                          - background: "#1565c0"
+                          - background: "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)"
+                          - border-radius: 12px
+                          - height: 56px
+                          - box-shadow: 0 4px 12px rgba(21,101,192,0.3)
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
 
                     - type: custom:button-card
-                      template: asm_action
-                      name: ADD NEW
+                      name: Add
                       icon: mdi:plus
                       tap_action:
                         action: call-service
                         service: script.asm_start_add_asset
                       styles:
                         card:
-                          - background: "#2e7d32"
+                          - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
+                          - border-radius: 12px
+                          - height: 56px
+                          - box-shadow: 0 4px 12px rgba(46,125,50,0.3)
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
 
                     - type: custom:button-card
-                      template: asm_action
-                      name: DELETE
+                      name: Delete
                       icon: mdi:delete
                       tap_action:
                         action: call-service
@@ -306,7 +333,17 @@ views:
                           text: "Delete this asset? This cannot be undone."
                       styles:
                         card:
-                          - background: "#c62828"
+                          - background: "linear-gradient(135deg, #E53935 0%, #C62828 100%)"
+                          - border-radius: 12px
+                          - height: 56px
+                          - box-shadow: 0 4px 12px rgba(198,40,40,0.3)
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
 
               #----------------------------------------------------------------
               # ASSET FORM (only visible in Add New or Edit Existing mode)
@@ -557,7 +594,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: --card-background-color;
+                            background: var(--card-background-color);
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.1rem !important;
@@ -567,66 +604,118 @@ views:
                           }
 
                     # Form action buttons
-                    - type: horizontal-stack
+                    - type: grid
+                      columns: 2
+                      square: false
                       cards:
                         - type: custom:button-card
-                          template: asm_action
-                          name: SAVE
+                          name: Save
                           icon: mdi:content-save
                           tap_action:
                             action: call-service
                             service: script.asm_save_asset
                           styles:
                             card:
-                              - background: "#2e7d32"
+                              - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
+                              - border-radius: 12px
+                              - height: 56px
+                              - box-shadow: 0 4px 12px rgba(46,125,50,0.3)
+                            name:
+                              - font-size: 16px
+                              - font-weight: 700
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 24px
 
                         - type: custom:button-card
-                          template: asm_secondary
-                          name: CANCEL
+                          name: Cancel
                           icon: mdi:close
                           tap_action:
                             action: call-service
                             service: script.asm_clear_asset_form
+                          styles:
+                            card:
+                              - background: "linear-gradient(135deg, #616161 0%, #424242 100%)"
+                              - border-radius: 12px
+                              - height: 56px
+                              - box-shadow: 0 4px 12px rgba(0,0,0,0.2)
+                            name:
+                              - font-size: 16px
+                              - font-weight: 700
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 24px
 
               #----------------------------------------------------------------
-              # ASSET LIST (always visible)
+              # ASSET LIST (always visible) - Product Cards
               #----------------------------------------------------------------
+              - type: custom:mushroom-title-card
+                title: All Assets
+                subtitle: Tap card to select
+
               - type: custom:button-card
-                template: asm_title
-                name: ASSET LIST
-
-              - type: markdown
-                content: |
-                  {% set assets = state_attr('sensor.asm_data', 'assets') or {} %}
-                  {% if assets | length == 0 %}
-                  *No assets yet. Click ADD NEW above to create one.*
-                  {% else %}
-                  | Asset | Category | Attributes |
-                  |-------|----------|------------|
-                  {% for aid, a in assets.items() %}
-                  | {{ a.name }} | {{ a.category }} | {{ (a.attributes or {}) | length }} attrs |
-                  {% endfor %}
-                  {% endif %}
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 10px;
-                      background: --card-background-color;
-                    }
-                    table {
-                      width: 100%;
-                      border-collapse: collapse;
-                      font-size: 0.95rem;
-                    }
-                    th, td {
-                      padding: 8px;
-                      border-bottom: 1px solid var(--divider-color);
-                    }
-                    th {
-                      text-align: left;
-                      font-weight: 700;
-                    }
+                entity: sensor.asm_data
+                show_icon: false
+                show_name: false
+                show_state: false
+                styles:
+                  card:
+                    - background: transparent
+                    - box-shadow: none
+                    - padding: 0
+                  grid:
+                    - display: block
+                  custom_fields:
+                    cards:
+                      - width: 100%
+                custom_fields:
+                  cards: |
+                    [[[
+                      try {
+                        const assets = entity?.attributes?.assets || {};
+                        const ids = Object.keys(assets);
+                        if (ids.length === 0) {
+                          return '<div style="background:var(--card-background-color);border-radius:16px;padding:24px;text-align:center;color:var(--secondary-text-color);"><ha-icon icon="mdi:tractor" style="--mdc-icon-size:48px;opacity:0.5;display:block;margin:0 auto 12px;"></ha-icon><div style="font-size:16px;font-weight:600;">No assets yet</div><div style="font-size:14px;margin-top:4px;">Click ADD above to create one</div></div>';
+                        }
+                        const icons = {Tractor:'mdi:tractor',Pump:'mdi:pump',Harvester:'mdi:corn',Vehicle:'mdi:car-pickup',Implement:'mdi:plow',Sprayer:'mdi:spray',Irrigation:'mdi:water-pump'};
+                        const colors = {Tractor:'#43A047',Pump:'#1E88E5',Harvester:'#FB8C00',Vehicle:'#5E35B1',Implement:'#00897B',Sprayer:'#E53935',Irrigation:'#039BE5'};
+                        let h = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                        for (const id of ids) {
+                          const a = assets[id];
+                          if (!a) continue;
+                          const ic = icons[a.category] || 'mdi:cog';
+                          const cl = colors[a.category] || '#757575';
+                          const at = a.attributes || {};
+                          const ks = Object.keys(at).slice(0, 4);
+                          h += '<div style="background:var(--card-background-color);border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.08);border-left:4px solid ' + cl + ';">';
+                          h += '<div style="display:flex;align-items:center;gap:14px;' + (ks.length > 0 ? 'margin-bottom:12px;' : '') + '">';
+                          h += '<div style="width:56px;height:56px;border-radius:12px;background:' + cl + '20;display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+                          h += '<ha-icon icon="' + ic + '" style="--mdc-icon-size:32px;color:' + cl + ';"></ha-icon></div>';
+                          h += '<div style="flex:1;min-width:0;">';
+                          h += '<div style="font-size:18px;font-weight:700;color:var(--primary-text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (a.name || 'Unnamed') + '</div>';
+                          h += '<div style="font-size:13px;color:' + cl + ';font-weight:600;margin-top:2px;">' + (a.category || 'Uncategorized') + '</div>';
+                          h += '</div></div>';
+                          if (ks.length > 0) {
+                            h += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding-top:12px;border-top:1px solid var(--divider-color);">';
+                            for (const k of ks) {
+                              h += '<div style="background:var(--primary-background-color);border-radius:8px;padding:10px 12px;">';
+                              h += '<div style="font-size:11px;color:var(--secondary-text-color);text-transform:uppercase;font-weight:600;margin-bottom:2px;">' + k + '</div>';
+                              h += '<div style="font-size:14px;font-weight:700;color:var(--primary-text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + at[k] + '</div></div>';
+                            }
+                            const extra = Object.keys(at).length - 4;
+                            if (extra > 0) {
+                              h += '<div style="grid-column:span 2;font-size:12px;color:var(--secondary-text-color);text-align:center;padding-top:4px;">+' + extra + ' more</div>';
+                            }
+                            h += '</div>';
+                          }
+                          h += '</div>';
+                        }
+                        h += '</div>';
+                        return h;
+                      } catch(e) { return '<div style="color:#f44336;padding:16px;">Error: ' + e.message + '</div>'; }
+                    ]]]
 
   #===========================================================================
   # VIEW 2: PART MANAGER
@@ -641,28 +730,17 @@ views:
         cards:
           - type: vertical-stack
             cards:
-              - type: custom:button-card
-                template: asm_title
-                name: PART MANAGER
+              - type: custom:mushroom-title-card
+                title: Part Manager
+                subtitle: Manage spare parts & consumables
 
               #----------------------------------------------------------------
               # SELECT PART
               #----------------------------------------------------------------
-              - type: entities
-                entities:
-                  - entity: input_select.asm_part
-                    name: Select Part
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 4px;
-                      background: --card-background-color;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.3rem !important;
-                      font-weight: 600;
-                    }
+              - type: custom:mushroom-select-card
+                entity: input_select.asm_part
+                icon: mdi:cog
+                fill_container: true
 
               #----------------------------------------------------------------
               # PART INFO (shows when part is selected AND mode is View)
@@ -775,33 +853,52 @@ views:
                   - entity: input_select.asm_part_editor_mode
                     state: "View"
                 card:
-                  type: horizontal-stack
+                  type: grid
+                  columns: 3
+                  square: false
                   cards:
                     - type: custom:button-card
-                      template: asm_action
-                      name: EDIT
+                      name: Edit
                       icon: mdi:pencil
                       tap_action:
                         action: call-service
                         service: script.asm_load_part
                       styles:
                         card:
-                          - background: "#7b1fa2"
+                          - background: "linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)"
+                          - border-radius: 12px
+                          - height: 56px
+                          - box-shadow: 0 4px 12px rgba(123,31,162,0.3)
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
 
                     - type: custom:button-card
-                      template: asm_action
-                      name: ADD NEW
+                      name: Add
                       icon: mdi:plus
                       tap_action:
                         action: call-service
                         service: script.asm_start_add_part
                       styles:
                         card:
-                          - background: "#2e7d32"
+                          - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
+                          - border-radius: 12px
+                          - height: 56px
+                          - box-shadow: 0 4px 12px rgba(46,125,50,0.3)
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
 
                     - type: custom:button-card
-                      template: asm_action
-                      name: DELETE
+                      name: Delete
                       icon: mdi:delete
                       tap_action:
                         action: call-service
@@ -810,7 +907,17 @@ views:
                           text: "Delete this part? This cannot be undone."
                       styles:
                         card:
-                          - background: "#c62828"
+                          - background: "linear-gradient(135deg, #E53935 0%, #C62828 100%)"
+                          - border-radius: 12px
+                          - height: 56px
+                          - box-shadow: 0 4px 12px rgba(198,40,40,0.3)
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
 
               #----------------------------------------------------------------
               # PART FORM (only visible in Add New or Edit Existing mode)
@@ -925,7 +1032,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: --card-background-color;
+                            background: var(--card-background-color);
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.1rem !important;
@@ -1030,7 +1137,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: --card-background-color;
+                            background: var(--card-background-color);
                           }
 
                     # Form action buttons
@@ -1080,7 +1187,7 @@ views:
                           ha-card {
                             border-radius: 12px;
                             padding: 6px;
-                            background: --card-background-color;
+                            background: var(--card-background-color);
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.2rem !important;
@@ -1111,104 +1218,159 @@ views:
         cards:
           - type: vertical-stack
             cards:
-              - type: custom:button-card
-                template: asm_title
-                name: PARTS REPORT
+              - type: custom:mushroom-title-card
+                title: Parts Report
+                subtitle: Stock levels & inventory
 
-              # Summary chips (mechanics unchanged)
-              - type: horizontal-stack
+              # Summary stats (mobile-first grid)
+              - type: grid
+                columns: 2
+                square: false
                 cards:
                   - type: custom:button-card
-                    template: asm_stat_chip
                     entity: sensor.asm_data
                     icon: mdi:cog-outline
                     name: Total Parts
+                    show_state: true
+                    state_display: |
+                      [[[
+                        const parts = entity?.attributes?.parts || {};
+                        return Object.keys(parts).length;
+                      ]]]
                     styles:
                       card:
-                        - background: "#455a64"
+                        - background: "linear-gradient(135deg, #546E7A 0%, #455A64 100%)"
+                        - border-radius: 12px
+                        - height: 72px
+                        - padding: 12px
+                        - box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+                      grid:
+                        - grid-template-areas: '"i s" "i n"'
+                        - grid-template-columns: 40px 1fr
+                        - grid-template-rows: 1fr auto
+                      icon:
+                        - color: white
+                        - width: 28px
+                      state:
+                        - font-size: 24px
+                        - font-weight: 800
+                        - color: white
+                        - justify-self: start
+                      name:
+                        - font-size: 12px
+                        - font-weight: 600
+                        - color: "rgba(255,255,255,0.8)"
+                        - justify-self: start
 
                   - type: custom:button-card
-                    template: asm_stat_chip
                     entity: sensor.asm_low_stock_count
                     icon: mdi:alert
                     name: Low Stock
+                    show_state: true
                     styles:
                       card:
                         - background: |
                             [[[
-                              return Number(entity.state) > 0 ? '#d32f2f' : '#388e3c';
+                              return Number(entity.state) > 0
+                                ? 'linear-gradient(135deg, #E53935 0%, #C62828 100%)'
+                                : 'linear-gradient(135deg, #43A047 0%, #388E3C 100%)';
                             ]]]
+                        - border-radius: 12px
+                        - height: 72px
+                        - padding: 12px
+                        - box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+                      grid:
+                        - grid-template-areas: '"i s" "i n"'
+                        - grid-template-columns: 40px 1fr
+                        - grid-template-rows: 1fr auto
+                      icon:
+                        - color: white
+                        - width: 28px
+                      state:
+                        - font-size: 24px
+                        - font-weight: 800
+                        - color: white
+                        - justify-self: start
+                      name:
+                        - font-size: 12px
+                        - font-weight: 600
+                        - color: "rgba(255,255,255,0.8)"
+                        - justify-self: start
 
-              - type: entities
-                entities:
-                  - entity: input_select.asm_report_asset
-                    name: Asset
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 6px;
-                      background: --card-background-color;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.3rem !important;
-                      font-weight: 600;
-                    }
+              # Filter by asset
+              - type: custom:mushroom-select-card
+                entity: input_select.asm_report_asset
+                icon: mdi:filter
+                fill_container: true
 
-              # Parts table (logic unchanged; styled wrapper)
-              - type: markdown
-                content: |
-                  {% set filter_asset = states('input_select.asm_report_asset') %}
-                  {% set parts = state_attr('sensor.asm_data', 'parts') or {} %}
-                  {% set assets = state_attr('sensor.asm_data', 'assets') or {} %}
-                  {% set asset_id_to_name = state_attr('sensor.asm_data', 'asset_id_to_name') or {} %}
-
-                  {% set ns = namespace(asset_id='') %}
-                  {% if filter_asset not in ['All Assets', 'unknown', 'unavailable', ''] %}
-                    {% for aid, a in assets.items() %}
-                      {% if a.name == filter_asset %}
-                        {% set ns.asset_id = aid %}
-                      {% endif %}
-                    {% endfor %}
-                  {% endif %}
-
-                  | Part | Category | Stock | Min | Status | Assets |
-                  |------|----------|-------|-----|--------|--------|
-                  {% for pid, p in parts.items() %}
-                    {% set show = (filter_asset in ['All Assets', ''] or p.universal or ns.asset_id in (p.applicable_assets | default([]))) %}
-                    {% if show %}
-                      {% set status = 'OK' if p.stock >= p.min_stock or p.min_stock == 0 else 'LOW' %}
-                      {% set asset_names = [] %}
-                      {% if p.universal %}
-                        {% set asset_names = ['Universal'] %}
-                      {% else %}
-                        {% for aid in p.applicable_assets | default([]) %}
-                          {% set asset_names = asset_names + [asset_id_to_name.get(aid, aid)] %}
-                        {% endfor %}
-                      {% endif %}
-                  | {{ p.name }} | {{ p.category }} | {{ p.stock }} {{ p.unit }} | {{ p.min_stock }} | {{ status }} | {{ asset_names | join(', ') }} |
-                    {% endif %}
-                  {% endfor %}
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 10px;
-                      background: --card-background-color;
-                    }
-                    table {
-                      width: 100%;
-                      border-collapse: collapse;
-                      font-size: 0.95rem;
-                    }
-                    th, td {
-                      padding: 8px;
-                      border-bottom: 1px solid var(--divider-color);
-                    }
-                    th {
-                      text-align: left;
-                      font-weight: 700;
-                    }
+              # Parts list - Product Cards
+              - type: custom:button-card
+                entity: sensor.asm_data
+                show_icon: false
+                show_name: false
+                show_state: false
+                styles:
+                  card:
+                    - background: transparent
+                    - box-shadow: none
+                    - padding: 0
+                  grid:
+                    - display: block
+                  custom_fields:
+                    cards:
+                      - width: 100%
+                custom_fields:
+                  cards: |
+                    [[[
+                      try {
+                        const parts = entity?.attributes?.parts || {};
+                        const ids = Object.keys(parts);
+                        const assetNames = entity?.attributes?.asset_id_to_name || {};
+                        if (ids.length === 0) {
+                          return '<div style="background:var(--card-background-color);border-radius:16px;padding:24px;text-align:center;color:var(--secondary-text-color);"><ha-icon icon="mdi:cog" style="--mdc-icon-size:48px;opacity:0.5;display:block;margin:0 auto 12px;"></ha-icon><div style="font-size:16px;font-weight:600;">No parts yet</div><div style="font-size:14px;margin-top:4px;">Add parts in the Parts Manager</div></div>';
+                        }
+                        const icons = {Filter:'mdi:air-filter',Belt:'mdi:link-variant',Oil:'mdi:oil',Grease:'mdi:water',Battery:'mdi:car-battery',Tyre:'mdi:tire',Hose:'mdi:pipe',Blade:'mdi:knife',Seal:'mdi:circle-outline'};
+                        const colors = {Filter:'#8E24AA',Belt:'#5D4037',Oil:'#FFA000',Grease:'#00897B',Battery:'#C62828',Tyre:'#37474F',Hose:'#1565C0',Blade:'#546E7A',Seal:'#78909C'};
+                        let h = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                        for (const id of ids) {
+                          const p = parts[id];
+                          if (!p) continue;
+                          const ic = icons[p.category] || 'mdi:cog';
+                          const cl = colors[p.category] || '#757575';
+                          const stock = Number(p.stock) || 0;
+                          const minStock = Number(p.min_stock) || 0;
+                          const isLow = minStock > 0 && stock < minStock;
+                          const stockCl = isLow ? '#E53935' : '#43A047';
+                          let fits = 'Universal';
+                          if (!p.universal && p.applicable_assets && p.applicable_assets.length > 0) {
+                            const names = p.applicable_assets.map(aid => assetNames[aid] || aid).slice(0,2);
+                            fits = names.join(', ');
+                            if (p.applicable_assets.length > 2) fits += ' +' + (p.applicable_assets.length - 2);
+                          }
+                          h += '<div style="background:var(--card-background-color);border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.08);border-left:4px solid ' + cl + ';">';
+                          h += '<div style="display:flex;align-items:center;gap:14px;">';
+                          h += '<div style="width:56px;height:56px;border-radius:12px;background:' + cl + '20;display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+                          h += '<ha-icon icon="' + ic + '" style="--mdc-icon-size:32px;color:' + cl + ';"></ha-icon></div>';
+                          h += '<div style="flex:1;min-width:0;">';
+                          h += '<div style="font-size:18px;font-weight:700;color:var(--primary-text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (p.name || 'Unnamed') + '</div>';
+                          h += '<div style="font-size:13px;color:' + cl + ';font-weight:600;margin-top:2px;">' + (p.category || 'Part') + (p.part_number ? ' · ' + p.part_number : '') + '</div>';
+                          h += '</div></div>';
+                          h += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--divider-color);">';
+                          h += '<div style="background:' + (isLow ? 'rgba(229,57,53,0.1)' : 'rgba(67,160,71,0.1)') + ';border-radius:8px;padding:10px 12px;">';
+                          h += '<div style="font-size:11px;color:var(--secondary-text-color);text-transform:uppercase;font-weight:600;margin-bottom:2px;">Stock</div>';
+                          h += '<div style="font-size:16px;font-weight:700;color:' + stockCl + ';">' + stock + ' ' + (p.unit || 'ea') + '</div></div>';
+                          h += '<div style="background:var(--primary-background-color);border-radius:8px;padding:10px 12px;">';
+                          h += '<div style="font-size:11px;color:var(--secondary-text-color);text-transform:uppercase;font-weight:600;margin-bottom:2px;">Min Stock</div>';
+                          h += '<div style="font-size:16px;font-weight:700;color:var(--primary-text-color);">' + minStock + '</div></div>';
+                          h += '<div style="grid-column:span 2;background:var(--primary-background-color);border-radius:8px;padding:10px 12px;">';
+                          h += '<div style="font-size:11px;color:var(--secondary-text-color);text-transform:uppercase;font-weight:600;margin-bottom:2px;">Fits</div>';
+                          h += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + fits + '</div></div>';
+                          h += '</div></div>';
+                        }
+                        h += '</div>';
+                        return h;
+                      } catch(e) { return '<div style="color:#f44336;padding:16px;">Error: ' + e.message + '</div>'; }
+                    ]]]
 
               # Low stock alert (logic unchanged; styled)
               - type: conditional
@@ -1246,28 +1408,17 @@ views:
         cards:
           - type: vertical-stack
             cards:
-              - type: custom:button-card
-                template: asm_title
-                name: RECORD SERVICE EVENT
+              - type: custom:mushroom-title-card
+                title: Record Service
+                subtitle: Log maintenance & repairs
 
               #----------------------------------------------------------------
               # SELECT ASSET (always visible)
               #----------------------------------------------------------------
-              - type: entities
-                entities:
-                  - entity: input_select.asm_service_asset
-                    name: Select Asset
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 4px;
-                      background: --card-background-color;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.3rem !important;
-                      font-weight: 600;
-                    }
+              - type: custom:mushroom-select-card
+                entity: input_select.asm_service_asset
+                icon: mdi:tractor
+                fill_container: true
 
               #----------------------------------------------------------------
               # SERVICE FORM (only visible when asset is selected)
@@ -1380,9 +1531,9 @@ views:
                       card_mod:
                         style: |
                           ha-card {
-                            border-radius: 12px;
-                            padding: 6px;
-                            background: --card-background-color;
+                            border-radius: 16px;
+                            padding: 8px;
+                            background: var(--card-background-color);
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.1rem !important;
@@ -1392,51 +1543,62 @@ views:
                           }
 
                     # Action buttons
-                    - type: horizontal-stack
+                    - type: grid
+                      columns: 2
+                      square: false
                       cards:
                         - type: custom:button-card
-                          template: asm_action
-                          name: RECORD SERVICE
+                          name: Record Service
                           icon: mdi:check
                           tap_action:
                             action: call-service
                             service: script.asm_record_service
                           styles:
                             card:
-                              - height: 80px
-                              - background: "#1565c0"
+                              - background: "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)"
+                              - border-radius: 12px
+                              - height: 56px
+                              - box-shadow: 0 4px 12px rgba(21,101,192,0.3)
+                            name:
+                              - font-size: 14px
+                              - font-weight: 700
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 24px
 
                         - type: custom:button-card
-                          template: asm_secondary
-                          name: CLEAR
+                          name: Clear
                           icon: mdi:eraser
                           tap_action:
                             action: call-service
                             service: script.asm_clear_service_form
+                          styles:
+                            card:
+                              - background: "linear-gradient(135deg, #616161 0%, #424242 100%)"
+                              - border-radius: 12px
+                              - height: 56px
+                              - box-shadow: 0 4px 12px rgba(0,0,0,0.2)
+                            name:
+                              - font-size: 14px
+                              - font-weight: 700
+                              - color: white
+                            icon:
+                              - color: white
+                              - width: 24px
 
               # Recent service history
-              - type: custom:button-card
-                template: asm_title
-                name: SERVICE HISTORY
+              - type: custom:mushroom-title-card
+                title: Service History
+                subtitle: Past maintenance records
 
               #----------------------------------------------------------------
               # SELECT SERVICE EVENT TO VIEW DETAILS
               #----------------------------------------------------------------
-              - type: entities
-                entities:
-                  - entity: input_select.asm_service_event
-                    name: Select Event to View
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 4px;
-                      background: --card-background-color;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.2rem !important;
-                      font-weight: 600;
-                    }
+              - type: custom:mushroom-select-card
+                entity: input_select.asm_service_event
+                icon: mdi:history
+                fill_container: true
 
               #----------------------------------------------------------------
               # SERVICE EVENT DETAIL CARD (shows when event is selected)
@@ -1599,7 +1761,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 10px;
-                      background: --card-background-color;
+                      background: var(--card-background-color);
                     }
                     table {
                       width: 100%;
@@ -1627,9 +1789,9 @@ views:
         cards:
           - type: vertical-stack
             cards:
-              - type: custom:button-card
-                template: asm_title
-                name: ASM SETTINGS
+              - type: custom:mushroom-title-card
+                title: Settings
+                subtitle: System configuration & data
 
               #----------------------------------------------------------------
               # SYSTEM STATUS
@@ -1825,7 +1987,7 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 12px;
-                      background: --card-background-color;
+                      background: var(--card-background-color);
                     }
 
               #----------------------------------------------------------------
@@ -1852,5 +2014,5 @@ views:
                     ha-card {
                       border-radius: 12px;
                       padding: 12px;
-                      background: --card-background-color;
+                      background: var(--card-background-color);
                     }

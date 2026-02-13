@@ -41,8 +41,8 @@ button_card_templates:
         - border-radius: 12px
         - height: 56px
         - padding: 4px
-        - box-shadow: 0 4px 10px rgba(0,0,0,0.06)
-        - background: "linear-gradient(135deg, rgba(0,0,0,0.08), rgba(0,0,0,0.02))"
+        - box-shadow: 0 4px 10px rgba(0,0,0,0.15)
+        - background: "linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)"
       grid:
         - grid-template-areas: '"n"'
         - grid-template-columns: 1fr
@@ -52,9 +52,194 @@ button_card_templates:
         - text-align: center
         - font-size: 13px
         - font-weight: 900
-        - color: var(--primary-text-color)
+        - color: "#FFFFFF"
         - line-height: 1.2
         - align-self: center
+        - text-shadow: "0 1px 3px rgba(0,0,0,0.3)"
+
+  ###########################################################################
+  # WEATHER ICON TILE - Shows BOM weather icon for the day
+  ###########################################################################
+  forecast_icon_tile:
+    show_icon: true
+    show_name: false
+    show_state: false
+    tap_action:
+      action: none
+    icon: >
+      [[[
+        const icon = entity?.state;
+        const iconMap = {
+          'sunny': 'mdi:weather-sunny',
+          'clear': 'mdi:weather-night',
+          'mostly_sunny': 'mdi:weather-partly-cloudy',
+          'partly_cloudy': 'mdi:weather-partly-cloudy',
+          'cloudy': 'mdi:weather-cloudy',
+          'hazy': 'mdi:weather-hazy',
+          'fog': 'mdi:weather-fog',
+          'light_rain': 'mdi:weather-rainy',
+          'rain': 'mdi:weather-pouring',
+          'heavy_rain': 'mdi:weather-pouring',
+          'showers': 'mdi:weather-rainy',
+          'light_showers': 'mdi:weather-rainy',
+          'heavy_showers': 'mdi:weather-pouring',
+          'thunderstorm': 'mdi:weather-lightning-rainy',
+          'storm': 'mdi:weather-lightning',
+          'dust': 'mdi:weather-dust',
+          'frost': 'mdi:snowflake',
+          'snow': 'mdi:weather-snowy',
+          'wind': 'mdi:weather-windy',
+          'windy': 'mdi:weather-windy',
+          'cyclone': 'mdi:weather-hurricane'
+        };
+        return iconMap[icon?.toLowerCase()] || 'mdi:weather-cloudy';
+      ]]]
+    styles:
+      card:
+        - border-radius: 12px
+        - height: 56px
+        - padding: 4px
+        - box-shadow: 0 4px 10px rgba(0,0,0,0.08)
+        - background: var(--card-background-color)
+      icon:
+        - width: 32px
+        - color: >
+            [[[
+              const icon = entity?.state?.toLowerCase();
+              if (['sunny', 'mostly_sunny', 'clear'].includes(icon)) return '#FFA726';
+              if (['rain', 'heavy_rain', 'showers', 'light_showers', 'heavy_showers', 'light_rain'].includes(icon)) return '#42A5F5';
+              if (['thunderstorm', 'storm'].includes(icon)) return '#7E57C2';
+              if (['snow', 'frost'].includes(icon)) return '#81D4FA';
+              return 'var(--primary-text-color)';
+            ]]]
+
+  ###########################################################################
+  # UV INDEX TILE - Shows UV level with color coding
+  ###########################################################################
+  forecast_uv_tile:
+    show_icon: true
+    show_name: true
+    show_state: true
+    show_label: false
+    tap_action:
+      action: none
+    icon: mdi:white-balance-sunny
+    state_display: >
+      [[[
+        const v = entity?.state;
+        if (v === 'unavailable' || v === 'unknown' || !v) return '--';
+        return v;
+      ]]]
+    name: UV
+    styles:
+      card:
+        - border-radius: 12px
+        - height: 56px
+        - padding: 6px
+        - box-shadow: 0 4px 10px rgba(0,0,0,0.10)
+        - background: >
+            [[[
+              const v = entity?.state?.toLowerCase();
+              if (v === 'unavailable' || v === 'unknown' || !v) return 'rgba(100,100,100,0.15)';
+              if (v === 'low' || v === '1' || v === '2') return 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)';
+              if (v === 'moderate' || v === '3' || v === '4' || v === '5') return 'linear-gradient(135deg, #FFC107 0%, #FFA000 100%)';
+              if (v === 'high' || v === '6' || v === '7') return 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+              if (v === 'very high' || v === '8' || v === '9' || v === '10') return 'linear-gradient(135deg, #F44336 0%, #D32F2F 100%)';
+              if (v === 'extreme' || Number(v) >= 11) return 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)';
+              return 'linear-gradient(135deg, #FFC107 0%, #FFA000 100%)';
+            ]]]
+      grid:
+        - grid-template-areas: '"i s" "i n"'
+        - grid-template-columns: 28px 1fr
+        - grid-template-rows: 1fr auto
+      icon:
+        - width: 22px
+        - color: "#FFFFFF"
+      state:
+        - font-size: 14px
+        - font-weight: 900
+        - color: "#FFFFFF"
+        - justify-self: start
+        - align-self: end
+        - text-shadow: "0 1px 3px rgba(0,0,0,0.3)"
+      name:
+        - font-size: 10px
+        - font-weight: 800
+        - color: "rgba(255,255,255,0.9)"
+        - justify-self: start
+        - align-self: start
+
+  ###########################################################################
+  # FIRE DANGER TILE - Shows fire danger level with color coding
+  ###########################################################################
+  forecast_fire_tile:
+    show_icon: true
+    show_name: true
+    show_state: true
+    show_label: false
+    tap_action:
+      action: none
+    icon: mdi:fire
+    state_display: >
+      [[[
+        const v = entity?.state;
+        if (v === 'unavailable' || v === 'unknown' || !v) return '--';
+        return v;
+      ]]]
+    name: Fire
+    styles:
+      card:
+        - border-radius: 12px
+        - height: 56px
+        - padding: 6px
+        - box-shadow: 0 4px 10px rgba(0,0,0,0.10)
+        - background: >
+            [[[
+              const v = entity?.state?.toLowerCase();
+              if (v === 'unavailable' || v === 'unknown' || !v || v === 'none' || v === 'no rating') return 'rgba(100,100,100,0.15)';
+              if (v === 'low-moderate' || v === 'low' || v === 'moderate') return 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)';
+              if (v === 'high') return 'linear-gradient(135deg, #FFC107 0%, #FFA000 100%)';
+              if (v === 'very high') return 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)';
+              if (v === 'severe') return 'linear-gradient(135deg, #F44336 0%, #D32F2F 100%)';
+              if (v === 'extreme') return 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)';
+              if (v === 'catastrophic' || v === 'code red') return 'linear-gradient(135deg, #212121 0%, #000000 100%)';
+              return 'rgba(100,100,100,0.15)';
+            ]]]
+      grid:
+        - grid-template-areas: '"i s" "i n"'
+        - grid-template-columns: 28px 1fr
+        - grid-template-rows: 1fr auto
+      icon:
+        - width: 22px
+        - color: >
+            [[[
+              const v = entity?.state?.toLowerCase();
+              if (v === 'unavailable' || v === 'unknown' || !v || v === 'none' || v === 'no rating') return 'var(--secondary-text-color)';
+              return '#FFFFFF';
+            ]]]
+      state:
+        - font-size: 12px
+        - font-weight: 900
+        - color: >
+            [[[
+              const v = entity?.state?.toLowerCase();
+              if (v === 'unavailable' || v === 'unknown' || !v || v === 'none' || v === 'no rating') return 'var(--secondary-text-color)';
+              return '#FFFFFF';
+            ]]]
+        - justify-self: start
+        - align-self: end
+        - text-shadow: "0 1px 3px rgba(0,0,0,0.3)"
+      name:
+        - font-size: 10px
+        - font-weight: 800
+        - color: >
+            [[[
+              const v = entity?.state?.toLowerCase();
+              if (v === 'unavailable' || v === 'unknown' || !v || v === 'none' || v === 'no rating') return 'var(--secondary-text-color)';
+              return 'rgba(255,255,255,0.9)';
+            ]]]
+        - justify-self: start
+        - align-self: start
 
   ###########################################################################
   # RAIN TILE - for Temp & Rain view (blue gradient based on rainfall)
@@ -595,6 +780,43 @@ views:
                 entity: sensor.bom_forecast_rain_6
                 name: mm
 
+          # Today's Additional Info
+          - type: custom:mushroom-title-card
+            title: Today's Conditions
+            subtitle: UV index & fire danger
+
+          - type: grid
+            columns: 3
+            square: false
+            cards:
+              - type: conditional
+                conditions:
+                  - entity: sensor.bom_forecast_uv_0
+                    state_not: unavailable
+                card:
+                  type: custom:button-card
+                  template: forecast_uv_tile
+                  entity: sensor.bom_forecast_uv_0
+
+              - type: conditional
+                conditions:
+                  - entity: sensor.bom_forecast_fire_danger_0
+                    state_not: unavailable
+                card:
+                  type: custom:button-card
+                  template: forecast_fire_tile
+                  entity: sensor.bom_forecast_fire_danger_0
+
+              - type: conditional
+                conditions:
+                  - entity: sensor.bom_forecast_rain_chance_0
+                    state_not: unavailable
+                card:
+                  type: custom:button-card
+                  template: forecast_rain_tile
+                  entity: sensor.bom_forecast_rain_chance_0
+                  name: "% rain"
+
 
   ###########################################################################
   # VIEW 2: CURRENT (Bureau of Meteorology Current Conditions)
@@ -637,46 +859,159 @@ views:
                   columns: 2
                   square: false
                   cards:
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_temperature
-                      name: Temp
-                      icon: mdi:thermometer
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_rain_since_9am
-                      name: Rain 9am
-                      icon: mdi:water
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_humidity
-                      name: Humidity
-                      icon: mdi:water-percent
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_pressure
-                      name: Pressure
-                      icon: mdi:gauge
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_feels_like
-                      name: Feels
-                      icon: mdi:thermometer-check
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_dew_point
-                      name: Dew
-                      icon: mdi:water-thermometer
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_delta_t
-                      name: Delta T
-                      icon: mdi:delta
-                    - type: custom:button-card
-                      template: small_stat
-                      entity: sensor.bom_observations_wind_speed
-                      name: Wind
-                      icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_temperature
+                        name: Temp
+                        icon: mdi:thermometer
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_feels_like
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_feels_like
+                        name: Feels Like
+                        icon: mdi:thermometer-check
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_humidity
+                        name: Humidity
+                        icon: mdi:water-percent
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_dew_point
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_dew_point
+                        name: Dew Point
+                        icon: mdi:water-thermometer
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_pressure
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_pressure
+                        name: Pressure
+                        icon: mdi:gauge
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_delta_t
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_delta_t
+                        name: Delta T
+                        icon: mdi:delta
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_rain_since_9am
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_rain_since_9am
+                        name: Rain 9am
+                        icon: mdi:water
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_wind_speed
+                        name: Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_wind_gust
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_wind_gust
+                        name: Gusts
+                        icon: mdi:weather-windy-variant
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_observations_wind_direction
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.bom_observations_wind_direction
+                        name: Direction
+                        icon: mdi:compass
+
+                # Today's Forecast section
+                - type: custom:mushroom-title-card
+                  title: Today's Forecast
+
+                - type: grid
+                  columns: 3
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_forecast_uv_0
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: forecast_uv_tile
+                        entity: sensor.bom_forecast_uv_0
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_forecast_fire_danger_0
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: forecast_fire_tile
+                        entity: sensor.bom_forecast_fire_danger_0
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.bom_forecast_rain_chance_0
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: forecast_rain_tile
+                        entity: sensor.bom_forecast_rain_chance_0
+                        name: "% rain"
+
+                # Today's Forecast Text
+                - type: conditional
+                  conditions:
+                    - entity: sensor.bom_forecast_short_text_0
+                      state_not: unavailable
+                  card:
+                    type: markdown
+                    content: >
+                      {{ states('sensor.bom_forecast_short_text_0') }}
+                    card_mod:
+                      style: |
+                        ha-card {
+                          background: var(--card-background-color);
+                          border-radius: 12px;
+                          padding: 12px;
+                          font-size: 14px;
+                          text-align: center;
+                        }
 
                 # Wind section title
                 - type: custom:mushroom-title-card
@@ -791,12 +1126,16 @@ views:
     sections:
       - type: grid
         cards:
+          - type: custom:mushroom-title-card
+            title: Home Radar
+            subtitle: 50km rain radar
+
           - type: custom:weather-radar-card
             data_source: RainViewer-TWC
             map_style: Dark
             center_latitude: -35.34395839537419
             center_longitude: 145.53880716799404
-            zoom_level: 7
+            zoom_level: 9
             marker_latitude: -35.34395839537419
             marker_longitude: 145.53880716799404
             show_marker: true
@@ -845,157 +1184,187 @@ views:
             card:
               type: vertical-stack
               cards:
-                # Title - uses configured station name
+                # Header - uses configured station name
                 - type: custom:button-card
-                  color_type: label-card
-                  color: rgb(30, 30, 30)
-                  show_icon: false
-                  show_state: false
+                  template: station_header
                   entity: binary_sensor.weather_local_station_1_enabled
+                  icon: mdi:home-thermometer
                   name: >
                     [[[
-                      return entity?.attributes?.name || 'ECOWITT WEATHER STATION';
+                      return entity?.attributes?.name || 'Local Weather Station';
                     ]]]
+                  state_display: "Ecowitt Gateway"
                   styles:
                     card:
-                      - height: 50px
-                      - border-radius: 12px
-                      - padding: 8px
-                    name:
-                      - font-size: 18px
-                      - font-weight: 700
-                      - text-align: center
-                      - color: white
+                      - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
 
-                # Current Conditions Row
-                - type: horizontal-stack
+                # Current Conditions (2 columns)
+                - type: grid
+                  columns: 2
+                  square: false
                   cards:
-                    - type: entity
-                      entity: sensor.ecowittgateway_1_outdoor_temperature
-                      name: Temperature
-                      icon: mdi:thermometer
-                    - type: entity
-                      entity: sensor.ecowittgateway_1_humidity
-                      name: Humidity
-                      icon: mdi:water-percent
-                    - type: entity
-                      entity: sensor.ecowittgateway_1_wind_speed
-                      name: Wind
-                      icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_outdoor_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_outdoor_temperature
+                        name: Temp
+                        icon: mdi:thermometer
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_humidity
+                        name: Humidity
+                        icon: mdi:water-percent
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_wind_speed
+                        name: Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_solar_radiation
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_solar_radiation
+                        name: Solar
+                        icon: mdi:white-balance-sunny
 
-                # Calculated Sensors Title
-                - type: custom:button-card
-                  color_type: label-card
-                  color: rgb(76, 175, 80)
-                  show_icon: false
-                  show_state: false
-                  name: CALCULATED SENSORS
-                  styles:
-                    card:
-                      - height: 40px
-                      - border-radius: 12px
-                      - padding: 8px
-                    name:
-                      - font-size: 14px
-                      - font-weight: 700
-                      - text-align: center
-                      - color: white
+                # Calculated Sensors
+                - type: custom:mushroom-title-card
+                  title: Calculated Sensors
 
-                # Delta T and ETo
-                - type: horizontal-stack
+                - type: grid
+                  columns: 2
+                  square: false
                   cards:
-                    - type: entity
-                      entity: sensor.weather_station_1_delta_t
-                      name: Delta T
-                      icon: mdi:delta
-                    - type: entity
-                      entity: sensor.weather_station_1_evapotranspiration
-                      name: ETo
-                      icon: mdi:water-outline
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_delta_t
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_delta_t
+                        name: Delta T
+                        icon: mdi:delta
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_evapotranspiration
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_evapotranspiration
+                        name: ETo
+                        icon: mdi:water-outline
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_degree_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_degree_day
+                        name: Degree Day
+                        icon: mdi:thermometer-lines
+                    - type: conditional
+                      conditions:
+                        - entity: input_number.weather_station_1_cdd
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: input_number.weather_station_1_cdd
+                        name: Cumulative DD
+                        icon: mdi:chart-line
 
-                # Degree Days
-                - type: horizontal-stack
+                # 24-Hour Statistics
+                - type: custom:mushroom-title-card
+                  title: 24-Hour Statistics
+
+                - type: grid
+                  columns: 2
+                  square: false
                   cards:
-                    - type: entity
-                      entity: sensor.weather_station_1_degree_day
-                      name: Degree Day
-                      icon: mdi:thermometer-lines
-                    - type: entity
-                      entity: input_number.weather_station_1_cdd
-                      name: Cumulative DD
-                      icon: mdi:chart-line
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_min_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_min_temperature
+                        name: Min Temp
+                        icon: mdi:thermometer-low
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_max_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_max_temperature
+                        name: Max Temp
+                        icon: mdi:thermometer-high
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_min_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_min_humidity
+                        name: Min Humidity
+                        icon: mdi:water-minus
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_max_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_max_humidity
+                        name: Max Humidity
+                        icon: mdi:water-plus
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_avg_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_avg_wind_speed
+                        name: Avg Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: utility_meter.weather_station_1_solar_radiation_mj_m2_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: utility_meter.weather_station_1_solar_radiation_mj_m2_day
+                        name: Solar (MJ/m2)
+                        icon: mdi:white-balance-sunny
 
-                # Statistics Title
-                - type: custom:button-card
-                  color_type: label-card
-                  color: rgb(33, 150, 243)
-                  show_icon: false
-                  show_state: false
-                  name: 24-HOUR STATISTICS
-                  styles:
-                    card:
-                      - height: 40px
-                      - border-radius: 12px
-                      - padding: 8px
-                    name:
-                      - font-size: 14px
-                      - font-weight: 700
-                      - text-align: center
-                      - color: white
-
-                # Min/Max Temperature
-                - type: horizontal-stack
-                  cards:
-                    - type: entity
-                      entity: sensor.weather_station_1_min_temperature
-                      name: Min Temp
-                      icon: mdi:thermometer-low
-                    - type: entity
-                      entity: sensor.weather_station_1_max_temperature
-                      name: Max Temp
-                      icon: mdi:thermometer-high
-
-                # Min/Max Humidity
-                - type: horizontal-stack
-                  cards:
-                    - type: entity
-                      entity: sensor.weather_station_1_min_humidity
-                      name: Min Humidity
-                      icon: mdi:water-minus
-                    - type: entity
-                      entity: sensor.weather_station_1_max_humidity
-                      name: Max Humidity
-                      icon: mdi:water-plus
-
-                # Avg Wind and Solar
-                - type: horizontal-stack
-                  cards:
-                    - type: entity
-                      entity: sensor.weather_station_1_avg_wind_speed
-                      name: Avg Wind
-                      icon: mdi:weather-windy
-                    - type: entity
-                      entity: utility_meter.weather_station_1_solar_radiation_mj_m2_day
-                      name: Solar (MJ/m2)
-                      icon: mdi:white-balance-sunny
-
-                # Spray Conditions Card
-                - type: custom:button-card
-                  color_type: label-card
-                  color: rgb(255, 152, 0)
-                  show_icon: false
-                  show_state: false
-                  name: SPRAY CONDITIONS
-                  styles:
-                    card:
-                      - height: 40px
-                      - border-radius: 12px
-                      - padding: 8px
-                    name:
-                      - font-size: 14px
-                      - font-weight: 700
-                      - text-align: center
-                      - color: white
+                # Spray Conditions
+                - type: custom:mushroom-title-card
+                  title: Spray Conditions
 
                 - type: markdown
                   content: |
@@ -1020,7 +1389,7 @@ views:
                       ha-card {
                         border-radius: 12px;
                         padding: 12px;
-                        background: #fff8e1;
+                        background: var(--card-background-color);
                       }
                       table {
                         width: 100%;
