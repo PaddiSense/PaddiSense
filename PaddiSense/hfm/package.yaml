@@ -585,38 +585,95 @@ template:
             {% if fname == farm_name %}{{ fid }}{% endif %}
           {% endfor %}
 
-      # Weather sensors for display
+      # Weather sensors for display (Local station first, BOM fallback)
       - name: "HFM Current Wind Speed"
         unique_id: hfm_current_wind_speed
         icon: mdi:weather-windy
         unit_of_measurement: "km/h"
-        state: "{{ states('sensor.bom_wind_speed_kilometre') | float(0) | round(1) }}"
+        state: >
+          {% set local = states('sensor.weather_api_station_1_wind_speed') %}
+          {% set bom = states('sensor.bom_wind_speed_kilometre') %}
+          {% if local not in ['unknown', 'unavailable', ''] %}
+            {{ local | float(0) | round(1) }}
+          {% else %}
+            {{ bom | float(0) | round(1) }}
+          {% endif %}
 
       - name: "HFM Current Wind Direction"
         unique_id: hfm_current_wind_direction
         icon: mdi:compass
         state: >
-          {% set deg = states('sensor.bom_wind_direction') | float(0) %}
-          {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
-          {{ dirs[((deg + 11.25) % 360 / 22.5) | int] }}
+          {% set local = states('sensor.weather_api_station_1_wind_direction') %}
+          {% set bom = states('sensor.bom_wind_direction') %}
+          {% if local not in ['unknown', 'unavailable', ''] %}
+            {{ local }}
+          {% else %}
+            {% set deg = bom | float(0) %}
+            {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
+            {{ dirs[((deg + 11.25) % 360 / 22.5) | int] }}
+          {% endif %}
 
       - name: "HFM Current Wind Gust"
         unique_id: hfm_current_wind_gust
         icon: mdi:weather-windy-variant
         unit_of_measurement: "km/h"
-        state: "{{ states('sensor.bom_gust_speed_kilometre') | float(0) | round(1) }}"
+        state: >
+          {% set local = states('sensor.weather_api_station_1_wind_gust') %}
+          {% set bom = states('sensor.bom_gust_speed_kilometre') %}
+          {% if local not in ['unknown', 'unavailable', ''] %}
+            {{ local | float(0) | round(1) }}
+          {% else %}
+            {{ bom | float(0) | round(1) }}
+          {% endif %}
 
       - name: "HFM Current Temperature"
         unique_id: hfm_current_temperature
         icon: mdi:thermometer
         unit_of_measurement: "°C"
-        state: "{{ states('sensor.bom_temp') | float(0) | round(1) }}"
+        state: >
+          {% set local = states('sensor.weather_api_station_1_temperature') %}
+          {% set bom = states('sensor.bom_temp') %}
+          {% if local not in ['unknown', 'unavailable', ''] %}
+            {{ local | float(0) | round(1) }}
+          {% else %}
+            {{ bom | float(0) | round(1) }}
+          {% endif %}
 
       - name: "HFM Current Humidity"
         unique_id: hfm_current_humidity
         icon: mdi:water-percent
         unit_of_measurement: "%"
-        state: "{{ states('sensor.bom_humidity') | float(0) | round(0) }}"
+        state: >
+          {% set local = states('sensor.weather_api_station_1_humidity') %}
+          {% set bom = states('sensor.bom_humidity') %}
+          {% if local not in ['unknown', 'unavailable', ''] %}
+            {{ local | float(0) | round(0) }}
+          {% else %}
+            {{ bom | float(0) | round(0) }}
+          {% endif %}
+
+      - name: "HFM Current Delta T"
+        unique_id: hfm_current_delta_t
+        icon: mdi:thermometer-lines
+        unit_of_measurement: "°C"
+        state: >
+          {% set local = states('sensor.weather_api_station_1_delta_t') %}
+          {% set bom = states('sensor.bom_observations_delta_t') %}
+          {% if local not in ['unknown', 'unavailable', ''] %}
+            {{ local | float(0) | round(1) }}
+          {% elif bom not in ['unknown', 'unavailable', ''] %}
+            {{ bom | float(0) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "HFM Current Rain Chance"
+        unique_id: hfm_current_rain_chance
+        icon: mdi:weather-rainy
+        unit_of_measurement: "%"
+        state: >
+          {% set bom = states('sensor.bom_forecast_rain_chance_0') %}
+          {{ bom | float(0) | round(0) if bom not in ['unknown', 'unavailable', ''] else 0 }}
 
       - name: "HFM Weather Summary"
         unique_id: hfm_weather_summary
@@ -624,7 +681,7 @@ template:
         state: >
           Wind: {{ states('sensor.hfm_current_wind_speed') }}km/h {{ states('sensor.hfm_current_wind_direction') }},
           Gusts: {{ states('sensor.hfm_current_wind_gust') }}km/h,
-          {{ states('sensor.hfm_current_temperature') }}°C,
+          ΔT: {{ states('sensor.hfm_current_delta_t') }}°C,
           {{ states('sensor.hfm_current_humidity') }}%
 
       # Farm & Paddock selection sensors
@@ -2423,6 +2480,10 @@ script:
             {% else %}
               {{ none }}
             {% endif %}
+          # Get rain chance from BOM forecast
+          rain_chance: >
+            {% set rc = states('sensor.bom_forecast_rain_chance_0') %}
+            {{ rc | float(0) | round(0) if rc not in ['unknown', 'unavailable', ''] else 0 }}
           source: "{{ 'local' if local_available else 'bom' }}"
           captured_at: "{{ now().strftime('%Y-%m-%d %H:%M') }}"
           weather_record: >
@@ -2435,8 +2496,8 @@ script:
               "wind_direction_deg": {{ wind_direction_deg }},
               "wind_direction": "{{ wind_direction }}",
               "humidity_pct": {{ humidity }},
-              "temperature_c": {{ temperature }},
-              "delta_t": {{ delta_t if delta_t is not none else 'null' }}
+              "delta_t": {{ delta_t if delta_t is not none else 'null' }},
+              "rain_chance_pct": {{ rain_chance }}
             }
       - service: shell_command.hfm_update_draft_weather_phase
         data:

@@ -15,7 +15,7 @@ button_card_templates:
   #---------------------------------------------------------------------------
   hfm_title:
     color_type: card
-    color: "#1e1e1e"
+    color: "#c77f00"
     show_icon: false
     show_state: false
     styles:
@@ -3270,7 +3270,7 @@ views:
                         cards:
                           - type: custom:button-card
                             color_type: card
-                            color: "#1565c0"
+                            color: "#c77f00"
                             show_icon: false
                             show_name: true
                             name: "SPRAY WEATHER PHASES"
@@ -3284,20 +3284,7 @@ views:
                                 - font-weight: 700
                                 - color: white
 
-                          # Phase Times Summary
-                          - type: markdown
-                            content: |
-                              **Calculated from Step 2:** Start {{ states('sensor.hfm_spray_start_time') }} → Mid {{ states('sensor.hfm_spray_mid_time') }} → End {{ states('sensor.hfm_spray_end_time') }}
-                            card_mod:
-                              style: |
-                                ha-card {
-                                  border-radius: 0;
-                                  text-align: center;
-                                  padding: 8px;
-                                  background: rgba(21, 101, 192, 0.1);
-                                }
-
-                          # START Phase
+                          # Capture Buttons Row
                           - type: horizontal-stack
                             cards:
                               - type: custom:button-card
@@ -3309,30 +3296,18 @@ views:
                                 icon: mdi:play-circle
                                 show_icon: true
                                 show_name: true
-                                show_state: true
-                                state_display: |
-                                  [[[
-                                    const data = entity?.attributes?.data;
-                                    if (data && typeof data === 'object') {
-                                      return data.wind_speed + 'km/h ' + data.wind_direction;
-                                    }
-                                    return entity?.state || '';
-                                  ]]]
                                 styles:
                                   card:
-                                    - height: 80px
+                                    - height: 70px
                                     - border-radius: 0
                                     - background: |
                                         [[[
-                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
+                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.3)' : 'rgba(117, 117, 117, 0.15)';
                                         ]]]
                                   name:
-                                    - font-size: 12px
+                                    - font-size: 11px
                                     - font-weight: 700
                                     - white-space: pre-line
-                                  state:
-                                    - font-size: 14px
-                                    - font-weight: 600
                                   icon:
                                     - color: |
                                         [[[
@@ -3343,29 +3318,12 @@ views:
                                   service: script.hfm_capture_weather_phase
                                   service_data:
                                     phase: start
-                              - type: custom:button-card
-                                name: Clear
-                                icon: mdi:close
-                                show_icon: true
-                                show_name: false
-                                color_type: card
-                                color: "#dc3545"
-                                styles:
-                                  card:
-                                    - height: 80px
-                                    - width: 60px
-                                    - border-radius: 0
-                                  icon:
-                                    - color: white
-                                tap_action:
+                                hold_action:
                                   action: call-service
                                   service: script.hfm_clear_weather_phase
                                   service_data:
                                     phase: start
 
-                          # MID Phase
-                          - type: horizontal-stack
-                            cards:
                               - type: custom:button-card
                                 entity: sensor.hfm_weather_mid
                                 name: |
@@ -3375,30 +3333,18 @@ views:
                                 icon: mdi:pause-circle
                                 show_icon: true
                                 show_name: true
-                                show_state: true
-                                state_display: |
-                                  [[[
-                                    const data = entity?.attributes?.data;
-                                    if (data && typeof data === 'object') {
-                                      return data.wind_speed + 'km/h ' + data.wind_direction;
-                                    }
-                                    return entity?.state || '';
-                                  ]]]
                                 styles:
                                   card:
-                                    - height: 80px
+                                    - height: 70px
                                     - border-radius: 0
                                     - background: |
                                         [[[
-                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
+                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.3)' : 'rgba(117, 117, 117, 0.15)';
                                         ]]]
                                   name:
-                                    - font-size: 12px
+                                    - font-size: 11px
                                     - font-weight: 700
                                     - white-space: pre-line
-                                  state:
-                                    - font-size: 14px
-                                    - font-weight: 600
                                   icon:
                                     - color: |
                                         [[[
@@ -3409,29 +3355,12 @@ views:
                                   service: script.hfm_capture_weather_phase
                                   service_data:
                                     phase: mid
-                              - type: custom:button-card
-                                name: Clear
-                                icon: mdi:close
-                                show_icon: true
-                                show_name: false
-                                color_type: card
-                                color: "#dc3545"
-                                styles:
-                                  card:
-                                    - height: 80px
-                                    - width: 60px
-                                    - border-radius: 0
-                                  icon:
-                                    - color: white
-                                tap_action:
+                                hold_action:
                                   action: call-service
                                   service: script.hfm_clear_weather_phase
                                   service_data:
                                     phase: mid
 
-                          # END Phase
-                          - type: horizontal-stack
-                            cards:
                               - type: custom:button-card
                                 entity: sensor.hfm_weather_end
                                 name: |
@@ -3441,30 +3370,18 @@ views:
                                 icon: mdi:stop-circle
                                 show_icon: true
                                 show_name: true
-                                show_state: true
-                                state_display: |
-                                  [[[
-                                    const data = entity?.attributes?.data;
-                                    if (data && typeof data === 'object') {
-                                      return data.wind_speed + 'km/h ' + data.wind_direction;
-                                    }
-                                    return entity?.state || '';
-                                  ]]]
                                 styles:
                                   card:
-                                    - height: 80px
-                                    - border-radius: 0 0 0 12px
+                                    - height: 70px
+                                    - border-radius: 0
                                     - background: |
                                         [[[
-                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
+                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.3)' : 'rgba(117, 117, 117, 0.15)';
                                         ]]]
                                   name:
-                                    - font-size: 12px
+                                    - font-size: 11px
                                     - font-weight: 700
                                     - white-space: pre-line
-                                  state:
-                                    - font-size: 14px
-                                    - font-weight: 600
                                   icon:
                                     - color: |
                                         [[[
@@ -3475,25 +3392,44 @@ views:
                                   service: script.hfm_capture_weather_phase
                                   service_data:
                                     phase: end
-                              - type: custom:button-card
-                                name: Clear
-                                icon: mdi:close
-                                show_icon: true
-                                show_name: false
-                                color_type: card
-                                color: "#dc3545"
-                                styles:
-                                  card:
-                                    - height: 80px
-                                    - width: 60px
-                                    - border-radius: 0 0 12px 0
-                                  icon:
-                                    - color: white
-                                tap_action:
+                                hold_action:
                                   action: call-service
                                   service: script.hfm_clear_weather_phase
                                   service_data:
                                     phase: end
+
+                          # Weather Data Table (Markdown)
+                          - type: markdown
+                            content: |
+                              {% set device_id = states('input_text.hfm_current_device') %}
+                              {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+                              {% set draft = drafts.get(device_id, {}) %}
+                              {% set data = draft.get('data', {}) %}
+                              {% set ws = data.get('weather_start') %}
+                              {% set wm = data.get('weather_mid') %}
+                              {% set we = data.get('weather_end') %}
+                              | | START | MID | END |
+                              |:--|:--:|:--:|:--:|
+                              | **Wind** | {{ ws.wind_speed if ws else '-' }} | {{ wm.wind_speed if wm else '-' }} | {{ we.wind_speed if we else '-' }} |
+                              | **Gust** | {{ ws.wind_gust if ws else '-' }} | {{ wm.wind_gust if wm else '-' }} | {{ we.wind_gust if we else '-' }} |
+                              | **Dir** | {{ ws.wind_direction if ws else '-' }} | {{ wm.wind_direction if wm else '-' }} | {{ we.wind_direction if we else '-' }} |
+                              | **ΔT** | {{ ws.delta_t if ws else '-' }} | {{ wm.delta_t if wm else '-' }} | {{ we.delta_t if we else '-' }} |
+                              | **Hum** | {{ ws.humidity if ws else '-' }}% | {{ wm.humidity if wm else '-' }}% | {{ we.humidity if we else '-' }}% |
+                              | **Rain** | {{ ws.rain_chance_pct if ws else '-' }}% | {{ wm.rain_chance_pct if wm else '-' }}% | {{ we.rain_chance_pct if we else '-' }}% |
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  border-radius: 0 0 12px 12px;
+                                  padding: 8px;
+                                  font-size: 12px;
+                                }
+                                table {
+                                  width: 100%;
+                                  font-size: 11px;
+                                }
+                                th, td {
+                                  padding: 2px 4px;
+                                }
 
                     # Irrigation: Type selection
                     - type: conditional
@@ -3747,9 +3683,67 @@ views:
                                             <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${startTime}${duration ? ' (' + duration + ' min)' : ''}</span>
                                           </div>`;
                                 }
-                                // Weather summary
-                                if (weatherSummary && weatherSummary !== 'unavailable') {
-                                  html += `<div style="padding:8px 12px;background:rgba(21,101,192,0.1);border-radius:8px;">
+                                // Weather - show phases for Chemical, summary for Nutrient
+                                const draftData = draft.data || {};
+                                const ws = draftData.weather_start;
+                                const wm = draftData.weather_mid;
+                                const we = draftData.weather_end;
+                                const hasPhaseWeather = ws || wm || we;
+
+                                if (eventType === 'Chemical Application' && hasPhaseWeather) {
+                                  // Show weather phases table for Chemical
+                                  html += `<div style="padding:8px 12px;background:rgba(199,127,0,0.12);border-radius:8px;">
+                                            <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:6px;">
+                                              <ha-icon icon="mdi:weather-windy" style="--mdc-icon-size:14px;"></ha-icon> Weather Phases
+                                            </div>
+                                            <table style="width:100%;font-size:11px;border-collapse:collapse;">
+                                              <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
+                                                <th style="text-align:left;padding:2px 4px;"></th>
+                                                <th style="text-align:center;padding:2px 4px;">START</th>
+                                                <th style="text-align:center;padding:2px 4px;">MID</th>
+                                                <th style="text-align:center;padding:2px 4px;">END</th>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:2px 4px;font-weight:600;">Wind</td>
+                                                <td style="text-align:center;padding:2px 4px;">${ws ? ws.wind_speed : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${wm ? wm.wind_speed : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${we ? we.wind_speed : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:2px 4px;font-weight:600;">Gust</td>
+                                                <td style="text-align:center;padding:2px 4px;">${ws ? ws.wind_gust : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${wm ? wm.wind_gust : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${we ? we.wind_gust : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:2px 4px;font-weight:600;">Dir</td>
+                                                <td style="text-align:center;padding:2px 4px;">${ws ? ws.wind_direction : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${wm ? wm.wind_direction : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${we ? we.wind_direction : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:2px 4px;font-weight:600;">ΔT</td>
+                                                <td style="text-align:center;padding:2px 4px;">${ws ? ws.delta_t + '°' : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${wm ? wm.delta_t + '°' : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${we ? we.delta_t + '°' : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:2px 4px;font-weight:600;">Hum</td>
+                                                <td style="text-align:center;padding:2px 4px;">${ws ? ws.humidity + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${wm ? wm.humidity + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${we ? we.humidity + '%' : '-'}</td>
+                                              </tr>
+                                              <tr>
+                                                <td style="padding:2px 4px;font-weight:600;">Rain</td>
+                                                <td style="text-align:center;padding:2px 4px;">${ws ? ws.rain_chance_pct + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${wm ? wm.rain_chance_pct + '%' : '-'}</td>
+                                                <td style="text-align:center;padding:2px 4px;">${we ? we.rain_chance_pct + '%' : '-'}</td>
+                                              </tr>
+                                            </table>
+                                          </div>`;
+                                } else if (weatherSummary && weatherSummary !== 'unavailable') {
+                                  // Show weather summary for Nutrient or Chemical without captured phases
+                                  html += `<div style="padding:8px 12px;background:rgba(199,127,0,0.12);border-radius:8px;">
                                             <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:4px;">
                                               <ha-icon icon="mdi:weather-windy" style="--mdc-icon-size:14px;"></ha-icon> Weather Conditions
                                             </div>
