@@ -677,6 +677,110 @@ template:
             {% endfor %}
             {{ ns.names }}
 
+      # Spray Phase Time Calculations (for Chemical Applications)
+      - name: "HFM Spray Start Time"
+        unique_id: hfm_spray_start_time
+        icon: mdi:play-circle
+        state: >
+          {% set hour = states('input_number.hfm_hour') | int(8) %}
+          {% set ampm = states('input_select.hfm_ampm') %}
+          {% if ampm == 'PM' and hour != 12 %}
+            {% set hour24 = hour + 12 %}
+          {% elif ampm == 'AM' and hour == 12 %}
+            {% set hour24 = 0 %}
+          {% else %}
+            {% set hour24 = hour %}
+          {% endif %}
+          {{ '%02d:00' | format(hour24) }}
+
+      - name: "HFM Spray Mid Time"
+        unique_id: hfm_spray_mid_time
+        icon: mdi:pause-circle
+        state: >
+          {% set hour = states('input_number.hfm_hour') | int(8) %}
+          {% set ampm = states('input_select.hfm_ampm') %}
+          {% set duration = states('input_number.hfm_duration_minutes') | int(60) %}
+          {% if ampm == 'PM' and hour != 12 %}
+            {% set hour24 = hour + 12 %}
+          {% elif ampm == 'AM' and hour == 12 %}
+            {% set hour24 = 0 %}
+          {% else %}
+            {% set hour24 = hour %}
+          {% endif %}
+          {% set start_minutes = hour24 * 60 %}
+          {% set mid_minutes = start_minutes + (duration / 2) | int %}
+          {% set mid_hour = (mid_minutes / 60) | int % 24 %}
+          {% set mid_min = mid_minutes % 60 %}
+          {{ '%02d:%02d' | format(mid_hour, mid_min) }}
+
+      - name: "HFM Spray End Time"
+        unique_id: hfm_spray_end_time
+        icon: mdi:stop-circle
+        state: >
+          {% set hour = states('input_number.hfm_hour') | int(8) %}
+          {% set ampm = states('input_select.hfm_ampm') %}
+          {% set duration = states('input_number.hfm_duration_minutes') | int(60) %}
+          {% if ampm == 'PM' and hour != 12 %}
+            {% set hour24 = hour + 12 %}
+          {% elif ampm == 'AM' and hour == 12 %}
+            {% set hour24 = 0 %}
+          {% else %}
+            {% set hour24 = hour %}
+          {% endif %}
+          {% set start_minutes = hour24 * 60 %}
+          {% set end_minutes = start_minutes + duration %}
+          {% set end_hour = (end_minutes / 60) | int % 24 %}
+          {% set end_min = end_minutes % 60 %}
+          {{ '%02d:%02d' | format(end_hour, end_min) }}
+
+      # Weather phase data from draft
+      - name: "HFM Weather Start"
+        unique_id: hfm_weather_start
+        icon: mdi:weather-cloudy-clock
+        state: >
+          {% set device_id = states('input_text.hfm_current_device') %}
+          {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+          {% set draft = drafts.get(device_id, {}) %}
+          {% set weather = draft.get('data', {}).get('weather_start') %}
+          {{ 'Captured' if weather else 'Not captured' }}
+        attributes:
+          data: >
+            {% set device_id = states('input_text.hfm_current_device') %}
+            {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+            {% set draft = drafts.get(device_id, {}) %}
+            {{ draft.get('data', {}).get('weather_start') }}
+
+      - name: "HFM Weather Mid"
+        unique_id: hfm_weather_mid
+        icon: mdi:weather-cloudy-clock
+        state: >
+          {% set device_id = states('input_text.hfm_current_device') %}
+          {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+          {% set draft = drafts.get(device_id, {}) %}
+          {% set weather = draft.get('data', {}).get('weather_mid') %}
+          {{ 'Captured' if weather else 'Not captured' }}
+        attributes:
+          data: >
+            {% set device_id = states('input_text.hfm_current_device') %}
+            {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+            {% set draft = drafts.get(device_id, {}) %}
+            {{ draft.get('data', {}).get('weather_mid') }}
+
+      - name: "HFM Weather End"
+        unique_id: hfm_weather_end
+        icon: mdi:weather-cloudy-clock
+        state: >
+          {% set device_id = states('input_text.hfm_current_device') %}
+          {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+          {% set draft = drafts.get(device_id, {}) %}
+          {% set weather = draft.get('data', {}).get('weather_end') %}
+          {{ 'Captured' if weather else 'Not captured' }}
+        attributes:
+          data: >
+            {% set device_id = states('input_text.hfm_current_device') %}
+            {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+            {% set draft = drafts.get(device_id, {}) %}
+            {{ draft.get('data', {}).get('weather_end') }}
 
 
 # -----------------------------------------------------------------------------
@@ -2882,3 +2986,61 @@ script:
       - service: script.hfm_toggle_paddock
         data:
           paddock_id: "{{ paddock_id }}"
+
+  # --- Weather Phase Capture Scripts ---
+  hfm_capture_weather_phase:
+    alias: "HFM Capture Weather Phase"
+    icon: mdi:weather-cloudy-clock
+    description: "Capture current weather for a spray phase (start/mid/end)"
+    fields:
+      phase:
+        description: "Phase to capture (start, mid, end)"
+        example: "start"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          weather_data: >
+            {
+              "captured_at": "{{ now().isoformat() }}",
+              "time": "{{ states('sensor.hfm_spray_' ~ phase ~ '_time') }}",
+              "temperature": {{ states('sensor.hfm_current_temperature') | float(0) }},
+              "humidity": {{ states('sensor.hfm_current_humidity') | float(0) }},
+              "wind_speed": {{ states('sensor.hfm_current_wind_speed') | float(0) }},
+              "wind_direction": "{{ states('sensor.hfm_current_wind_direction') }}",
+              "wind_gust": {{ states('sensor.hfm_current_wind_gust') | float(0) }}
+            }
+      - condition: template
+        value_template: "{{ device_id != '' and phase in ['start', 'mid', 'end'] }}"
+      - service: shell_command.hfm_update_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "{{ phase }}"
+          weather: "{{ weather_data }}"
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_clear_weather_phase:
+    alias: "HFM Clear Weather Phase"
+    icon: mdi:weather-cloudy-alert
+    description: "Clear captured weather for a spray phase"
+    fields:
+      phase:
+        description: "Phase to clear (start, mid, end)"
+        example: "start"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+      - condition: template
+        value_template: "{{ device_id != '' and phase in ['start', 'mid', 'end'] }}"
+      - service: shell_command.hfm_clear_draft_weather_phase
+        data:
+          device_id: "{{ device_id }}"
+          phase: "{{ phase }}"
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
