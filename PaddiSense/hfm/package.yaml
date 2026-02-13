@@ -2966,6 +2966,10 @@ script:
     sequence:
       - variables:
           device_id: "{{ states('input_text.hfm_current_device') }}"
+          # Check if local station is available
+          local_available: >
+            {{ states('sensor.weather_api_station_1_wind_speed') not in ['unavailable', 'unknown', ''] }}
+          source: "{{ 'Local Station' if local_available else 'BOM' }}"
           # Get delta_t from local station or BOM
           delta_t_val: >
             {% set local = states('sensor.weather_api_station_1_delta_t') %}
@@ -2985,6 +2989,7 @@ script:
             {
               "captured_at": "{{ now().isoformat() }}",
               "time": "{{ states('sensor.hfm_spray_' ~ phase ~ '_time') }}",
+              "source": "{{ source }}",
               "temperature": {{ states('sensor.hfm_current_temperature') | float(0) }},
               "humidity": {{ states('sensor.hfm_current_humidity') | float(0) }},
               "wind_speed": {{ states('sensor.hfm_current_wind_speed') | float(0) }},

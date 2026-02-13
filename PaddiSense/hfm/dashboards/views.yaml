@@ -3551,6 +3551,9 @@ views:
                               {% set ws = data.get('weather_start') %}
                               {% set wm = data.get('weather_mid') %}
                               {% set we = data.get('weather_end') %}
+                              {% set source = ws.source if ws else (wm.source if wm else (we.source if we else none)) %}
+                              {% if source %}**Data Source:** {{ source }}{% endif %}
+
                               | | START | MID | END |
                               |:--|:--:|:--:|:--:|
                               | **Wind** | {{ ws.wind_speed if ws else '-' }} | {{ wm.wind_speed if wm else '-' }} | {{ we.wind_speed if we else '-' }} |
