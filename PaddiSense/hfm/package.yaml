@@ -575,6 +575,16 @@ template:
             {{ states('input_text.hfm_specific_date') }}
           {% endif %}
 
+      - name: "HFM Selected Farm ID"
+        unique_id: hfm_selected_farm_id
+        icon: mdi:barn
+        state: >
+          {% set farm_name = states('input_select.hfm_selected_farm') %}
+          {% set farms = state_attr('sensor.hfm_drafts', 'farms') or {} %}
+          {% for fid, fname in farms.items() %}
+            {% if fname == farm_name %}{{ fid }}{% endif %}
+          {% endfor %}
+
       # Weather sensors for display
       - name: "HFM Current Wind Speed"
         unique_id: hfm_current_wind_speed
@@ -1429,6 +1439,138 @@ script:
           entity_id: input_number.hfm_wizard_step
         data:
           value: "{{ [1, states('input_number.hfm_wizard_step') | int - 1] | max }}"
+
+  # --- Paddock Selection Scripts ---
+
+  hfm_select_all_paddocks:
+    alias: "HFM Select All Paddocks"
+    icon: mdi:checkbox-multiple-marked
+    description: "Select all paddocks for the current farm"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
+          paddocks_by_farm: "{{ state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} }}"
+          farm_paddocks: "{{ paddocks_by_farm.get(farm_id, []) }}"
+          all_ids: "{{ farm_paddocks | map(attribute='id') | list }}"
+      - condition: template
+        value_template: "{{ device_id != '' and all_ids | length > 0 }}"
+      - service: shell_command.hfm_update_draft
+        data:
+          device_id: "{{ device_id }}"
+          data: '{"data": {"paddocks": {{ all_ids | tojson }}}}'
+      - delay: 0.5
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_clear_paddock_selection:
+    alias: "HFM Clear Paddock Selection"
+    icon: mdi:checkbox-multiple-blank-outline
+    description: "Clear all selected paddocks"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+      - condition: template
+        value_template: "{{ device_id != '' }}"
+      - service: shell_command.hfm_update_draft
+        data:
+          device_id: "{{ device_id }}"
+          data: '{"data": {"paddocks": []}}'
+      - delay: 0.5
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_select_current_season_paddocks:
+    alias: "HFM Select Current Season Paddocks"
+    icon: mdi:calendar-check
+    description: "Select paddocks with current_season flag"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
+          paddocks_by_farm: "{{ state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} }}"
+          farm_paddocks: "{{ paddocks_by_farm.get(farm_id, []) }}"
+          season_ids: "{{ farm_paddocks | selectattr('current_season', 'eq', true) | map(attribute='id') | list }}"
+      - condition: template
+        value_template: "{{ device_id != '' }}"
+      - service: shell_command.hfm_update_draft
+        data:
+          device_id: "{{ device_id }}"
+          data: '{"data": {"paddocks": {{ season_ids | tojson }}}}'
+      - delay: 0.5
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_toggle_paddock_by_index:
+    alias: "HFM Toggle Paddock by Index"
+    icon: mdi:checkbox-marked-outline
+    description: "Toggle a paddock selection by its index in the farm's paddock list"
+    fields:
+      index:
+        description: "Index of paddock in the farm's paddock list (0-based)"
+        example: 0
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
+          paddocks_by_farm: "{{ state_attr('sensor.hfm_drafts', 'paddocks_by_farm') or {} }}"
+          farm_paddocks: "{{ paddocks_by_farm.get(farm_id, []) }}"
+          paddock_id: "{{ farm_paddocks[index | int].id if farm_paddocks | length > index | int else '' }}"
+          drafts: "{{ state_attr('sensor.hfm_drafts', 'drafts') or {} }}"
+          draft: "{{ drafts.get(device_id, {}) }}"
+          current_paddocks: "{{ draft.get('data', {}).get('paddocks', []) }}"
+          is_selected: "{{ paddock_id in current_paddocks }}"
+          new_paddocks: >
+            {% if is_selected %}
+              {{ current_paddocks | reject('eq', paddock_id) | list }}
+            {% else %}
+              {{ current_paddocks + [paddock_id] }}
+            {% endif %}
+      - condition: template
+        value_template: "{{ device_id != '' and paddock_id != '' }}"
+      - service: shell_command.hfm_update_draft
+        data:
+          device_id: "{{ device_id }}"
+          data: '{"data": {"paddocks": {{ new_paddocks | tojson }}}}'
+      - delay: 0.3
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_toggle_paddock:
+    alias: "HFM Toggle Paddock"
+    icon: mdi:checkbox-marked-outline
+    description: "Toggle a paddock selection by its ID"
+    fields:
+      paddock_id:
+        description: "ID of the paddock to toggle"
+        example: "paddock_abc123"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          drafts: "{{ state_attr('sensor.hfm_drafts', 'drafts') or {} }}"
+          draft: "{{ drafts.get(device_id, {}) }}"
+          current_paddocks: "{{ draft.get('data', {}).get('paddocks', []) }}"
+          is_selected: "{{ paddock_id in current_paddocks }}"
+          new_paddocks: >
+            {% if is_selected %}
+              {{ current_paddocks | reject('eq', paddock_id) | list }}
+            {% else %}
+              {{ current_paddocks + [paddock_id] }}
+            {% endif %}
+      - condition: template
+        value_template: "{{ device_id != '' and paddock_id is defined }}"
+      - service: shell_command.hfm_update_draft
+        data:
+          device_id: "{{ device_id }}"
+          data: '{"data": {"paddocks": {{ new_paddocks | tojson }}}}'
+      - delay: 0.3
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
 
   hfm_add_product_slot:
     alias: "HFM Add Product Slot"

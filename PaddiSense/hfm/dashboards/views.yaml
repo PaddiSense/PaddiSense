@@ -1607,148 +1607,485 @@ views:
                       template: hfm_title
                       name: SELECT PADDOCK(S)
 
-                    # Farm Selection (only show if multiple farms)
-                    - type: conditional
-                      conditions:
-                        - condition: template
-                          value_template: >
-                            {% set farms = state_attr('sensor.hfm_drafts', 'farms') or {} %}
-                            {{ farms | length > 1 }}
-                      card:
-                        type: entities
-                        entities:
-                          - entity: input_select.hfm_selected_farm
-                            name: Farm
-                        card_mod:
-                          style: |
-                            ha-card {
-                              border-radius: 12px;
-                              margin-bottom: 12px;
-                            }
-                            .mdc-list-item__primary-text {
-                              font-size: 1.3rem !important;
-                              font-weight: 600;
-                            }
+                    # Farm Selection
+                    - type: entities
+                      entities:
+                        - entity: input_select.hfm_selected_farm
+                          name: Farm
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            margin-bottom: 8px;
+                          }
 
-                    # Legacy single paddock selector (fallback if no device_id)
-                    - type: conditional
-                      conditions:
-                        - condition: template
-                          value_template: "{{ states('input_text.hfm_current_device') == '' }}"
-                      card:
-                        type: entities
-                        entities:
-                          - entity: input_select.hfm_selected_paddock
-                            name: Paddock
-                        card_mod:
-                          style: |
-                            ha-card {
-                              border-radius: 12px;
-                            }
-                            .mdc-list-item__primary-text {
-                              font-size: 1.3rem !important;
-                              font-weight: 600;
-                            }
+                    # Quick actions row (All, Clear, Season)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          name: All
+                          icon: mdi:checkbox-multiple-marked
+                          template: hfm_secondary
+                          styles:
+                            card:
+                              - height: 50px
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_select_all_paddocks
 
-                    # Multi-paddock selection (when device_id is set)
-                    - type: conditional
-                      conditions:
-                        - condition: template
-                          value_template: "{{ states('input_text.hfm_current_device') != '' }}"
-                      card:
-                        type: vertical-stack
-                        cards:
-                          # Quick actions row
-                          - type: horizontal-stack
-                            cards:
-                              - type: custom:button-card
-                                name: Select All
-                                icon: mdi:checkbox-multiple-marked
-                                template: hfm_secondary
-                                styles:
-                                  card:
-                                    - height: 50px
-                                tap_action:
-                                  action: call-service
-                                  service: script.hfm_select_all_paddocks
+                        - type: custom:button-card
+                          name: Clear
+                          icon: mdi:checkbox-multiple-blank-outline
+                          template: hfm_secondary
+                          styles:
+                            card:
+                              - height: 50px
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_clear_paddock_selection
 
-                              - type: custom:button-card
-                                name: Clear
-                                icon: mdi:checkbox-multiple-blank-outline
-                                template: hfm_secondary
-                                styles:
-                                  card:
-                                    - height: 50px
-                                tap_action:
-                                  action: call-service
-                                  service: script.hfm_clear_paddock_selection
+                        - type: custom:button-card
+                          name: Season
+                          icon: mdi:calendar-check
+                          template: hfm_secondary
+                          styles:
+                            card:
+                              - height: 50px
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_select_current_season_paddocks
 
-                              - type: custom:button-card
-                                name: Current Season
-                                icon: mdi:calendar-check
-                                template: hfm_secondary
-                                styles:
-                                  card:
-                                    - height: 50px
-                                tap_action:
-                                  action: call-service
-                                  service: script.hfm_select_current_season_paddocks
-
-                          # Paddock toggle buttons (dynamic from draft sensor)
-                          - type: custom:button-card
-                            entity: sensor.hfm_drafts
-                            show_icon: false
-                            show_name: false
-                            show_state: false
-                            styles:
-                              card:
-                                - background: transparent
-                                - box-shadow: none
-                                - padding: 0
-                              grid:
-                                - display: block
-                            custom_fields:
-                              paddocks: |
+                    # Paddock buttons - Row 1
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: true
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
                                 [[[
-                                  const deviceId = states['input_text.hfm_current_device']?.state || '';
-                                  const drafts = entity?.attributes?.drafts || {};
-                                  const draft = drafts[deviceId] || {};
-                                  const selectedPaddocks = draft.data?.paddocks || [];
-
-                                  const paddocksByFarm = entity?.attributes?.paddocks_by_farm || {};
-                                  const farmId = states['sensor.hfm_selected_farm_id']?.state || '';
-                                  const paddocks = paddocksByFarm[farmId] || [];
-
-                                  if (paddocks.length === 0) {
-                                    return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">
-                                              No paddocks for selected farm
-                                            </div>`;
-                                  }
-
-                                  let html = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px 0;">`;
-
-                                  for (const p of paddocks) {
-                                    const isSelected = selectedPaddocks.includes(p.id);
-                                    const bg = isSelected ? '#28a745' : '#424242';
-                                    const icon = isSelected ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                                    const seasonBadge = p.current_season ?
-                                      `<span style="font-size:10px;background:#ffc107;color:#000;padding:2px 6px;border-radius:4px;margin-left:4px;">Season</span>` : '';
-
-                                    html += `<div style="background:${bg};border-radius:12px;padding:12px;display:flex;align-items:center;gap:8px;cursor:pointer;"
-                                               data-paddock-id="${p.id}"
-                                               onclick="this.dispatchEvent(new CustomEvent('hass-action', {bubbles:true,composed:true,detail:{action:'call-service',service:'script.hfm_toggle_paddock',service_data:{paddock_id:'${p.id}'}}}))">
-                                              <ha-icon icon="${icon}" style="--mdc-icon-size:24px;color:white;"></ha-icon>
-                                              <div style="flex:1;">
-                                                <div style="font-size:14px;font-weight:600;color:white;">${p.name}</div>
-                                                ${p.area_ha ? `<div style="font-size:11px;color:rgba(255,255,255,0.7);">${p.area_ha} ha</div>` : ''}
-                                              </div>
-                                              ${seasonBadge}
-                                            </div>`;
-                                  }
-
-                                  html += `</div>`;
-                                  return html;
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[0]?.id || '';
                                 ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[0]?.name || '';
+                            ]]]
+                          icon: |
+                            [[[
+                              const deviceId = states['input_text.hfm_current_device']?.state || '';
+                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                              const selected = draft.data?.paddocks || [];
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              const pid = paddocks[0]?.id;
+                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 60px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 0 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[0]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: true
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[1]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[1]?.name || '';
+                            ]]]
+                          icon: |
+                            [[[
+                              const deviceId = states['input_text.hfm_current_device']?.state || '';
+                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                              const selected = draft.data?.paddocks || [];
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              const pid = paddocks[1]?.id;
+                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 60px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 1 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[1]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+
+                    # Paddock buttons - Row 2
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: true
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[2]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[2]?.name || '';
+                            ]]]
+                          icon: |
+                            [[[
+                              const deviceId = states['input_text.hfm_current_device']?.state || '';
+                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                              const selected = draft.data?.paddocks || [];
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              const pid = paddocks[2]?.id;
+                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 60px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 2 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[2]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: true
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[3]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[3]?.name || '';
+                            ]]]
+                          icon: |
+                            [[[
+                              const deviceId = states['input_text.hfm_current_device']?.state || '';
+                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                              const selected = draft.data?.paddocks || [];
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              const pid = paddocks[3]?.id;
+                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 60px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 3 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[3]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+
+                    # Paddock buttons - Row 3
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: true
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[4]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[4]?.name || '';
+                            ]]]
+                          icon: |
+                            [[[
+                              const deviceId = states['input_text.hfm_current_device']?.state || '';
+                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                              const selected = draft.data?.paddocks || [];
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              const pid = paddocks[4]?.id;
+                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 60px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 4 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[4]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: true
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[5]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[5]?.name || '';
+                            ]]]
+                          icon: |
+                            [[[
+                              const deviceId = states['input_text.hfm_current_device']?.state || '';
+                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                              const selected = draft.data?.paddocks || [];
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              const pid = paddocks[5]?.id;
+                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 60px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 5 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[5]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 14px
+                              - font-weight: 600
+                              - color: white
+                            icon:
+                              - color: white
 
                     # Selected paddocks summary
                     - type: markdown
