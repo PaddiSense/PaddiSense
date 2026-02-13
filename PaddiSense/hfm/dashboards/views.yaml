@@ -962,6 +962,7 @@ views:
                             border-radius: 12px;
                             text-align: center;
                             padding: 8px;
+                            background: rgba(25, 118, 210, 0.2);
                           }
 
               #----------------------------------------------------------------
@@ -1109,6 +1110,7 @@ views:
                             border-radius: 12px;
                             text-align: center;
                             padding: 8px;
+                            background: rgba(25, 118, 210, 0.2);
                           }
 
                     # Time and Duration (Chemical/Nutrient only)
@@ -2986,6 +2988,7 @@ views:
                             border-radius: 12px;
                             text-align: center;
                             padding: 8px;
+                            background: rgba(25, 118, 210, 0.2);
                           }
 
               #----------------------------------------------------------------
