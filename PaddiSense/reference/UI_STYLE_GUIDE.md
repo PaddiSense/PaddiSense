@@ -11,7 +11,7 @@ All modules should define templates following this pattern (replace `ipm_` prefi
 ```yaml
 <module>_title:
   color_type: card
-  color: "#1e1e1e"
+  color: "#c77f00"   # Dull orange - mobile-friendly visual segregation
   show_icon: false
   show_state: false
   styles:
@@ -25,6 +25,8 @@ All modules should define templates following this pattern (replace `ipm_` prefi
       - text-align: center
       - color: white
 ```
+
+> **Note:** Title/heading color changed from `#1e1e1e` to dull orange `#c77f00` for better visual segregation on mobile devices (Feb 2026).
 
 ### Info Display Block
 ```yaml
@@ -127,15 +129,15 @@ All modules should define templates following this pattern (replace `ipm_` prefi
   show_state: false
   styles:
     card:
-      - height: 60px
+      - height: 70px   # Standardized to 70px minimum for mobile
       - border-radius: 12px
     name:
-      - font-size: 14px
-      - font-weight: 600
+      - font-size: 16px
+      - font-weight: 700
       - color: white
     icon:
       - color: white
-      - width: 24px
+      - width: 28px
 ```
 
 ### Danger Button (Delete/Destructive)
@@ -191,13 +193,21 @@ All modules should define templates following this pattern (replace `ipm_` prefi
 
 | Purpose | Hex | Usage |
 |---------|-----|-------|
-| Dark/Title | `#1e1e1e` | Section headers, title bars |
+| **Title/Headers** | `#c77f00` | Section headers, title bars (dull orange) |
 | Slate/Info | `#546e7a` | Display blocks, read-only info |
-| Success/Add | `#28a745` | Plus buttons, positive actions |
-| Danger/Remove | `#dc3545` | Minus/delete, destructive actions |
-| Primary/Action | `#0066cc` | Primary CTA buttons |
+| Success/Add | `#28a745` | Plus buttons, positive actions, confirm |
+| Danger/Remove | `#dc3545` | Minus/delete, destructive actions, clear |
+| Primary/Action | `#0066cc` | Primary CTA buttons, All selection |
 | Secondary/Muted | `#555555` | Secondary actions, less emphasis |
+| Warning/Season | `#e6a700` | Season selection buttons |
 | Chip/Stat | `#424242` | Small stat indicators |
+
+### Button Color Standards (Step 3 Paddock Selection)
+| Button | Color | Hex |
+|--------|-------|-----|
+| All | Blue | `#0066cc` |
+| Clear | Red | `#dc3545` |
+| Season | Yellow | `#e6a700` |
 
 ## Sizing Standards
 
@@ -206,16 +216,65 @@ All modules should define templates following this pattern (replace `ipm_` prefi
 | Title | 50px | 18px bold | 12px |
 | Info Block | 80px | 32px state, 14px name | 12px |
 | Action Button | 70px | 16-20px bold | 12px |
-| Secondary Button | 60px | 14px | 12px |
+| Secondary Button | 70px | 16px bold | 12px |
+| Nav Button | 70px | 16px bold | 12px |
 | Stat Chip | 50px | 12px name, 16px state | 25px (pill) |
+
+> **Standard:** ALL interactive buttons should be minimum 70px height for mobile usability.
 
 ## Mobile-First Requirements
 
-- Minimum touch target: 60px height
-- Primary actions: 70px+ height
-- High contrast text (white on dark)
-- Readable at arm's length (16px+ for important text)
-- No hover-only interactions
+- **Minimum touch target:** 70px height (standardized)
+- **Primary actions:** 70px+ height
+- **High contrast text:** White on dark backgrounds
+- **Readable at arm's length:** 16px+ for important text
+- **No hover-only interactions**
+- **Hold-to-clear pattern:** Tap to capture, hold to clear (reduces button count)
+- **Fat fingers, bad eyes:** Design for outdoor field use
+
+## Weather Data Tables (HFM Pattern)
+
+For compact weather data display, use markdown tables with Jinja templating:
+
+```yaml
+- type: markdown
+  content: |
+    {% set device_id = states('input_text.hfm_current_device') %}
+    {% set drafts = state_attr('sensor.hfm_drafts', 'drafts') or {} %}
+    {% set draft = drafts.get(device_id, {}) %}
+    {% set data = draft.get('data', {}) %}
+    {% set ws = data.get('weather_start') %}
+    {% set wm = data.get('weather_mid') %}
+    {% set we = data.get('weather_end') %}
+    | | START | MID | END |
+    |:--|:--:|:--:|:--:|
+    | **Wind** | {{ ws.wind_speed if ws else '-' }} | ... |
+  card_mod:
+    style: |
+      ha-card { border-radius: 12px; padding: 8px; font-size: 12px; }
+      table { width: 100%; font-size: 11px; }
+```
+
+### Weather Fields to Capture
+- Wind speed (km/h)
+- Wind gust (km/h)
+- Wind direction
+- Delta T (°C)
+- Humidity (%)
+- Rain chance (%)
+
+### Sensor Fallback Pattern
+Always use local sensors first, BOM as fallback:
+```yaml
+state: >
+  {% set local = states('sensor.weather_api_station_1_wind_speed') %}
+  {% set bom = states('sensor.bom_wind_speed_kilometre') %}
+  {% if local not in ['unknown', 'unavailable', ''] %}
+    {{ local | float(0) | round(1) }}
+  {% else %}
+    {{ bom | float(0) | round(1) }}
+  {% endif %}
+```
 
 ---
 

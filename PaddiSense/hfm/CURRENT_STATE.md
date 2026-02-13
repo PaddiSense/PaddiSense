@@ -1,12 +1,12 @@
 # HFM Module - Current State
 
-**Version:** 1.0.0-rc.1
+**Version:** 1.0.0-rc.2
 **Status:** Release Candidate
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-14
 
 ## Summary
 
-Hey Farmer Module (HFM) is an event recording system for tracking farm activities including nutrient/chemical applications, irrigation events, and crop stage changes. Features a wizard-based event entry system with edit capabilities.
+Hey Farmer Module (HFM) is an event recording system for tracking farm activities including nutrient/chemical applications, irrigation events, and crop stage changes. Features a wizard-based event entry system with multi-user draft support.
 
 ## Features
 
@@ -20,12 +20,16 @@ Hey Farmer Module (HFM) is an event recording system for tracking farm activitie
 - **Export**: Backup events to JSON files
 - **Product Integration**: Pulls products from IPM module by category
 - **Paddock Integration**: Uses Farm Registry paddocks
+- **Multi-Paddock Selection**: Select multiple paddocks per event with All/Clear/Season buttons
+- **Multi-User Drafts**: Device-based draft system allows concurrent event recording
+- **Applicator Management**: Select applicator equipment with auto-method assignment
+- **Weather Phase Capture**: For Chemical Applications, capture weather at Start/Mid/End phases
+- **Weather Data**: Wind speed, gust, direction, Delta T, humidity, rain chance
+- **Local Weather First**: Uses local weather station data, falls back to BOM
 
 ### Not Yet Implemented
 
 - Voice recording (planned for future)
-- Device-to-user mapping (infrastructure ready)
-- Multi-paddock selection per event
 
 ## Dashboard Views
 
@@ -103,6 +107,19 @@ Hey Farmer Module (HFM) is an event recording system for tracking farm activitie
 | `script.hfm_add_crop_stage` | Add custom crop stage |
 
 ## Changelog
+
+### 1.0.0-rc.2 (2026-02-14)
+- **Multi-Paddock Selection**: Support up to 20 paddocks per farm with auto-expanding grid
+- **Farm Selector**: Select farm first, paddocks filter automatically
+- **Selection Buttons**: All (blue), Clear (red), Season (yellow) for quick paddock selection
+- **Applicator Card**: Styled like product cards with equipment attributes display
+- **Weather Phase Capture**: START/MID/END weather capture for Chemical Applications
+- **Compact Weather Table**: Markdown table showing all weather metrics
+- **Weather Sensors**: Local station first, BOM fallback for all weather data
+- **Dull Orange Headers**: Changed all title/heading colors for mobile visual segregation
+- **Step 6 Weather**: Shows weather phases table (Chemical) or summary (Nutrient)
+- **Hold-to-Clear**: Tap to capture weather, hold to clear (reduced UI clutter)
+- **70px Buttons**: Standardized all buttons to 70px minimum height
 
 ### 1.0.0-rc.1 (2026-02-07)
 - Fixed ButtonCardJS template errors with try-catch wrappers
