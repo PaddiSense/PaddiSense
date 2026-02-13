@@ -2025,6 +2025,804 @@ views:
                               - font-weight: 700
                               - color: white
 
+                    # Paddock buttons - Row 4 (indices 6-7)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[6]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[6]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 6 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[6]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[7]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[7]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 7 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[7]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
+                    # Paddock buttons - Row 5 (indices 8-9)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[8]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[8]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 8 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[8]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[9]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[9]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 9 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[9]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
+                    # Paddock buttons - Row 6 (indices 10-11)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[10]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[10]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 10 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[10]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[11]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[11]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 11 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[11]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
+                    # Paddock buttons - Row 7 (indices 12-13)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[12]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[12]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 12 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[12]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[13]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[13]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 13 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[13]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
+                    # Paddock buttons - Row 8 (indices 14-15)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[14]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[14]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 14 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[14]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[15]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[15]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 15 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[15]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
+                    # Paddock buttons - Row 9 (indices 16-17)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[16]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[16]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 16 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[16]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[17]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[17]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 17 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[17]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
+                    # Paddock buttons - Row 10 (indices 18-19)
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[18]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[18]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 18 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[18]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+                        - type: custom:button-card
+                          entity: sensor.hfm_drafts
+                          show_name: true
+                          show_icon: false
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_toggle_paddock
+                            service_data:
+                              paddock_id: |
+                                [[[
+                                  const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                  const farms = entity?.attributes?.farms || {};
+                                  let farmId = '';
+                                  for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                  const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                  return paddocks[19]?.id || '';
+                                ]]]
+                          name: |
+                            [[[
+                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                              const farms = entity?.attributes?.farms || {};
+                              let farmId = '';
+                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                              return paddocks[19]?.name || '';
+                            ]]]
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                              - display: |
+                                  [[[
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return paddocks.length > 19 ? 'flex' : 'none';
+                                  ]]]
+                              - background: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[19]?.id) ? '#28a745' : '#424242';
+                                  ]]]
+                            name:
+                              - font-size: 18px
+                              - font-weight: 700
+                              - color: white
+
                     # Selected paddocks summary
                     - type: markdown
                       content: |
