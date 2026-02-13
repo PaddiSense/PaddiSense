@@ -605,11 +605,15 @@ template:
         state: >
           {% set local = states('sensor.weather_api_station_1_wind_direction') %}
           {% set bom = states('sensor.bom_wind_direction') %}
+          {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
           {% if local not in ['unknown', 'unavailable', ''] %}
-            {{ local }}
+            {% if local | float(-1) >= 0 %}
+              {{ dirs[((local | float(0) + 11.25) % 360 / 22.5) | int] }}
+            {% else %}
+              {{ local }}
+            {% endif %}
           {% else %}
             {% set deg = bom | float(0) %}
-            {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
             {{ dirs[((deg + 11.25) % 360 / 22.5) | int] }}
           {% endif %}
 

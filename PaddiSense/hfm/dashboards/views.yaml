@@ -3416,31 +3416,35 @@ views:
                         cards:
                           - type: custom:button-card
                             template: hfm_title
-                            name: "SPRAY WEATHER PHASES"
+                            name: "SPRAY WEATHER (Auto-Captured)"
 
-                          # Capture Buttons Row
+                          # Weather Status Row - Hold to clear a phase
                           - type: horizontal-stack
                             cards:
                               - type: custom:button-card
                                 entity: sensor.hfm_weather_start
                                 name: |
                                   [[[
-                                    return 'START\n' + states['sensor.hfm_spray_start_time']?.state;
+                                    const time = states['sensor.hfm_spray_start_time']?.state || '';
+                                    return 'START\n' + time;
                                   ]]]
-                                icon: mdi:play-circle
+                                icon: |
+                                  [[[
+                                    return entity?.state === 'Captured' ? 'mdi:check-circle' : 'mdi:clock-outline';
+                                  ]]]
                                 show_icon: true
                                 show_name: true
                                 styles:
                                   card:
-                                    - height: 70px
+                                    - height: 50px
                                     - border-radius: 0
                                     - background: |
                                         [[[
-                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.3)' : 'rgba(117, 117, 117, 0.15)';
+                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
                                         ]]]
                                   name:
-                                    - font-size: 11px
-                                    - font-weight: 700
+                                    - font-size: 10px
+                                    - font-weight: 600
                                     - white-space: pre-line
                                   icon:
                                     - color: |
@@ -3448,36 +3452,39 @@ views:
                                           return entity?.state === 'Captured' ? '#28a745' : '#757575';
                                         ]]]
                                 tap_action:
-                                  action: call-service
-                                  service: script.hfm_capture_weather_phase
-                                  service_data:
-                                    phase: start
+                                  action: none
                                 hold_action:
                                   action: call-service
                                   service: script.hfm_clear_weather_phase
                                   service_data:
                                     phase: start
+                                  confirmation:
+                                    text: "Clear START weather data?"
 
                               - type: custom:button-card
                                 entity: sensor.hfm_weather_mid
                                 name: |
                                   [[[
-                                    return 'MID\n' + states['sensor.hfm_spray_mid_time']?.state;
+                                    const time = states['sensor.hfm_spray_mid_time']?.state || '';
+                                    return 'MID\n' + time;
                                   ]]]
-                                icon: mdi:pause-circle
+                                icon: |
+                                  [[[
+                                    return entity?.state === 'Captured' ? 'mdi:check-circle' : 'mdi:clock-outline';
+                                  ]]]
                                 show_icon: true
                                 show_name: true
                                 styles:
                                   card:
-                                    - height: 70px
+                                    - height: 50px
                                     - border-radius: 0
                                     - background: |
                                         [[[
-                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.3)' : 'rgba(117, 117, 117, 0.15)';
+                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
                                         ]]]
                                   name:
-                                    - font-size: 11px
-                                    - font-weight: 700
+                                    - font-size: 10px
+                                    - font-weight: 600
                                     - white-space: pre-line
                                   icon:
                                     - color: |
@@ -3485,36 +3492,39 @@ views:
                                           return entity?.state === 'Captured' ? '#28a745' : '#757575';
                                         ]]]
                                 tap_action:
-                                  action: call-service
-                                  service: script.hfm_capture_weather_phase
-                                  service_data:
-                                    phase: mid
+                                  action: none
                                 hold_action:
                                   action: call-service
                                   service: script.hfm_clear_weather_phase
                                   service_data:
                                     phase: mid
+                                  confirmation:
+                                    text: "Clear MID weather data?"
 
                               - type: custom:button-card
                                 entity: sensor.hfm_weather_end
                                 name: |
                                   [[[
-                                    return 'END\n' + states['sensor.hfm_spray_end_time']?.state;
+                                    const time = states['sensor.hfm_spray_end_time']?.state || '';
+                                    return 'END\n' + time;
                                   ]]]
-                                icon: mdi:stop-circle
+                                icon: |
+                                  [[[
+                                    return entity?.state === 'Captured' ? 'mdi:check-circle' : 'mdi:clock-outline';
+                                  ]]]
                                 show_icon: true
                                 show_name: true
                                 styles:
                                   card:
-                                    - height: 70px
+                                    - height: 50px
                                     - border-radius: 0
                                     - background: |
                                         [[[
-                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.3)' : 'rgba(117, 117, 117, 0.15)';
+                                          return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
                                         ]]]
                                   name:
-                                    - font-size: 11px
-                                    - font-weight: 700
+                                    - font-size: 10px
+                                    - font-weight: 600
                                     - white-space: pre-line
                                   icon:
                                     - color: |
@@ -3522,15 +3532,14 @@ views:
                                           return entity?.state === 'Captured' ? '#28a745' : '#757575';
                                         ]]]
                                 tap_action:
-                                  action: call-service
-                                  service: script.hfm_capture_weather_phase
-                                  service_data:
-                                    phase: end
+                                  action: none
                                 hold_action:
                                   action: call-service
                                   service: script.hfm_clear_weather_phase
                                   service_data:
                                     phase: end
+                                  confirmation:
+                                    text: "Clear END weather data?"
 
                           # Weather Data Table (Markdown)
                           - type: markdown
@@ -3554,15 +3563,14 @@ views:
                               style: |
                                 ha-card {
                                   border-radius: 0 0 12px 12px;
-                                  padding: 8px;
-                                  font-size: 12px;
+                                  padding: 12px;
                                 }
                                 table {
                                   width: 100%;
-                                  font-size: 11px;
+                                  font-size: 14px;
                                 }
                                 th, td {
-                                  padding: 2px 4px;
+                                  padding: 4px 6px;
                                 }
 
                     # Irrigation: Type selection
