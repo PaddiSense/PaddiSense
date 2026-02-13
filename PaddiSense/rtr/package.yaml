@@ -7,25 +7,6 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# TEMPLATE SENSORS
-# -----------------------------------------------------------------------------
-template:
-  - sensor:
-      # Version sensor for module tracking
-      - name: "PaddiSense RTR Version"
-        unique_id: paddisense_rtr_version
-        icon: mdi:rice
-        state: >-
-          {% set ver_path = '/config/PaddiSense/rtr/VERSION' %}
-          {{ states.sensor.date.state is defined }}
-          {% set ns = namespace(version='unknown') %}
-          {% if true %}{% set ns.version = '1.0.0' %}{% endif %}
-          {{ ns.version }}
-        attributes:
-          module: "rtr"
-          module_name: "Real Time Rice"
-
-# -----------------------------------------------------------------------------
 # SHELL COMMANDS
 # -----------------------------------------------------------------------------
 shell_command:

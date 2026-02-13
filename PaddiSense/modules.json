@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-pr.1",
   "modules": {
     "registry": {
       "name": "Farm Registry",
@@ -9,8 +9,8 @@
       "dashboard_slug": "paddisense-manager",
       "dashboard_title": "PaddiSense Manager",
       "dashboard_file": "registry/dashboards/manager.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "ipm": {
       "name": "Inventory Manager",
@@ -19,8 +19,8 @@
       "dashboard_slug": "ipm-inventory",
       "dashboard_title": "Inventory Manager",
       "dashboard_file": "ipm/dashboards/inventory.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "asm": {
       "name": "Asset Service Manager",
@@ -29,8 +29,8 @@
       "dashboard_slug": "asm-service",
       "dashboard_title": "Asset Service Manager",
       "dashboard_file": "asm/dashboards/views.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "weather": {
       "name": "Weather Stations",
@@ -39,8 +39,8 @@
       "dashboard_slug": "weather-station",
       "dashboard_title": "Weather",
       "dashboard_file": "weather/dashboards/views.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "pwm": {
       "name": "Water Management",
@@ -49,8 +49,8 @@
       "dashboard_slug": "pwm-irrigation",
       "dashboard_title": "Water Management",
       "dashboard_file": "pwm/dashboards/views.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "rtr": {
       "name": "Real Time Rice",
@@ -59,8 +59,8 @@
       "dashboard_slug": "rtr-predictions",
       "dashboard_title": "Real Time Rice",
       "dashboard_file": "rtr/dashboards/views.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "str": {
       "name": "Stock Tracker",
@@ -69,8 +69,8 @@
       "dashboard_slug": "str-stock",
       "dashboard_title": "Stock Tracker",
       "dashboard_file": "str/dashboards/views.yaml",
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "hfm": {
       "name": "Hey Farmer",
@@ -80,8 +80,8 @@
       "dashboard_title": "Hey Farmer",
       "dashboard_file": "hfm/dashboards/views.yaml",
       "dependencies": ["ipm"],
-      "status": "rc",
-      "version": "1.0.0-rc.1"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     },
     "wss": {
       "name": "Worker Safety",
@@ -95,8 +95,8 @@
         "button-card",
         "lovelace-card-mod"
       ],
-      "status": "dev",
-      "version": "1.1.0-dev"
+      "status": "pr",
+      "version": "1.0.0-pr.1"
     }
   }
 }

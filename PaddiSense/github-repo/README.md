@@ -1,12 +1,12 @@
 # PaddiSense Farm Management
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![Version](https://img.shields.io/badge/version-1.0.0--rc.8-blue.svg)](https://github.com/PaddiSense/PaddiSense/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0--pr.1-blue.svg)](https://github.com/PaddiSense/PaddiSense/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A modular Home Assistant integration for farm management. Built for Australian rice and mixed farming operations.
 
-> **Pre-Release Notice**: Version 1.0.0-rc.8 is a release candidate. Core features are complete but still undergoing testing.
+> **Pre-Release Notice**: Version 1.0.0-pr.1 is a pre-release. All modules are functional and undergoing final testing.
 
 ## Modules
 

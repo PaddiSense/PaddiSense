@@ -5,33 +5,39 @@
 paddisense-manager:
   mode: yaml
   title: PaddiSense Manager
-  icon: mdi:view-dashboard
+  icon: mdi:database
   show_in_sidebar: true
   filename: PaddiSense/registry/dashboards/manager.yaml
-rtr-predictions:
-  mode: yaml
-  title: Real Time Rice
-  icon: mdi:rice
-  show_in_sidebar: true
-  filename: PaddiSense/rtr/dashboards/views.yaml
-pwm-extra:
-  mode: yaml
-  title: PWM Extra Data
-  icon: mdi:chart-line
-  show_in_sidebar: false
-  filename: PaddiSense/pwm/dashboards/extra_data.yaml
-weather-station:
-  mode: yaml
-  title: Weather
-  icon: mdi:weather-cloudy
-  show_in_sidebar: true
-  filename: PaddiSense/weather/dashboards/views.yaml
 ipm-inventory:
   mode: yaml
   title: Inventory Manager
   icon: mdi:warehouse
   show_in_sidebar: true
   filename: PaddiSense/ipm/dashboards/inventory.yaml
+asm-service:
+  mode: yaml
+  title: Asset Service Manager
+  icon: mdi:tractor
+  show_in_sidebar: true
+  filename: PaddiSense/asm/dashboards/views.yaml
+pwm-irrigation:
+  mode: yaml
+  title: Water Management
+  icon: mdi:water
+  show_in_sidebar: true
+  filename: PaddiSense/pwm/dashboards/views.yaml
+pwm-extra:
+  mode: yaml
+  title: PWM Extra Data
+  icon: mdi:chart-line
+  show_in_sidebar: false
+  filename: PaddiSense/pwm/dashboards/extra_data.yaml
+rtr-predictions:
+  mode: yaml
+  title: Real Time Rice
+  icon: mdi:rice
+  show_in_sidebar: true
+  filename: PaddiSense/rtr/dashboards/views.yaml
 str-stock:
   mode: yaml
   title: Stock Tracker
@@ -40,19 +46,19 @@ str-stock:
   filename: PaddiSense/str/dashboards/views.yaml
 hfm-heyfarm:
   mode: yaml
-  title: Hey Farm
+  title: Hey Farmer
   icon: mdi:microphone
   show_in_sidebar: true
   filename: PaddiSense/hfm/dashboards/views.yaml
-asm-service:
-  mode: yaml
-  title: Asset Service Manager
-  icon: mdi:tractor
-  show_in_sidebar: true
-  filename: PaddiSense/asm/dashboards/views.yaml
 wss-safety:
   mode: yaml
   title: Worker Safety
   icon: mdi:account-hard-hat
   show_in_sidebar: true
   filename: PaddiSense/wss/dashboards/views.yaml
+weather-station:
+  mode: yaml
+  title: Weather
+  icon: mdi:weather-cloudy
+  show_in_sidebar: true
+  filename: PaddiSense/weather/dashboards/views.yaml

@@ -8,7 +8,7 @@ Outputs ONE JSON payload for Home Assistant command_line sensor:
   "status": "ready|not_initialized|credentials_missing|error",
   "initialized": bool,
   "credentials_ok": bool,
-  "version": "1.1.0",
+  "version": "<from VERSION file>",
   "station_count": int,
   "last_update": "ISO8601",
   "stations": {
@@ -34,9 +34,19 @@ from pathlib import Path
 CONFIG_DIR = Path("/config/local_data/weather_api")
 CONFIG_FILE = CONFIG_DIR / "config.json"
 SECRETS_FILE = Path("/config/secrets.yaml")
+VERSION_FILE = Path("/config/PaddiSense/weather/VERSION")
 
 VALID_SLOTS = ["1", "2", "3", "4"]
-VERSION = "1.1.0"
+
+
+def get_version() -> str:
+    """Read module version from VERSION file."""
+    try:
+        if VERSION_FILE.exists():
+            return VERSION_FILE.read_text(encoding="utf-8").strip()
+    except IOError:
+        pass
+    return "unknown"
 
 
 def utc_now_iso() -> str:
@@ -301,7 +311,7 @@ def main() -> int:
         "status": status,
         "initialized": initialized,
         "credentials_ok": credentials_ok,
-        "version": VERSION,
+        "version": get_version(),
         "station_count": station_count,
         "last_update": utc_now_iso(),
         "stations": stations_out,
