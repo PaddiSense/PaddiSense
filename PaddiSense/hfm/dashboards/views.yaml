@@ -1618,6 +1618,10 @@ views:
                             border-radius: 12px;
                             margin-bottom: 8px;
                           }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.4rem !important;
+                            font-weight: 600 !important;
+                          }
 
                     # Quick actions row (All, Clear, Season)
                     - type: horizontal-stack
@@ -1625,10 +1629,18 @@ views:
                         - type: custom:button-card
                           name: All
                           icon: mdi:checkbox-multiple-marked
-                          template: hfm_secondary
+                          color_type: card
+                          color: "#0066cc"
                           styles:
                             card:
-                              - height: 50px
+                              - height: 70px
+                              - border-radius: 12px
+                            name:
+                              - font-size: 16px
+                              - font-weight: 700
+                              - color: white
+                            icon:
+                              - color: white
                           tap_action:
                             action: call-service
                             service: script.hfm_select_all_paddocks
@@ -1636,10 +1648,18 @@ views:
                         - type: custom:button-card
                           name: Clear
                           icon: mdi:checkbox-multiple-blank-outline
-                          template: hfm_secondary
+                          color_type: card
+                          color: "#dc3545"
                           styles:
                             card:
-                              - height: 50px
+                              - height: 70px
+                              - border-radius: 12px
+                            name:
+                              - font-size: 16px
+                              - font-weight: 700
+                              - color: white
+                            icon:
+                              - color: white
                           tap_action:
                             action: call-service
                             service: script.hfm_clear_paddock_selection
@@ -1647,10 +1667,18 @@ views:
                         - type: custom:button-card
                           name: Season
                           icon: mdi:calendar-check
-                          template: hfm_secondary
+                          color_type: card
+                          color: "#ffc107"
                           styles:
                             card:
-                              - height: 50px
+                              - height: 70px
+                              - border-radius: 12px
+                            name:
+                              - font-size: 16px
+                              - font-weight: 700
+                              - color: black
+                            icon:
+                              - color: black
                           tap_action:
                             action: call-service
                             service: script.hfm_select_current_season_paddocks
@@ -1661,7 +1689,7 @@ views:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
-                          show_icon: true
+                          show_icon: false
                           tap_action:
                             action: call-service
                             service: script.hfm_toggle_paddock
@@ -1684,22 +1712,9 @@ views:
                               const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
                               return paddocks[0]?.name || '';
                             ]]]
-                          icon: |
-                            [[[
-                              const deviceId = states['input_text.hfm_current_device']?.state || '';
-                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
-                              const selected = draft.data?.paddocks || [];
-                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
-                              const farms = entity?.attributes?.farms || {};
-                              let farmId = '';
-                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
-                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                              const pid = paddocks[0]?.id;
-                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                            ]]]
                           styles:
                             card:
-                              - height: 60px
+                              - height: 70px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1723,15 +1738,13 @@ views:
                                     return selected.includes(paddocks[0]?.id) ? '#28a745' : '#424242';
                                   ]]]
                             name:
-                              - font-size: 14px
-                              - font-weight: 600
-                              - color: white
-                            icon:
+                              - font-size: 18px
+                              - font-weight: 700
                               - color: white
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
-                          show_icon: true
+                          show_icon: false
                           tap_action:
                             action: call-service
                             service: script.hfm_toggle_paddock
@@ -1754,22 +1767,9 @@ views:
                               const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
                               return paddocks[1]?.name || '';
                             ]]]
-                          icon: |
-                            [[[
-                              const deviceId = states['input_text.hfm_current_device']?.state || '';
-                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
-                              const selected = draft.data?.paddocks || [];
-                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
-                              const farms = entity?.attributes?.farms || {};
-                              let farmId = '';
-                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
-                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                              const pid = paddocks[1]?.id;
-                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                            ]]]
                           styles:
                             card:
-                              - height: 60px
+                              - height: 70px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1793,10 +1793,8 @@ views:
                                     return selected.includes(paddocks[1]?.id) ? '#28a745' : '#424242';
                                   ]]]
                             name:
-                              - font-size: 14px
-                              - font-weight: 600
-                              - color: white
-                            icon:
+                              - font-size: 18px
+                              - font-weight: 700
                               - color: white
 
                     # Paddock buttons - Row 2
@@ -1805,7 +1803,7 @@ views:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
-                          show_icon: true
+                          show_icon: false
                           tap_action:
                             action: call-service
                             service: script.hfm_toggle_paddock
@@ -1828,22 +1826,9 @@ views:
                               const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
                               return paddocks[2]?.name || '';
                             ]]]
-                          icon: |
-                            [[[
-                              const deviceId = states['input_text.hfm_current_device']?.state || '';
-                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
-                              const selected = draft.data?.paddocks || [];
-                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
-                              const farms = entity?.attributes?.farms || {};
-                              let farmId = '';
-                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
-                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                              const pid = paddocks[2]?.id;
-                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                            ]]]
                           styles:
                             card:
-                              - height: 60px
+                              - height: 70px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1867,15 +1852,13 @@ views:
                                     return selected.includes(paddocks[2]?.id) ? '#28a745' : '#424242';
                                   ]]]
                             name:
-                              - font-size: 14px
-                              - font-weight: 600
-                              - color: white
-                            icon:
+                              - font-size: 18px
+                              - font-weight: 700
                               - color: white
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
-                          show_icon: true
+                          show_icon: false
                           tap_action:
                             action: call-service
                             service: script.hfm_toggle_paddock
@@ -1898,22 +1881,9 @@ views:
                               const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
                               return paddocks[3]?.name || '';
                             ]]]
-                          icon: |
-                            [[[
-                              const deviceId = states['input_text.hfm_current_device']?.state || '';
-                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
-                              const selected = draft.data?.paddocks || [];
-                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
-                              const farms = entity?.attributes?.farms || {};
-                              let farmId = '';
-                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
-                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                              const pid = paddocks[3]?.id;
-                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                            ]]]
                           styles:
                             card:
-                              - height: 60px
+                              - height: 70px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1937,10 +1907,8 @@ views:
                                     return selected.includes(paddocks[3]?.id) ? '#28a745' : '#424242';
                                   ]]]
                             name:
-                              - font-size: 14px
-                              - font-weight: 600
-                              - color: white
-                            icon:
+                              - font-size: 18px
+                              - font-weight: 700
                               - color: white
 
                     # Paddock buttons - Row 3
@@ -1949,7 +1917,7 @@ views:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
-                          show_icon: true
+                          show_icon: false
                           tap_action:
                             action: call-service
                             service: script.hfm_toggle_paddock
@@ -1972,22 +1940,9 @@ views:
                               const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
                               return paddocks[4]?.name || '';
                             ]]]
-                          icon: |
-                            [[[
-                              const deviceId = states['input_text.hfm_current_device']?.state || '';
-                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
-                              const selected = draft.data?.paddocks || [];
-                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
-                              const farms = entity?.attributes?.farms || {};
-                              let farmId = '';
-                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
-                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                              const pid = paddocks[4]?.id;
-                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                            ]]]
                           styles:
                             card:
-                              - height: 60px
+                              - height: 70px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2011,15 +1966,13 @@ views:
                                     return selected.includes(paddocks[4]?.id) ? '#28a745' : '#424242';
                                   ]]]
                             name:
-                              - font-size: 14px
-                              - font-weight: 600
-                              - color: white
-                            icon:
+                              - font-size: 18px
+                              - font-weight: 700
                               - color: white
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
-                          show_icon: true
+                          show_icon: false
                           tap_action:
                             action: call-service
                             service: script.hfm_toggle_paddock
@@ -2042,22 +1995,9 @@ views:
                               const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
                               return paddocks[5]?.name || '';
                             ]]]
-                          icon: |
-                            [[[
-                              const deviceId = states['input_text.hfm_current_device']?.state || '';
-                              const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
-                              const selected = draft.data?.paddocks || [];
-                              const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
-                              const farms = entity?.attributes?.farms || {};
-                              let farmId = '';
-                              for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
-                              const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                              const pid = paddocks[5]?.id;
-                              return selected.includes(pid) ? 'mdi:checkbox-marked' : 'mdi:checkbox-blank-outline';
-                            ]]]
                           styles:
                             card:
-                              - height: 60px
+                              - height: 70px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2081,10 +2021,8 @@ views:
                                     return selected.includes(paddocks[5]?.id) ? '#28a745' : '#424242';
                                   ]]]
                             name:
-                              - font-size: 14px
-                              - font-weight: 600
-                              - color: white
-                            icon:
+                              - font-size: 18px
+                              - font-weight: 700
                               - color: white
 
                     # Selected paddocks summary
@@ -2399,18 +2337,6 @@ views:
                                   action: call-service
                                   service: script.hfm_remove_product_slot
 
-                          # Application method
-                          - type: entities
-                            entities:
-                              - entity: input_select.hfm_application_method
-                                name: Application Method
-                            card_mod:
-                              style: |
-                                ha-card {
-                                  border-radius: 12px;
-                                  margin-top: 8px;
-                                }
-
                           # Applicator Selection
                           - type: custom:button-card
                             color_type: card
@@ -2435,61 +2361,55 @@ views:
                             card_mod:
                               style: |
                                 ha-card {
-                                  border-radius: 0 0 12px 12px;
+                                  border-radius: 0;
                                 }
                                 .mdc-list-item__primary-text {
                                   font-size: 1.2rem !important;
                                 }
 
-                          # Weather Capture - Start Time & Duration
-                          - type: custom:button-card
-                            color_type: card
-                            color: "#1565c0"
-                            show_icon: false
-                            show_name: true
-                            name: "Application Timing (for Weather)"
-                            styles:
-                              card:
-                                - height: 36px
-                                - border-radius: 12px 12px 0 0
-                                - margin-top: 8px
-                              name:
-                                - font-size: 14px
-                                - font-weight: 600
-                                - color: white
-
-                          - type: entities
-                            entities:
-                              - entity: input_text.hfm_start_time
-                                name: Start Time (HH:MM)
-                              - entity: input_number.hfm_duration_minutes
-                                name: Duration (minutes)
-                            card_mod:
-                              style: |
-                                ha-card {
-                                  border-radius: 0 0 12px 12px;
-                                }
-
-                          # Current Weather Preview
+                          # Applicator Details Card
                           - type: markdown
                             content: |
-                              {% set ws = states('sensor.hfm_current_wind_speed') %}
-                              {% set wd = states('sensor.hfm_current_wind_direction') %}
-                              {% set wg = states('sensor.hfm_current_wind_gust') %}
-                              {% set temp = states('sensor.hfm_current_temperature') %}
-                              {% if ws and ws != 'unavailable' %}
-                              **Current Weather:** {{ temp }}°C | Wind: {{ ws }} km/h {{ wd }} (Gust: {{ wg }} km/h)
+                              {% set selected = states('input_select.hfm_selected_applicator') %}
+                              {% set applicators = state_attr('sensor.hfm_events', 'applicators') or [] %}
+                              {% set app = namespace(found=none) %}
+                              {% for a in applicators %}
+                                {% if a.name == selected %}
+                                  {% set app.found = a %}
+                                {% endif %}
+                              {% endfor %}
+                              {% if app.found %}
+                              **{{ app.found.name }}** ({{ app.found.type | replace('_', ' ') | title }})
+
+                              | Attribute | Value |
+                              |:--|:--|
+                              | **Method** | {{ app.found.application_method or 'Not set' }} |
+                              {% if app.found.attributes %}
+                              {% if app.found.attributes.nozzle_type %}| **Nozzle** | {{ app.found.attributes.nozzle_type }} |{% endif %}
+                              {% if app.found.attributes.spray_width_m %}| **Width** | {{ app.found.attributes.spray_width_m }}m |{% endif %}
+                              {% if app.found.attributes.water_rate_l_ha %}| **Water Rate** | {{ app.found.attributes.water_rate_l_ha }} L/ha |{% endif %}
+                              {% if app.found.attributes.tank_size_l %}| **Tank** | {{ app.found.attributes.tank_size_l }}L |{% endif %}
+                              {% if app.found.attributes.spread_width_m %}| **Spread Width** | {{ app.found.attributes.spread_width_m }}m |{% endif %}
+                              {% if app.found.attributes.capacity_t %}| **Capacity** | {{ app.found.attributes.capacity_t }}t |{% endif %}
+                              {% if app.found.attributes.vehicle %}| **Vehicle** | {{ app.found.attributes.vehicle }} |{% endif %}
+                              {% endif %}
                               {% else %}
-                              *Weather data will be captured at submission*
+                              *Select an applicator to see details*
                               {% endif %}
                             card_mod:
                               style: |
                                 ha-card {
-                                  border-radius: 12px;
-                                  text-align: center;
-                                  padding: 8px;
-                                  margin-top: 8px;
-                                  background: rgba(21, 101, 192, 0.1);
+                                  border-radius: 0 0 12px 12px;
+                                  padding: 12px;
+                                  background: rgba(0, 102, 204, 0.1);
+                                }
+                                table {
+                                  width: 100%;
+                                  font-size: 14px;
+                                }
+                                th, td {
+                                  padding: 4px 8px;
+                                  text-align: left;
                                 }
 
                     # Irrigation: Type selection
