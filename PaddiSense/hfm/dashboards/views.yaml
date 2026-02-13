@@ -1629,7 +1629,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1655,7 +1655,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[0]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -1684,7 +1695,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1710,7 +1721,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[1]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 2
                     - type: horizontal-stack
@@ -1743,7 +1765,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1769,7 +1791,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[2]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -1798,7 +1831,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1824,7 +1857,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[3]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 3
                     - type: horizontal-stack
@@ -1857,7 +1901,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1883,7 +1927,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[4]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -1912,7 +1967,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1938,7 +1993,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[5]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 4 (indices 6-7)
                     - type: horizontal-stack
@@ -1971,7 +2037,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -1997,7 +2063,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[6]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2026,7 +2103,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2052,7 +2129,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[7]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 5 (indices 8-9)
                     - type: horizontal-stack
@@ -2085,7 +2173,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2111,7 +2199,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[8]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2140,7 +2239,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2166,7 +2265,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[9]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 6 (indices 10-11)
                     - type: horizontal-stack
@@ -2199,7 +2309,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2225,7 +2335,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[10]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2254,7 +2375,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2280,7 +2401,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[11]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 7 (indices 12-13)
                     - type: horizontal-stack
@@ -2313,7 +2445,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2339,7 +2471,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[12]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2368,7 +2511,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2394,7 +2537,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[13]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 8 (indices 14-15)
                     - type: horizontal-stack
@@ -2427,7 +2581,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2453,7 +2607,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[14]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2482,7 +2647,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2508,7 +2673,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[15]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 9 (indices 16-17)
                     - type: horizontal-stack
@@ -2541,7 +2717,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2567,7 +2743,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[16]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2596,7 +2783,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2622,7 +2809,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[17]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Paddock buttons - Row 10 (indices 18-19)
                     - type: horizontal-stack
@@ -2655,7 +2853,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2681,7 +2879,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[18]?.id) ? 'white' : 'black';
+                                  ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
                           show_name: true
@@ -2710,7 +2919,7 @@ views:
                             ]]]
                           styles:
                             card:
-                              - height: 70px
+                              - height: 90px
                               - border-radius: 12px
                               - display: |
                                   [[[
@@ -2736,7 +2945,18 @@ views:
                             name:
                               - font-size: 18px
                               - font-weight: 700
-                              - color: white
+                              - color: |
+                                  [[[
+                                    const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                    const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                    const selected = draft.data?.paddocks || [];
+                                    const selectedFarm = states['input_select.hfm_selected_farm']?.state || '';
+                                    const farms = entity?.attributes?.farms || {};
+                                    let farmId = '';
+                                    for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
+                                    const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
+                                    return selected.includes(paddocks[19]?.id) ? 'white' : 'black';
+                                  ]]]
 
                     # Selected paddocks summary
                     - type: markdown
