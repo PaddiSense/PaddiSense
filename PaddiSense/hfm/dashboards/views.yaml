@@ -3556,6 +3556,13 @@ views:
                                 - padding: 0
                                 - background: none
                                 - box-shadow: none
+                                - width: 100%
+                              grid:
+                                - grid-template-areas: '"weather_table"'
+                                - grid-template-columns: 1fr
+                              custom_fields:
+                                weather_table:
+                                  - width: 100%
                             custom_fields:
                               weather_table: |
                                 [[[
