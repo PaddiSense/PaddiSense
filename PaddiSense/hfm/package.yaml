@@ -1313,12 +1313,12 @@ automation:
       - condition: template
         value_template: "{{ states('input_text.hfm_current_device') != '' }}"
     action:
-      - service: script.hfm_capture_weather_middle
+      - service: script.hfm_capture_weather_mid
       - service: persistent_notification.create
         data:
-          title: "Weather Captured - Middle"
-          message: "Middle weather conditions recorded automatically"
-          notification_id: hfm_weather_middle
+          title: "Weather Captured - Mid"
+          message: "Mid weather conditions recorded automatically"
+          notification_id: hfm_weather_mid
 
   - id: hfm_auto_capture_weather_end
     alias: "HFM Auto Capture Weather - End"
@@ -1393,7 +1393,7 @@ script:
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ effective_device_id }}"
-          data: '{"wizard_step": 1, "data": {"event_type": null, "date": null, "start_time": null, "duration_minutes": null, "farm_id": null, "paddocks": [], "products": [], "applicator_id": null, "application_method": null, "crop_stage": null, "irrigation_type": null, "notes": "", "weather_start": null, "weather_middle": null, "weather_end": null}}'
+          data: '{"wizard_step": 1, "data": {"event_type": null, "date": null, "start_time": null, "duration_minutes": null, "farm_id": null, "paddocks": [], "products": [], "applicator_id": null, "application_method": null, "crop_stage": null, "irrigation_type": null, "notes": "", "weather_start": null, "weather_mid": null, "weather_end": null}}'
       # Reset UI helpers
       - service: script.hfm_wizard_reset
       # Update sensors
@@ -2413,102 +2413,7 @@ script:
           message: "{{ selected_name }} has been deactivated."
           notification_id: hfm_applicator_deleted
 
-  # --- Weather Capture Scripts (3-Phase Compliance) ---
-
-  hfm_capture_weather_phase:
-    alias: "HFM Capture Weather Phase"
-    icon: mdi:weather-partly-cloudy
-    description: "Capture weather for start/middle/end of application (legal compliance)"
-    fields:
-      device_id:
-        description: "Device ID for the draft"
-        example: "browser_abc123"
-      phase:
-        description: "Phase of application: start, middle, or end"
-        example: "start"
-    sequence:
-      - variables:
-          # Check if local station is available (has valid data)
-          local_available: >
-            {{ has_value('sensor.weather_api_station_1_wind_speed')
-               and states('sensor.weather_api_station_1_wind_speed') not in ['unavailable', 'unknown', ''] }}
-          # Get wind speed - local first, then BOM
-          wind_speed: >
-            {% if local_available %}
-              {{ states('sensor.weather_api_station_1_wind_speed') | float(0) | round(1) }}
-            {% else %}
-              {{ states('sensor.bom_observations_wind_speed') | float(states('sensor.bom_wind_speed_kilometre') | float(0)) | round(1) }}
-            {% endif %}
-          # Get wind gust - local first, then BOM
-          wind_gust: >
-            {% if local_available %}
-              {{ states('sensor.weather_api_station_1_wind_gust') | float(0) | round(1) }}
-            {% else %}
-              {{ states('sensor.bom_observations_wind_gust') | float(states('sensor.bom_gust_speed_kilometre') | float(0)) | round(1) }}
-            {% endif %}
-          # Get wind direction - local first, then BOM
-          wind_direction_deg: >
-            {% if local_available %}
-              {{ states('sensor.weather_api_station_1_wind_direction') | float(0) | round(0) }}
-            {% else %}
-              {{ states('sensor.bom_observations_wind_direction') | float(states('sensor.bom_wind_direction') | float(0)) | round(0) }}
-            {% endif %}
-          wind_direction: >
-            {% set deg = wind_direction_deg | float(0) %}
-            {% set dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'] %}
-            {{ dirs[((deg + 11.25) % 360 / 22.5) | int] }}
-          # Get humidity - local first, then BOM
-          humidity: >
-            {% if local_available %}
-              {{ states('sensor.weather_api_station_1_humidity') | float(0) | round(0) }}
-            {% else %}
-              {{ states('sensor.bom_observations_humidity') | float(states('sensor.bom_humidity') | float(0)) | round(0) }}
-            {% endif %}
-          # Get temperature - local first, then BOM
-          temperature: >
-            {% if local_available %}
-              {{ states('sensor.weather_api_station_1_temperature') | float(0) | round(1) }}
-            {% else %}
-              {{ states('sensor.bom_temp') | float(0) | round(1) }}
-            {% endif %}
-          # Get delta T - local first, then BOM calculated
-          delta_t: >
-            {% if local_available and has_value('sensor.weather_api_station_1_delta_t') %}
-              {{ states('sensor.weather_api_station_1_delta_t') | float(0) | round(1) }}
-            {% elif has_value('sensor.bom_observations_delta_t') %}
-              {{ states('sensor.bom_observations_delta_t') | float(0) | round(1) }}
-            {% else %}
-              {{ none }}
-            {% endif %}
-          # Get rain chance from BOM forecast
-          rain_chance: >
-            {% set rc = states('sensor.bom_forecast_rain_chance_0') %}
-            {{ rc | float(0) | round(0) if rc not in ['unknown', 'unavailable', ''] else 0 }}
-          source: "{{ 'local' if local_available else 'bom' }}"
-          captured_at: "{{ now().strftime('%Y-%m-%d %H:%M') }}"
-          weather_record: >
-            {
-              "phase": "{{ phase }}",
-              "source": "{{ source }}",
-              "captured_at": "{{ captured_at }}",
-              "wind_speed_kmh": {{ wind_speed }},
-              "wind_gust_kmh": {{ wind_gust }},
-              "wind_direction_deg": {{ wind_direction_deg }},
-              "wind_direction": "{{ wind_direction }}",
-              "humidity_pct": {{ humidity }},
-              "delta_t": {{ delta_t if delta_t is not none else 'null' }},
-              "rain_chance_pct": {{ rain_chance }}
-            }
-      - service: shell_command.hfm_update_draft_weather_phase
-        data:
-          device_id: "{{ device_id }}"
-          phase: "{{ phase }}"
-          weather: "{{ weather_record }}"
-      - delay:
-          milliseconds: 500
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hfm_drafts
+  # --- Weather Capture Helper Scripts ---
 
   hfm_capture_weather_start:
     alias: "HFM Capture Weather - Start"
@@ -2517,18 +2422,16 @@ script:
     sequence:
       - service: script.hfm_capture_weather_phase
         data:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
           phase: "start"
 
-  hfm_capture_weather_middle:
-    alias: "HFM Capture Weather - Middle"
+  hfm_capture_weather_mid:
+    alias: "HFM Capture Weather - Mid"
     icon: mdi:pause-circle
     description: "Capture weather at middle of application"
     sequence:
       - service: script.hfm_capture_weather_phase
         data:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
-          phase: "middle"
+          phase: "mid"
 
   hfm_capture_weather_end:
     alias: "HFM Capture Weather - End"
@@ -2537,7 +2440,6 @@ script:
     sequence:
       - service: script.hfm_capture_weather_phase
         data:
-          device_id: "{{ states('input_text.hfm_current_device') }}"
           phase: "end"
 
   hfm_capture_weather_now:
@@ -2551,11 +2453,11 @@ script:
           draft: "{{ drafts.get(device_id, {}) if device_id else {} }}"
           data: "{{ draft.get('data', {}) if draft else {} }}"
           has_start: "{{ data.get('weather_start') is not none }}"
-          has_middle: "{{ data.get('weather_middle') is not none }}"
+          has_mid: "{{ data.get('weather_mid') is not none }}"
           has_end: "{{ data.get('weather_end') is not none }}"
           next_phase: >
             {% if not has_start %}start
-            {% elif not has_middle %}middle
+            {% elif not has_mid %}mid
             {% elif not has_end %}end
             {% else %}none{% endif %}
       - condition: template
@@ -3060,6 +2962,21 @@ script:
     sequence:
       - variables:
           device_id: "{{ states('input_text.hfm_current_device') }}"
+          # Get delta_t from local station or BOM
+          delta_t_val: >
+            {% set local = states('sensor.weather_api_station_1_delta_t') %}
+            {% set bom = states('sensor.bom_observations_delta_t') %}
+            {% if local not in ['unavailable', 'unknown', ''] %}
+              {{ local | float(0) | round(1) }}
+            {% elif bom not in ['unavailable', 'unknown', ''] %}
+              {{ bom | float(0) | round(1) }}
+            {% else %}
+              null
+            {% endif %}
+          # Get rain chance from BOM forecast
+          rain_chance_val: >
+            {% set rc = states('sensor.bom_forecast_rain_chance_0') %}
+            {{ rc | float(0) | round(0) if rc not in ['unknown', 'unavailable', ''] else 0 }}
           weather_data: >
             {
               "captured_at": "{{ now().isoformat() }}",
@@ -3068,7 +2985,9 @@ script:
               "humidity": {{ states('sensor.hfm_current_humidity') | float(0) }},
               "wind_speed": {{ states('sensor.hfm_current_wind_speed') | float(0) }},
               "wind_direction": "{{ states('sensor.hfm_current_wind_direction') }}",
-              "wind_gust": {{ states('sensor.hfm_current_wind_gust') | float(0) }}
+              "wind_gust": {{ states('sensor.hfm_current_wind_gust') | float(0) }},
+              "delta_t": {{ delta_t_val }},
+              "rain_chance_pct": {{ rain_chance_val }}
             }
       - condition: template
         value_template: "{{ device_id != '' and phase in ['start', 'mid', 'end'] }}"
