@@ -746,6 +746,17 @@ views:
                 card:
                   type: vertical-stack
                   cards:
+                    - type: markdown
+                      content: |
+                        **Step 1:** Select the business to edit below.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 8px;
+                            background: rgba(0, 102, 204, 0.1);
+                          }
+
                     - type: entities
                       entities:
                         - entity: input_select.registry_business
@@ -759,6 +770,17 @@ views:
                           }
                           .mdc-list-item__primary-text {
                             font-size: 1.3rem !important;
+                          }
+
+                    - type: markdown
+                      content: |
+                        **Step 2:** Edit the business name below.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 8px;
+                            background: rgba(40, 167, 69, 0.1);
                           }
 
                     - type: entities
@@ -813,6 +835,17 @@ views:
                 card:
                   type: vertical-stack
                   cards:
+                    - type: markdown
+                      content: |
+                        **Enter the business name** and tap "Add Business" to create.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 8px;
+                            background: rgba(40, 167, 69, 0.1);
+                          }
+
                     - type: entities
                       entities:
                         - entity: input_text.registry_new_business_name
@@ -868,16 +901,7 @@ views:
                 variables:
                   var_name: FARM MANAGEMENT
 
-              # Business filter for farms
-              - type: entities
-                entities:
-                  - entity: input_select.registry_farm_business_filter
-                    name: Filter by Business
-                card_mod:
-                  style: |
-                    ha-card { border-radius: 12px; }
-
-              # Farm editor mode selector
+              # Farm editor mode selector (above filter)
               - type: entities
                 entities:
                   - entity: input_select.registry_farm_editor_mode
@@ -892,6 +916,15 @@ views:
                       font-size: 1.3rem !important;
                     }
 
+              # Business filter for farms
+              - type: entities
+                entities:
+                  - entity: input_select.registry_farm_business_filter
+                    name: Filter by Business
+                card_mod:
+                  style: |
+                    ha-card { border-radius: 12px; }
+
               #----------------------------------------------------------------
               # Edit Existing Farm (conditional)
               #----------------------------------------------------------------
@@ -905,13 +938,14 @@ views:
                   cards:
                     - type: markdown
                       content: |
-                        **Select a farm to edit.** Changes are auto-loaded when you select.
+                        **Step 1:** Use "Filter by Business" above to narrow the list (optional).
+                        **Step 2:** Select the farm below.
                       card_mod:
                         style: |
                           ha-card {
                             border-radius: 12px;
                             padding: 8px;
-                            background: var(--card-background-color);
+                            background: rgba(0, 102, 204, 0.1);
                           }
 
                     - type: entities
@@ -933,6 +967,18 @@ views:
                       template: template_titleblock
                       variables:
                         var_name: EDIT FARM DETAILS
+
+                    - type: markdown
+                      content: |
+                        **Edit Name:** Change the farm name below.
+                        **Assign Business:** Select which business owns this farm.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 8px;
+                            background: rgba(40, 167, 69, 0.1);
+                          }
 
                     - type: entities
                       entities:
@@ -994,6 +1040,17 @@ views:
                       template: template_titleblock
                       variables:
                         var_name: NEW FARM DETAILS
+
+                    - type: markdown
+                      content: |
+                        **Enter the farm name** and optionally assign to a business.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 8px;
+                            background: rgba(40, 167, 69, 0.1);
+                          }
 
                     - type: entities
                       entities:
