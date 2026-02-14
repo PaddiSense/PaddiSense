@@ -599,6 +599,159 @@ template:
             {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('1', {}) %}
             {{ s.get('entity_prefix', 'ecowittgateway_1') }}
 
+  # -------------------------------------------------------------------------
+  # Local Station Normalized Sensors - Dynamically resolve entity prefix
+  # These sensors allow flexible entity prefix configuration
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Local 1 Temperature"
+        unique_id: weather_local_1_temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_outdoor_temperature') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(none) }}
+
+      - name: "Weather Local 1 Humidity"
+        unique_id: weather_local_1_humidity
+        device_class: humidity
+        state_class: measurement
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_humidity') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_humidity') | float(none) }}
+
+      - name: "Weather Local 1 Dew Point"
+        unique_id: weather_local_1_dew_point
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:water-thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_dew_point') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_dew_point') | float(none) }}
+
+      - name: "Weather Local 1 Feels Like"
+        unique_id: weather_local_1_feels_like
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-check
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_feels_like') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_feels_like') | float(none) }}
+
+      - name: "Weather Local 1 Wind Speed"
+        unique_id: weather_local_1_wind_speed
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_speed') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_speed') | float(none) }}
+
+      - name: "Weather Local 1 Wind Gust"
+        unique_id: weather_local_1_wind_gust
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy-variant
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_gust') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_gust') | float(none) }}
+
+      - name: "Weather Local 1 Wind Direction"
+        unique_id: weather_local_1_wind_direction
+        state_class: measurement
+        unit_of_measurement: "°"
+        icon: mdi:compass
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_direction') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_direction') | float(none) }}
+
+      - name: "Weather Local 1 Daily Rain"
+        unique_id: weather_local_1_daily_rain
+        device_class: precipitation
+        state_class: measurement
+        unit_of_measurement: "mm"
+        icon: mdi:weather-rainy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_daily_rain') or has_value('sensor.' ~ prefix ~ '_24h_rain') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {% if has_value('sensor.' ~ prefix ~ '_daily_rain') %}
+            {{ states('sensor.' ~ prefix ~ '_daily_rain') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_24h_rain') | float(none) }}
+          {% endif %}
+
+      - name: "Weather Local 1 Solar Radiation"
+        unique_id: weather_local_1_solar_radiation
+        device_class: irradiance
+        state_class: measurement
+        unit_of_measurement: "W/m²"
+        icon: mdi:white-balance-sunny
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_solar_radiation') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_solar_radiation') | float(none) }}
+
+      - name: "Weather Local 1 UV Index"
+        unique_id: weather_local_1_uv_index
+        state_class: measurement
+        icon: mdi:sun-wireless
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_index') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ states('sensor.' ~ prefix ~ '_uv_index') | float(none) }}
+
+      - name: "Weather Local 1 Pressure"
+        unique_id: weather_local_1_pressure
+        device_class: pressure
+        state_class: measurement
+        unit_of_measurement: "hPa"
+        icon: mdi:gauge
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {{ has_value('sensor.' ~ prefix ~ '_relative_pressure') or has_value('sensor.' ~ prefix ~ '_pressure') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {% if has_value('sensor.' ~ prefix ~ '_relative_pressure') %}
+            {{ states('sensor.' ~ prefix ~ '_relative_pressure') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_pressure') | float(none) }}
+          {% endif %}
+
 
 # =============================================================================
 # BOM TEMPLATE SENSORS - Bureau of Meteorology Observations
@@ -2484,6 +2637,11 @@ input_text:
     max: 50
     icon: mdi:label
 
+  weather_local_station_prefix:
+    name: Weather Local Station Entity Prefix
+    max: 50
+    icon: mdi:identifier
+
 
 input_select:
   weather_api_editor_mode:
@@ -3115,20 +3273,22 @@ script:
         target:
           entity_id: sensor.weather_local_config
 
-  weather_local_set_station_name:
-    alias: Weather Local Set Station Name
+  weather_local_set_station_config:
+    alias: Weather Local Set Station Config
     mode: single
     fields:
       slot:
         description: Station slot (default 1)
       name:
         description: Station name
+      entity_prefix:
+        description: Entity prefix (e.g., gw1100c)
     sequence:
       - variables:
           slot: "{{ slot | default('1') }}"
           name: "{{ name | default(states('input_text.weather_local_station_name')) }}"
+          entity_prefix: "{{ entity_prefix | default(states('input_text.weather_local_station_prefix')) | default('gw1100c') }}"
           enabled: true
-          entity_prefix: "ecowittgateway_1"
       - choose:
           - conditions:
               - condition: template
@@ -3139,12 +3299,22 @@ script:
                   title: "Weather Local"
                   message: "Station name is required."
               - stop: "No name"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ entity_prefix | trim == '' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "Weather Local"
+                  message: "Entity prefix is required (e.g., gw1100c)."
+              - stop: "No prefix"
       - service: shell_command.weather_local_set_station
         data:
           slot: "{{ slot }}"
           name: "{{ name | trim }}"
           enabled: "{{ enabled }}"
-          entity_prefix: "{{ entity_prefix }}"
+          entity_prefix: "{{ entity_prefix | trim }}"
       - delay: "00:00:01"
       - service: homeassistant.update_entity
         target:
@@ -3154,10 +3324,15 @@ script:
           entity_id: input_text.weather_local_station_name
         data:
           value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.weather_local_station_prefix
+        data:
+          value: ""
       - service: persistent_notification.create
         data:
           title: "Weather Local"
-          message: "Station name updated to '{{ name }}'."
+          message: "Station '{{ name }}' configured with prefix '{{ entity_prefix }}'."
 
   weather_local_enable_station:
     alias: Weather Local Enable Station
