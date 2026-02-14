@@ -17,9 +17,12 @@
 - [x] Fixed: Removed leftover `/config/PaddiSense/github-repo/` folder
 
 ### 1.2 Registrations Repo (Private)
-- [ ] Verify `registrations/` repo is up-to-date
-- [ ] Confirm license-tools work correctly
-- [ ] Test license generation flow
+- [x] Verify `registrations/` repo is up-to-date
+- [x] Confirm license-tools work correctly (generate_keys.py, generate_license.py, validate_license.py)
+- [x] Test license generation flow (Ed25519 signing verified)
+- [x] Public key deployed to `/config/custom_components/paddisense/keys/public.pem`
+- [x] Fixed: get_allowed_modules() now checks for license-granted modules
+- [x] Fixed: install_module() now blocks LOCKED_MODULES without license
 
 ---
 
@@ -135,11 +138,11 @@ Review each module for:
 - [ ] Privacy-respecting (no farm data sent)
 
 ### 4.3 License System
-- [ ] License generation tool works (`registrations/license-tools/`)
-- [ ] License validation (offline, crypto-based)
-- [ ] Free modules accessible without license
-- [ ] PWM/WSS locked without valid license
-- [ ] License saved locally for offline use
+- [x] License generation tool works (`registrations/license-tools/`)
+- [x] License validation (offline, Ed25519 crypto-based)
+- [x] Free modules accessible without license
+- [x] PWM/WSS locked without valid license (install_module checks)
+- [x] License saved locally for offline use (`/config/local_data/paddisense/credentials.json`)
 
 ### 4.4 Email to Repo Recording
 - [ ] Does registration create GitHub issue? (if telemetry enabled)
