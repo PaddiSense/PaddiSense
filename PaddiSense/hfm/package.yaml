@@ -1439,6 +1439,71 @@ script:
         target:
           entity_id: sensor.hfm_events
 
+  # --- Weather Capture Scripts ---
+
+  hfm_clear_weather_phase:
+    alias: "HFM Clear Weather Phase"
+    icon: mdi:weather-cloudy-clock
+    description: "Clear weather data for a specific phase"
+    fields:
+      phase:
+        description: "Phase to clear (start, mid, end)"
+        example: "start"
+    sequence:
+      - service: shell_command.hfm_clear_draft_weather_phase
+        data:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          phase: "{{ phase }}"
+      - delay:
+          milliseconds: 300
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+
+  hfm_capture_all_weather:
+    alias: "HFM Capture All Weather Phases"
+    icon: mdi:weather-sync
+    description: "Manually trigger weather capture for all phases"
+    sequence:
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          event_date: "{{ states('sensor.hfm_event_date') }}"
+          start_time_str: "{{ states('sensor.hfm_spray_start_time') }}"
+          mid_time_str: "{{ states('sensor.hfm_spray_mid_time') }}"
+          end_time_str: "{{ states('sensor.hfm_spray_end_time') }}"
+      - service: shell_command.hfm_capture_historical_weather
+        data:
+          device_id: "{{ device_id }}"
+          phase: start
+          date: "{{ event_date }}"
+          time: "{{ start_time_str }}"
+      - delay:
+          milliseconds: 500
+      - service: shell_command.hfm_capture_historical_weather
+        data:
+          device_id: "{{ device_id }}"
+          phase: mid
+          date: "{{ event_date }}"
+          time: "{{ mid_time_str }}"
+      - delay:
+          milliseconds: 500
+      - service: shell_command.hfm_capture_historical_weather
+        data:
+          device_id: "{{ device_id }}"
+          phase: end
+          date: "{{ event_date }}"
+          time: "{{ end_time_str }}"
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
+      - service: persistent_notification.create
+        data:
+          title: "Weather Captured"
+          message: "Weather data captured for {{ event_date }}"
+          notification_id: hfm_weather_manual
+
   # --- Draft-Based Wizard Scripts ---
 
   hfm_start_wizard:

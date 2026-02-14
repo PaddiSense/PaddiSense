@@ -159,34 +159,37 @@ def get_historical_weather(event_date: str, event_time: str) -> dict:
     except ValueError:
         return {}
 
-    # Sensor mappings - local station first, then BOM fallback
+    # Sensor mappings - prioritize sensors that are actively updating
+    # home_observations updates frequently, BOM may be stale
     sensor_mappings = {
         'wind_speed': [
             'sensor.weather_api_station_1_wind_speed',
-            'sensor.bom_wind_speed_kilometre',
-            'sensor.home_observations_wind_speed_kilometre'
+            'sensor.home_observations_wind_speed_kilometre',
+            'sensor.bom_wind_speed_kilometre'
         ],
         'wind_direction': [
             'sensor.weather_api_station_1_wind_direction',
-            'sensor.bom_wind_direction',
-            'sensor.home_observations_wind_direction'
+            'sensor.home_observations_wind_direction',
+            'sensor.bom_wind_direction'
         ],
         'wind_gust': [
             'sensor.weather_api_station_1_wind_gust',
+            'sensor.home_observations_wind_gust_speed_kilometre',
             'sensor.bom_gust_speed_kilometre'
         ],
         'temperature': [
             'sensor.weather_api_station_1_temperature',
-            'sensor.bom_temp',
-            'sensor.home_observations_temp'
+            'sensor.home_observations_temp',
+            'sensor.bom_temp'
         ],
         'humidity': [
             'sensor.weather_api_station_1_humidity',
-            'sensor.bom_humidity',
-            'sensor.home_observations_humidity'
+            'sensor.home_observations_humidity',
+            'sensor.bom_humidity'
         ],
         'delta_t': [
             'sensor.weather_api_station_1_delta_t',
+            'sensor.home_observations_delta_t',
             'sensor.bom_observations_delta_t'
         ]
     }
@@ -1341,6 +1344,11 @@ def cmd_capture_historical_weather(args: argparse.Namespace) -> int:
     event_date = args.date
     event_time = args.time
 
+    # Debug logging to file
+    log_file = DATA_DIR / "weather_capture.log"
+    with open(log_file, "a") as f:
+        f.write(f"{now_iso()} - Capture request: phase={phase}, date={event_date}, time={event_time}, device={device_id}\n")
+
     if phase not in ['start', 'mid', 'end']:
         print(json.dumps({"error": f"Invalid phase: {phase}"}))
         return 1
@@ -1348,8 +1356,14 @@ def cmd_capture_historical_weather(args: argparse.Namespace) -> int:
     # Get historical weather
     weather = get_historical_weather(event_date, event_time)
 
+    # Debug logging
+    with open(log_file, "a") as f:
+        f.write(f"  -> Retrieved weather: time={weather.get('time')}, wind={weather.get('wind_speed')}, dir={weather.get('wind_direction')}\n")
+
     if not weather or all(v == 0 for k, v in weather.items() if k not in ['captured_at', 'time', 'source']):
         # No historical data - return without updating
+        with open(log_file, "a") as f:
+            f.write(f"  -> No data found, skipping\n")
         print(json.dumps({"status": "no_data", "message": f"No historical data available for {event_date} {event_time}"}))
         return 0
 
