@@ -77,6 +77,13 @@ shell_command:
     --filter-paddock "{{ filter_paddock }}"
     --filter-season "{{ filter_season }}"
 
+  hfm_export_csv: >-
+    python3 /config/PaddiSense/hfm/python/hfm_backend.py export_csv
+    --filter-type "{{ filter_type }}"
+    --filter-paddock "{{ filter_paddock }}"
+    --filter-season "{{ filter_season }}"
+    --output-name "{{ output_name | default('hfm_export') }}"
+
   # --- Draft Commands (Multi-user support) ---
   hfm_load_draft: >-
     python3 /config/PaddiSense/hfm/python/hfm_backend.py load_draft
@@ -1747,6 +1754,52 @@ automation:
           message: "All 3 weather records captured automatically"
           notification_id: hfm_weather_complete
 
+  - id: hfm_update_crop_stage_options
+    alias: "HFM Update Crop Stage Options"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_events
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: 2
+      - variables:
+          stages: "{{ state_attr('sensor.hfm_events', 'crop_stages') or [] }}"
+          stage_names: >
+            {% set ns = namespace(names=['Select Stage']) %}
+            {% for s in stages | sort(attribute='order') %}
+              {% set ns.names = ns.names + [s.name] %}
+            {% endfor %}
+            {{ ns.names }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_selected_crop_stage
+        data:
+          options: "{{ stage_names }}"
+
+  - id: hfm_update_applicator_edit_options
+    alias: "HFM Update Applicator Edit Options"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_events
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: 2
+      - variables:
+          applicators: "{{ state_attr('sensor.hfm_events', 'active_applicators') or [] }}"
+          app_names: >
+            {% set ns = namespace(names=['Select Applicator']) %}
+            {% for a in applicators %}
+              {% set ns.names = ns.names + [a.name] %}
+            {% endfor %}
+            {{ ns.names }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_selected_applicator_for_edit
+        data:
+          options: "{{ app_names }}"
+
 
 # -----------------------------------------------------------------------------
 # Scripts - Form Submissions
@@ -2743,6 +2796,28 @@ script:
                   entity_id: input_number.hfm_product_count
                 data:
                   value: "{{ [1, event_data.products | length] | max }}"
+              # Update product options BEFORE selecting (fixes race condition)
+              - variables:
+                  category_filter: "{{ 'Fertiliser' if event_data.event_type == 'nutrient' else 'Chemical' }}"
+                  products: "{{ state_attr('sensor.ipm_products', 'products') or {} }}"
+                  product_list: "{{ products.values() | list if products is mapping else products }}"
+                  product_options: >
+                    {% set ns = namespace(names=[]) %}
+                    {% for p in product_list if p.category == category_filter %}
+                      {% set ns.names = ns.names + [p.name] %}
+                    {% endfor %}
+                    {{ ['Select Product'] + (ns.names | sort) if ns.names else ['Select Product'] }}
+              - service: input_select.set_options
+                target:
+                  entity_id:
+                    - input_select.hfm_selected_product
+                    - input_select.hfm_selected_product_2
+                    - input_select.hfm_selected_product_3
+                    - input_select.hfm_selected_product_4
+                    - input_select.hfm_selected_product_5
+                    - input_select.hfm_selected_product_6
+                data:
+                  options: "{{ product_options }}"
               - service: input_select.select_option
                 target:
                   entity_id: input_select.hfm_selected_product
@@ -2806,52 +2881,36 @@ script:
           notification_id: hfm_export
 
   hfm_export_selection:
-    alias: "HFM Export Selection"
+    alias: "HFM Export Selection CSV"
     icon: mdi:export
-    description: "Export events matching current filter selection"
+    description: "Export filtered events to CSV for download"
     sequence:
       - variables:
           filter_type: "{{ states('input_select.hfm_filter_event_type') }}"
           filter_paddock: "{{ states('input_select.hfm_filter_paddock') }}"
           filter_season: "{{ states('input_select.hfm_filter_season') }}"
-      - service: shell_command.hfm_export_filtered
+      - service: shell_command.hfm_export_csv
         data:
           filter_type: "{{ filter_type }}"
           filter_paddock: "{{ filter_paddock }}"
           filter_season: "{{ filter_season }}"
-      - delay: 1
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hfm_events
-      - service: persistent_notification.create
-        data:
-          title: "HFM Export Complete"
-          message: "Filtered events exported to /config/local_data/hfm/backups/"
-          notification_id: hfm_export
+          output_name: "hfm_export_selection"
 
   hfm_export_season:
-    alias: "HFM Export Season"
+    alias: "HFM Export Season CSV"
     icon: mdi:calendar-export
-    description: "Export all events for selected season"
+    description: "Export season events to CSV for download"
     sequence:
       - variables:
           filter_season: "{{ states('input_select.hfm_filter_season') }}"
       - condition: template
         value_template: "{{ filter_season != 'All Seasons' }}"
-      - service: shell_command.hfm_export_filtered
+      - service: shell_command.hfm_export_csv
         data:
           filter_type: "All Events"
           filter_paddock: "All Paddocks"
           filter_season: "{{ filter_season }}"
-      - delay: 1
-      - service: homeassistant.update_entity
-        target:
-          entity_id: sensor.hfm_events
-      - service: persistent_notification.create
-        data:
-          title: "HFM Season Export Complete"
-          message: "Events for {{ filter_season }} exported to /config/local_data/hfm/backups/"
-          notification_id: hfm_export
+          output_name: "hfm_export_season"
 
   # --- Crop Stage Management Scripts ---
 
@@ -2897,12 +2956,14 @@ script:
       - variables:
           selected_name: "{{ states('input_select.hfm_selected_crop_stage') }}"
           stages: "{{ state_attr('sensor.hfm_events', 'crop_stages') or [] }}"
-          stage: >
-            {% for s in stages if s.name == selected_name %}{{ s | tojson }}{% endfor %}
+          stage_id: >
+            {% for s in stages if s.name == selected_name %}{{ s.id }}{% endfor %}
+          stage_order: >
+            {% for s in stages if s.name == selected_name %}{{ s.order | default(1) }}{% endfor %}
+          stage_crop_parent: >
+            {% for s in stages if s.name == selected_name %}{{ s.crop_parent | default('All Crops') }}{% endfor %}
       - condition: template
-        value_template: "{{ stage != '' }}"
-      - variables:
-          stage_data: "{{ stage | from_json }}"
+        value_template: "{{ stage_id != '' }}"
       - service: input_select.select_option
         target:
           entity_id: input_select.hfm_crop_stage_editor_mode
@@ -2912,22 +2973,22 @@ script:
         target:
           entity_id: input_text.hfm_stage_edit_id
         data:
-          value: "{{ stage_data.id }}"
+          value: "{{ stage_id }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_stage_edit_name
         data:
-          value: "{{ stage_data.name }}"
+          value: "{{ selected_name }}"
       - service: input_number.set_value
         target:
           entity_id: input_number.hfm_stage_order
         data:
-          value: "{{ stage_data.order | default(1) }}"
+          value: "{{ stage_order }}"
       - service: input_select.select_option
         target:
           entity_id: input_select.hfm_crop_parent
         data:
-          option: "{{ stage_data.crop_parent | default('All Crops') }}"
+          option: "{{ stage_crop_parent }}"
 
   hfm_crop_stage_save:
     alias: "HFM Save Crop Stage"
@@ -3139,13 +3200,40 @@ script:
       - variables:
           selected_name: "{{ states('input_select.hfm_selected_applicator_for_edit') }}"
           applicators: "{{ state_attr('sensor.hfm_events', 'active_applicators') or [] }}"
-          app_json: >
-            {% for a in applicators if a.name == selected_name %}{{ a | tojson }}{% endfor %}
+          app_id: >
+            {% for a in applicators if a.name == selected_name %}{{ a.id }}{% endfor %}
+          app_type: >
+            {% for a in applicators if a.name == selected_name %}{{ a.type }}{% endfor %}
+          attr_tank_size: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.tank_size_l | default('') }}{% endfor %}
+          attr_boom_width: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.boom_width_m | default(a.attributes.spray_width_m) | default('') }}{% endfor %}
+          attr_nozzle_size: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.nozzle_size | default('') }}{% endfor %}
+          attr_nozzle_type: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.nozzle_type | default('') }}{% endfor %}
+          attr_pressure: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.operating_pressure | default(a.attributes.operating_pressure_bar) | default('') }}{% endfor %}
+          attr_capacity: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.capacity_kg | default(a.attributes.capacity_t) | default('') }}{% endfor %}
+          attr_spreader_width: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.spreader_width_m | default(a.attributes.spread_width_m) | default('') }}{% endfor %}
+          attr_drop_point: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.drop_point_m | default('') }}{% endfor %}
+          attr_calibration: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.calibration_constant | default(a.attributes.calibration_date) | default('') }}{% endfor %}
+          attr_aircraft: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.aircraft_type | default('') }}{% endfor %}
+          attr_swath_width: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.swath_width_m | default('') }}{% endfor %}
+          attr_operator: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.operator | default(a.attributes.operator_name) | default('') }}{% endfor %}
+          attr_system_name: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.system_name | default('') }}{% endfor %}
+          attr_injection_rate: >
+            {% for a in applicators if a.name == selected_name %}{{ a.attributes.injection_rate_l_hr | default('') }}{% endfor %}
       - condition: template
-        value_template: "{{ app_json != '' }}"
-      - variables:
-          app: "{{ app_json | from_json }}"
-          attrs: "{{ app.attributes | default({}) }}"
+        value_template: "{{ app_id != '' }}"
       - service: input_select.select_option
         target:
           entity_id: input_select.hfm_applicator_editor_mode
@@ -3155,88 +3243,88 @@ script:
         target:
           entity_id: input_text.hfm_applicator_id
         data:
-          value: "{{ app.id }}"
+          value: "{{ app_id }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_name
         data:
-          value: "{{ app.name }}"
+          value: "{{ selected_name }}"
       - service: input_select.select_option
         target:
           entity_id: input_select.hfm_applicator_type
         data:
-          option: "{{ app.type }}"
+          option: "{{ app_type }}"
       # Load type-specific attributes
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_tank_size
         data:
-          value: "{{ attrs.tank_size_l | default('') }}"
+          value: "{{ attr_tank_size }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_boom_width
         data:
-          value: "{{ attrs.boom_width_m | default('') }}"
+          value: "{{ attr_boom_width }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_nozzle_size
         data:
-          value: "{{ attrs.nozzle_size | default('') }}"
+          value: "{{ attr_nozzle_size }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_nozzle_type
         data:
-          value: "{{ attrs.nozzle_type | default('') }}"
+          value: "{{ attr_nozzle_type }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_pressure
         data:
-          value: "{{ attrs.operating_pressure | default('') }}"
+          value: "{{ attr_pressure }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_capacity
         data:
-          value: "{{ attrs.capacity_kg | default('') }}"
+          value: "{{ attr_capacity }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_spreader_width
         data:
-          value: "{{ attrs.spreader_width_m | default('') }}"
+          value: "{{ attr_spreader_width }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_drop_point
         data:
-          value: "{{ attrs.drop_point_m | default('') }}"
+          value: "{{ attr_drop_point }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_calibration
         data:
-          value: "{{ attrs.calibration_constant | default('') }}"
+          value: "{{ attr_calibration }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_aircraft
         data:
-          value: "{{ attrs.aircraft_type | default('') }}"
+          value: "{{ attr_aircraft }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_swath_width
         data:
-          value: "{{ attrs.swath_width_m | default('') }}"
+          value: "{{ attr_swath_width }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_operator
         data:
-          value: "{{ attrs.operator | default('') }}"
+          value: "{{ attr_operator }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_system_name
         data:
-          value: "{{ attrs.system_name | default('') }}"
+          value: "{{ attr_system_name }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hfm_applicator_injection_rate
         data:
-          value: "{{ attrs.injection_rate_l_hr | default('') }}"
+          value: "{{ attr_injection_rate }}"
 
   hfm_applicator_save:
     alias: "HFM Save Applicator"
@@ -3312,6 +3400,7 @@ script:
                   id: "{{ app_id }}"
                   name: "{{ app_name }}"
                   type: "{{ app_type }}"
+                  active: "true"
                   attributes: "{{ attrs_json }}"
               - service: persistent_notification.create
                 data:

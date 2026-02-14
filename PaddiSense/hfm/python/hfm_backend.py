@@ -24,11 +24,13 @@ Draft Commands (Multi-user support):
 """
 
 import argparse
+import csv
 import json
 import os
 import sys
 import sqlite3
 from datetime import datetime, timedelta
+from io import StringIO
 from pathlib import Path
 from typing import Any, Optional
 import secrets
@@ -43,6 +45,7 @@ CONFIG_FILE = DATA_DIR / "config.json"
 EVENTS_FILE = DATA_DIR / "events.json"
 APPLICATORS_FILE = DATA_DIR / "applicators.json"
 BACKUPS_DIR = DATA_DIR / "backups"
+CSV_EXPORT_DIR = Path("/config/www/hfm_exports")
 DRAFTS_DIR = DATA_DIR / "drafts"
 VERSION_FILE = Path("/config/PaddiSense/hfm/VERSION")
 REGISTRY_FILE = Path("/config/local_data/registry/config.json")
@@ -990,6 +993,175 @@ def cmd_export_filtered(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_export_csv(args: argparse.Namespace) -> int:
+    """Export events to CSV file for browser download.
+
+    Creates one row per event/paddock combination.
+    Saves to /config/www/hfm_exports/ for web access.
+    """
+    data = load_events()
+    events = data.get("events", [])
+
+    filter_type = getattr(args, "filter_type", "All Events")
+    filter_paddock = getattr(args, "filter_paddock", "All Paddocks")
+    filter_season = getattr(args, "filter_season", "All Seasons")
+    output_name = getattr(args, "output_name", "")
+
+    # Map filter type labels to event types
+    type_map = {
+        "Chemical": "chemical",
+        "Nutrient": "nutrient",
+        "Irrigation": "irrigation",
+        "Crop Stage": "crop_stage",
+    }
+
+    # Filter events
+    filtered_events = []
+    for e in events:
+        event_date = e.get("event_date") or e.get("application_timing", {}).get("date", "")
+
+        if filter_type != "All Events":
+            expected_type = type_map.get(filter_type, filter_type.lower())
+            if e.get("event_type") != expected_type:
+                continue
+
+        if filter_paddock != "All Paddocks":
+            paddock_name = e.get("paddock", {}).get("name", "")
+            if paddock_name != filter_paddock:
+                continue
+
+        if filter_season != "All Seasons":
+            event_season = get_event_season(event_date)
+            if event_season != filter_season:
+                continue
+
+        filtered_events.append(e)
+
+    # Ensure export directory exists
+    CSV_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Generate filename - use output_name if provided, otherwise generate
+    if output_name:
+        filename = f"{output_name}.csv"
+    else:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filter_parts = []
+        if filter_season != "All Seasons":
+            filter_parts.append(filter_season.replace("/", "-"))
+        if filter_type != "All Events":
+            filter_parts.append(filter_type.replace(" ", "_"))
+        if filter_paddock != "All Paddocks":
+            filter_parts.append(filter_paddock.replace(" ", "_"))
+
+        filter_suffix = "_".join(filter_parts) if filter_parts else "all"
+        filename = f"hfm_events_{filter_suffix}_{timestamp}.csv"
+    export_path = CSV_EXPORT_DIR / filename
+
+    # CSV columns
+    fieldnames = [
+        "date", "season", "event_type", "paddock", "farm",
+        "product_1", "rate_1", "unit_1",
+        "product_2", "rate_2", "unit_2",
+        "product_3", "rate_3", "unit_3",
+        "method", "applicator", "water_rate_l_ha",
+        "irrigation_type", "crop_stage",
+        "start_time", "duration_min",
+        "notes", "recorded_by", "recorded_at"
+    ]
+
+    # Build rows - one per paddock
+    rows = []
+    for e in filtered_events:
+        event_date = e.get("event_date") or e.get("application_timing", {}).get("date", "")
+        event_type = e.get("event_type", "")
+
+        # Get paddock info - handle both single paddock and multi-paddock events
+        paddock_obj = e.get("paddock", {})
+        paddock_name = paddock_obj.get("name", "")
+        farm_name = e.get("farm", {}).get("name", "")
+
+        # If no single paddock, check paddocks array
+        paddock_list = [paddock_name] if paddock_name else []
+        if not paddock_list and e.get("paddocks"):
+            # Multi-paddock event - we'll create one row per paddock
+            # But we need paddock names, not IDs
+            paddock_list = e.get("paddocks", [])
+
+        if not paddock_list:
+            paddock_list = ["Unknown"]
+
+        # Get products (up to 3)
+        products = e.get("products", [])
+        p1 = products[0] if len(products) > 0 else {}
+        p2 = products[1] if len(products) > 1 else {}
+        p3 = products[2] if len(products) > 2 else {}
+
+        # Get timing info
+        timing = e.get("application_timing", {})
+        start_time = timing.get("start_time", "")
+        duration = timing.get("duration_minutes", "")
+
+        # Base row data (same for all paddocks in multi-paddock event)
+        base_row = {
+            "date": event_date,
+            "season": get_event_season(event_date),
+            "event_type": event_type,
+            "farm": farm_name,
+            "product_1": p1.get("product_name", ""),
+            "rate_1": p1.get("rate", ""),
+            "unit_1": p1.get("rate_unit", ""),
+            "product_2": p2.get("product_name", ""),
+            "rate_2": p2.get("rate", ""),
+            "unit_2": p2.get("rate_unit", ""),
+            "product_3": p3.get("product_name", ""),
+            "rate_3": p3.get("rate", ""),
+            "unit_3": p3.get("rate_unit", ""),
+            "method": e.get("application_method", ""),
+            "applicator": e.get("applicator", ""),
+            "water_rate_l_ha": e.get("water_rate", ""),
+            "irrigation_type": e.get("irrigation_type", ""),
+            "crop_stage": e.get("crop_stage", ""),
+            "start_time": start_time,
+            "duration_min": duration,
+            "notes": e.get("notes", ""),
+            "recorded_by": e.get("recorded_by", ""),
+            "recorded_at": e.get("recorded_at", ""),
+        }
+
+        # Create one row per paddock
+        for paddock in paddock_list:
+            row = base_row.copy()
+            # Handle paddock as either name string or ID
+            if isinstance(paddock, str):
+                row["paddock"] = paddock
+            else:
+                row["paddock"] = str(paddock)
+            rows.append(row)
+
+    # Write CSV
+    try:
+        with open(export_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    except IOError as e:
+        print(f"ERROR: Failed to write CSV: {e}", file=sys.stderr)
+        return 1
+
+    # Clean up old CSV exports (keep last 5)
+    try:
+        csv_files = sorted(CSV_EXPORT_DIR.glob("hfm_events_*.csv"),
+                          key=lambda f: f.stat().st_mtime, reverse=True)
+        for old_file in csv_files[5:]:
+            old_file.unlink()
+    except Exception:
+        pass  # Ignore cleanup errors
+
+    # Output filename for script to use
+    print(f"OK:csv_exported:{filename}:rows:{len(rows)}")
+    return 0
+
+
 # =============================================================================
 # Draft Commands
 # =============================================================================
@@ -1637,6 +1809,13 @@ def main():
     export_filtered_p.add_argument("--filter-paddock", default="All Paddocks", help="Paddock filter")
     export_filtered_p.add_argument("--filter-season", default="All Seasons", help="Season filter")
 
+    # export_csv (browser download)
+    export_csv_p = subparsers.add_parser("export_csv", help="Export events to CSV for browser download")
+    export_csv_p.add_argument("--filter-type", default="All Events", help="Event type filter")
+    export_csv_p.add_argument("--filter-paddock", default="All Paddocks", help="Paddock filter")
+    export_csv_p.add_argument("--filter-season", default="All Seasons", help="Season filter")
+    export_csv_p.add_argument("--output-name", default="", help="Output filename (without .csv extension)")
+
     # --- Draft commands ---
 
     # load_draft
@@ -1717,6 +1896,7 @@ def main():
         "delete_device": cmd_delete_device,
         "export": cmd_export,
         "export_filtered": cmd_export_filtered,
+        "export_csv": cmd_export_csv,
         "load_draft": cmd_load_draft,
         "update_draft": cmd_update_draft,
         "clear_draft": cmd_clear_draft,

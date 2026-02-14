@@ -546,29 +546,45 @@ views:
                         text: "Delete this event?"
 
               #----------------------------------------------------------------
-              # EXPORT BUTTONS
+              # EXPORT BUTTONS (CSV download)
               #----------------------------------------------------------------
               - type: horizontal-stack
                 cards:
                   - type: custom:button-card
                     template: hfm_secondary
-                    name: Export Selection
-                    icon: mdi:export
+                    name: Export CSV
+                    icon: mdi:file-download
                     tap_action:
-                      action: call-service
-                      service: script.hfm_export_selection
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: script.hfm_export_selection
+                            - delay: 2000
+                            - service: browser_mod.navigate
+                              data:
+                                path: /local/hfm_exports/hfm_export_selection.csv
                       confirmation:
-                        text: "Export filtered events?"
+                        text: "Export filtered events to CSV?"
 
                   - type: custom:button-card
                     template: hfm_secondary
                     name: Export Season
                     icon: mdi:calendar-export
                     tap_action:
-                      action: call-service
-                      service: script.hfm_export_season
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: script.hfm_export_season
+                            - delay: 2000
+                            - service: browser_mod.navigate
+                              data:
+                                path: /local/hfm_exports/hfm_export_season.csv
                       confirmation:
-                        text: "Export all events for selected season?"
+                        text: "Export season events to CSV?"
 
               #----------------------------------------------------------------
               # EVENTS LIST (filtered)
@@ -688,46 +704,77 @@ views:
                           const statusColor = isPending ? '#ffc107' : '#28a745';
                           const statusIcon = isPending ? 'mdi:clock-alert' : 'mdi:check-circle';
 
-                          // Details based on type
-                          let detailHtml = '';
+                          // Build card HTML matching Step 6 confirm style
+                          let cardHtml = `<div style="background:var(--card-background-color,#fff);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">`;
+
+                          // Header with icon, type, date and status
+                          cardHtml += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">`;
+                          cardHtml += `<div style="width:50px;height:50px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:28px;color:${cfg.color};"></ha-icon>
+                                      </div>`;
+                          cardHtml += `<div style="flex:1;">`;
+                          cardHtml += `<div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);">${cfg.label}</div>
+                                        <ha-icon icon="${statusIcon}" style="--mdc-icon-size:20px;color:${statusColor};"></ha-icon>
+                                      </div>`;
+                          cardHtml += `<div style="font-size:14px;color:var(--secondary-text-color);">${safeStr(e.event_date)}</div>`;
+                          cardHtml += `</div></div>`;
+
+                          // Details grid
+                          cardHtml += `<div style="display:grid;gap:8px;">`;
+
+                          // Paddock row
+                          cardHtml += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                        <span style="font-size:14px;color:var(--secondary-text-color);">Paddock</span>
+                                        <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${paddockStr}</span>
+                                      </div>`;
+
+                          // Type-specific details
                           if (eType === 'nutrient' || eType === 'chemical') {
                             const products = e.products || [];
                             if (products.length > 0) {
-                              detailHtml = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">`;
-                              for (let pr = 0; pr < products.length; pr++) {
-                                const prod = products[pr];
+                              cardHtml += `<div style="padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:6px;">Products (${products.length})</div>`;
+                              for (const prod of products) {
                                 const pName = safeStr(prod.product_name);
                                 const pRate = prod.rate || '';
                                 const pUnit = safeStr(prod.rate_unit);
-                                detailHtml += `<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;">
-                                  <span style="color:var(--primary-text-color);">${pName}</span>
-                                  <span style="color:var(--secondary-text-color);font-weight:500;">${pRate} ${pUnit}</span>
-                                </div>`;
+                                cardHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;">
+                                              <span style="font-size:14px;font-weight:500;color:var(--primary-text-color);">${pName}</span>
+                                              <span style="font-size:14px;color:var(--secondary-text-color);">${pRate} ${pUnit}</span>
+                                            </div>`;
                               }
-                              detailHtml += `</div>`;
+                              cardHtml += `</div>`;
+                            }
+                            // Method if available
+                            if (e.application_method) {
+                              cardHtml += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Method</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${safeStr(e.application_method)}</span>
+                                          </div>`;
                             }
                           } else if (eType === 'irrigation' && e.irrigation_type) {
-                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:4px;">Type: ${safeStr(e.irrigation_type)}</div>`;
+                            cardHtml += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                          <span style="font-size:14px;color:var(--secondary-text-color);">Type</span>
+                                          <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${safeStr(e.irrigation_type)}</span>
+                                        </div>`;
                           } else if (eType === 'crop_stage' && e.crop_stage) {
-                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:4px;">Stage: ${safeStr(e.crop_stage)}</div>`;
+                            cardHtml += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                          <span style="font-size:14px;color:var(--secondary-text-color);">Stage</span>
+                                          <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${safeStr(e.crop_stage)}</span>
+                                        </div>`;
                           }
 
-                          html += `
-                            <div style="background:var(--card-background-color,#fff);border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">
-                              <div style="display:flex;align-items:flex-start;gap:12px;">
-                                <div style="width:44px;height:44px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                  <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:24px;color:${cfg.color};"></ha-icon>
-                                </div>
-                                <div style="flex:1;min-width:0;">
-                                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                                    <div style="font-size:15px;font-weight:700;color:var(--primary-text-color);">${cfg.label}</div>
-                                    <ha-icon icon="${statusIcon}" style="--mdc-icon-size:18px;color:${statusColor};"></ha-icon>
-                                  </div>
-                                  <div style="font-size:13px;color:var(--secondary-text-color);">${safeStr(e.event_date)} • ${paddockStr}</div>
-                                  ${detailHtml}
-                                </div>
-                              </div>
-                            </div>`;
+                          // Notes if present
+                          if (e.notes) {
+                            cardHtml += `<div style="padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                          <div style="font-size:12px;color:var(--secondary-text-color);margin-bottom:4px;">Notes</div>
+                                          <div style="font-size:13px;color:var(--primary-text-color);">${safeStr(e.notes)}</div>
+                                        </div>`;
+                          }
+
+                          cardHtml += `</div></div>`;
+                          html += cardHtml;
                         }
 
                         if (events.length > 20) {
