@@ -712,20 +712,65 @@ def cmd_add_crop_stage(args: argparse.Namespace) -> int:
             print(f"ERROR: Crop stage '{args.stage_id}' already exists.", file=sys.stderr)
             return 1
 
-    # Determine order (add to end)
-    max_order = max((s.get("order", 0) for s in stages), default=0)
+    # Determine order (use provided or add to end)
+    if args.order:
+        order = int(args.order)
+    else:
+        max_order = max((s.get("order", 0) for s in stages), default=0)
+        order = max_order + 1
 
-    stages.append({
+    new_stage = {
         "id": args.stage_id,
         "name": args.name,
-        "order": max_order + 1,
-    })
+        "order": order,
+    }
 
+    # Add crop parent if provided
+    if args.crop_parent:
+        new_stage["crop_parent"] = args.crop_parent
+
+    stages.append(new_stage)
     config["crop_stages"] = stages
     if not save_config(config):
         return 1
 
     print(f"OK:crop_stage_added:{args.stage_id}")
+    return 0
+
+
+def cmd_edit_crop_stage(args: argparse.Namespace) -> int:
+    """Edit an existing crop stage."""
+    config = load_config()
+    if not config:
+        print("ERROR: HFM not initialized.", file=sys.stderr)
+        return 1
+
+    stages = config.get("crop_stages", [])
+
+    # Find the stage
+    stage_idx = None
+    for i, s in enumerate(stages):
+        if s["id"] == args.stage_id:
+            stage_idx = i
+            break
+
+    if stage_idx is None:
+        print(f"ERROR: Crop stage '{args.stage_id}' not found.", file=sys.stderr)
+        return 1
+
+    # Update fields if provided
+    if args.name:
+        stages[stage_idx]["name"] = args.name
+    if args.order:
+        stages[stage_idx]["order"] = int(args.order)
+    if args.crop_parent:
+        stages[stage_idx]["crop_parent"] = args.crop_parent
+
+    config["crop_stages"] = stages
+    if not save_config(config):
+        return 1
+
+    print(f"OK:crop_stage_edited:{args.stage_id}")
     return 0
 
 
@@ -793,6 +838,31 @@ def cmd_delete_device(args: argparse.Namespace) -> int:
     return 0
 
 
+def cleanup_old_backups(max_backups: int = 3) -> int:
+    """Delete oldest backups, keeping only max_backups."""
+    if not BACKUPS_DIR.exists():
+        return 0
+
+    backups = list(BACKUPS_DIR.glob("hfm_export_*.json"))
+    if len(backups) <= max_backups:
+        return 0
+
+    # Sort by modification time (oldest first)
+    backups.sort(key=lambda f: f.stat().st_mtime)
+
+    # Delete oldest until we have max_backups
+    deleted = 0
+    while len(backups) > max_backups:
+        oldest = backups.pop(0)
+        try:
+            oldest.unlink()
+            deleted += 1
+        except IOError:
+            pass
+
+    return deleted
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     """Export events to backup file."""
     data = load_events()
@@ -815,7 +885,108 @@ def cmd_export(args: argparse.Namespace) -> int:
     if not save_json(export_path, export_data):
         return 1
 
+    # Cleanup old backups (keep 3)
+    cleanup_old_backups(3)
+
     print(f"OK:exported:{export_path}")
+    return 0
+
+
+def get_event_season(event_date: str) -> str:
+    """Calculate season from event date (July-June agricultural year)."""
+    if not event_date:
+        return ""
+    try:
+        parts = event_date.split("-")
+        year = int(parts[0])
+        month = int(parts[1])
+        if month >= 7:
+            return f"{year}/{year + 1}"
+        else:
+            return f"{year - 1}/{year}"
+    except (ValueError, IndexError):
+        return ""
+
+
+def cmd_export_filtered(args: argparse.Namespace) -> int:
+    """Export filtered events to backup file."""
+    data = load_events()
+    config = load_config()
+    events = data.get("events", [])
+
+    filter_type = getattr(args, "filter_type", "All Events")
+    filter_paddock = getattr(args, "filter_paddock", "All Paddocks")
+    filter_season = getattr(args, "filter_season", "All Seasons")
+
+    # Map filter type labels to event types
+    type_map = {
+        "Chemical": "chemical",
+        "Nutrient": "nutrient",
+        "Irrigation": "irrigation",
+        "Crop Stage": "crop_stage",
+    }
+
+    filtered_events = []
+    for e in events:
+        # Get event date from application_timing or event_date
+        event_date = e.get("event_date") or e.get("application_timing", {}).get("date", "")
+
+        # Type filter
+        if filter_type != "All Events":
+            expected_type = type_map.get(filter_type, filter_type.lower())
+            if e.get("event_type") != expected_type:
+                continue
+
+        # Paddock filter
+        if filter_paddock != "All Paddocks":
+            paddock_name = e.get("paddock", {}).get("name", "")
+            if paddock_name != filter_paddock:
+                continue
+
+        # Season filter
+        if filter_season != "All Seasons":
+            event_season = get_event_season(event_date)
+            if event_season != filter_season:
+                continue
+
+        filtered_events.append(e)
+
+    # Create export package
+    filter_desc = []
+    if filter_type != "All Events":
+        filter_desc.append(filter_type)
+    if filter_paddock != "All Paddocks":
+        filter_desc.append(filter_paddock)
+    if filter_season != "All Seasons":
+        filter_desc.append(filter_season)
+
+    export_data = {
+        "export_type": "hfm_events_filtered",
+        "exported_at": now_iso(),
+        "version": get_version(),
+        "filters": {
+            "type": filter_type,
+            "paddock": filter_paddock,
+            "season": filter_season,
+        },
+        "config": config,
+        "events": filtered_events,
+        "event_count": len(filtered_events),
+    }
+
+    # Generate filename with filter info
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filter_suffix = "_".join(filter_desc).replace("/", "-").replace(" ", "_") if filter_desc else "all"
+    filename = f"hfm_export_{filter_suffix}_{timestamp}.json"
+    export_path = BACKUPS_DIR / filename
+
+    if not save_json(export_path, export_data):
+        return 1
+
+    # Cleanup old backups (keep 3)
+    cleanup_old_backups(3)
+
+    print(f"OK:exported:{export_path}:count:{len(filtered_events)}")
     return 0
 
 
@@ -1433,6 +1604,15 @@ def main():
     add_stage_p = subparsers.add_parser("add_crop_stage", help="Add a crop stage")
     add_stage_p.add_argument("--stage_id", required=True, help="Unique stage ID")
     add_stage_p.add_argument("--name", required=True, help="Display name")
+    add_stage_p.add_argument("--order", help="Display order (number)")
+    add_stage_p.add_argument("--crop_parent", help="Crop parent (Rice, Cotton, Wheat, Barley, Canola)")
+
+    # edit_crop_stage
+    edit_stage_p = subparsers.add_parser("edit_crop_stage", help="Edit a crop stage")
+    edit_stage_p.add_argument("--stage_id", required=True, help="Stage ID to edit")
+    edit_stage_p.add_argument("--name", help="New display name")
+    edit_stage_p.add_argument("--order", help="New display order")
+    edit_stage_p.add_argument("--crop_parent", help="Crop parent (Rice, Cotton, Wheat, Barley, Canola)")
 
     # delete_crop_stage
     del_stage_p = subparsers.add_parser("delete_crop_stage", help="Delete a crop stage")
@@ -1450,6 +1630,12 @@ def main():
 
     # export
     subparsers.add_parser("export", help="Export events to backup")
+
+    # export_filtered
+    export_filtered_p = subparsers.add_parser("export_filtered", help="Export filtered events to backup")
+    export_filtered_p.add_argument("--filter-type", default="All Events", help="Event type filter")
+    export_filtered_p.add_argument("--filter-paddock", default="All Paddocks", help="Paddock filter")
+    export_filtered_p.add_argument("--filter-season", default="All Seasons", help="Season filter")
 
     # --- Draft commands ---
 
@@ -1525,10 +1711,12 @@ def main():
         "delete_event": cmd_delete_event,
         "confirm_event": cmd_confirm_event,
         "add_crop_stage": cmd_add_crop_stage,
+        "edit_crop_stage": cmd_edit_crop_stage,
         "delete_crop_stage": cmd_delete_crop_stage,
         "add_device": cmd_add_device,
         "delete_device": cmd_delete_device,
         "export": cmd_export,
+        "export_filtered": cmd_export_filtered,
         "load_draft": cmd_load_draft,
         "update_draft": cmd_update_draft,
         "clear_draft": cmd_clear_draft,

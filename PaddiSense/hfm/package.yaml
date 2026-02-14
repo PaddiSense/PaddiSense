@@ -51,6 +51,13 @@ shell_command:
     python3 /config/PaddiSense/hfm/python/hfm_backend.py delete_crop_stage
     --stage_id "{{ stage_id }}"
 
+  hfm_edit_crop_stage: >-
+    python3 /config/PaddiSense/hfm/python/hfm_backend.py edit_crop_stage
+    --stage_id "{{ stage_id }}"
+    --name "{{ name | default("") }}"
+    --order "{{ order | default("") }}"
+    --crop_parent "{{ crop_parent | default("") }}"
+
   hfm_add_device: >-
     python3 /config/PaddiSense/hfm/python/hfm_backend.py add_device
     --device_id "{{ device_id }}"
@@ -346,6 +353,50 @@ input_select:
     options:
       - Select Applicator
 
+  # Crop Stage Management (Settings)
+  hfm_crop_stage_editor_mode:
+    name: HFM Crop Stage Editor Mode
+    icon: mdi:pencil-box
+    options:
+      - View
+      - Add New
+      - Edit Existing
+    initial: View
+
+  hfm_selected_crop_stage:
+    name: HFM Selected Crop Stage
+    icon: mdi:sprout
+    options:
+      - Select Stage
+
+  hfm_crop_parent:
+    name: HFM Crop Parent
+    icon: mdi:seed
+    options:
+      - All Crops
+      - Rice
+      - Cotton
+      - Wheat
+      - Barley
+      - Canola
+    initial: All Crops
+
+  # Applicator Management (Settings)
+  hfm_applicator_editor_mode:
+    name: HFM Applicator Editor Mode
+    icon: mdi:pencil-box
+    options:
+      - View
+      - Add New
+      - Edit Existing
+    initial: View
+
+  hfm_selected_applicator_for_edit:
+    name: HFM Applicator for Edit
+    icon: mdi:tractor-variant
+    options:
+      - Select Applicator
+
   # Farm Selection
   hfm_selected_farm:
     name: HFM Selected Farm
@@ -490,6 +541,93 @@ input_text:
     icon: mdi:code-json
     max: 255
 
+  # Crop Stage Editor (Settings)
+  hfm_stage_edit_id:
+    name: HFM Stage Edit ID
+    icon: mdi:identifier
+    max: 50
+
+  hfm_stage_edit_name:
+    name: HFM Stage Edit Name
+    icon: mdi:label
+    max: 100
+
+  hfm_stage_edit_order:
+    name: HFM Stage Edit Order
+    icon: mdi:sort-numeric-ascending
+    max: 10
+
+  # Applicator Editor - Type-Specific Attributes (Settings)
+  hfm_applicator_tank_size:
+    name: HFM Applicator Tank Size (L)
+    icon: mdi:storage-tank
+    max: 20
+
+  hfm_applicator_boom_width:
+    name: HFM Applicator Boom Width (m)
+    icon: mdi:arrow-expand-horizontal
+    max: 20
+
+  hfm_applicator_nozzle_size:
+    name: HFM Applicator Nozzle Size
+    icon: mdi:water-circle
+    max: 20
+
+  hfm_applicator_nozzle_type:
+    name: HFM Applicator Nozzle Type
+    icon: mdi:spray
+    max: 50
+
+  hfm_applicator_pressure:
+    name: HFM Applicator Pressure
+    icon: mdi:gauge
+    max: 20
+
+  hfm_applicator_capacity:
+    name: HFM Applicator Capacity (kg)
+    icon: mdi:weight-kilogram
+    max: 20
+
+  hfm_applicator_spreader_width:
+    name: HFM Applicator Spreader Width (m)
+    icon: mdi:arrow-expand-horizontal
+    max: 20
+
+  hfm_applicator_drop_point:
+    name: HFM Applicator Drop Point (m)
+    icon: mdi:target
+    max: 20
+
+  hfm_applicator_calibration:
+    name: HFM Applicator Calibration Const
+    icon: mdi:chart-line
+    max: 20
+
+  hfm_applicator_aircraft:
+    name: HFM Applicator Aircraft Type
+    icon: mdi:airplane
+    max: 50
+
+  hfm_applicator_swath_width:
+    name: HFM Applicator Swath Width (m)
+    icon: mdi:arrow-expand-horizontal
+    max: 20
+
+  hfm_applicator_operator:
+    name: HFM Applicator Operator
+    icon: mdi:account
+    max: 100
+
+  hfm_applicator_system_name:
+    name: HFM Applicator System Name
+    icon: mdi:pipe
+    max: 100
+
+  hfm_applicator_injection_rate:
+    name: HFM Applicator Injection Rate (L/hr)
+    icon: mdi:needle
+    max: 20
+
   # Application Timing
   hfm_start_time:
     name: HFM Start Time
@@ -541,6 +679,16 @@ input_number:
     initial: 100
     mode: box
     unit_of_measurement: "L/ha"
+
+  # Crop Stage Editor (Settings)
+  hfm_stage_order:
+    name: HFM Stage Order
+    icon: mdi:sort-numeric-ascending
+    min: 1
+    max: 99
+    step: 1
+    initial: 1
+    mode: box
 
 input_boolean:
   hfm_edit_mode:
@@ -2705,8 +2853,220 @@ script:
           message: "Events for {{ filter_season }} exported to /config/local_data/hfm/backups/"
           notification_id: hfm_export
 
+  # --- Crop Stage Management Scripts ---
+
+  hfm_crop_stage_start_add:
+    alias: "HFM Start Add Crop Stage"
+    icon: mdi:plus
+    description: "Clear form and set mode to Add New"
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_crop_stage_editor_mode
+        data:
+          option: "Add New"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_stage_edit_id
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_stage_edit_name
+        data:
+          value: ""
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.hfm_stage_order
+        data:
+          value: >
+            {% set stages = state_attr('sensor.hfm_events', 'crop_stages') or [] %}
+            {% set max_order = stages | map(attribute='order') | list | max | default(0) %}
+            {{ max_order + 1 }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_crop_parent
+        data:
+          option: "All Crops"
+
+  hfm_crop_stage_start_edit:
+    alias: "HFM Start Edit Crop Stage"
+    icon: mdi:pencil
+    description: "Load selected stage into form"
+    sequence:
+      - variables:
+          selected_name: "{{ states('input_select.hfm_selected_crop_stage') }}"
+          stages: "{{ state_attr('sensor.hfm_events', 'crop_stages') or [] }}"
+          stage: >
+            {% for s in stages if s.name == selected_name %}{{ s | tojson }}{% endfor %}
+      - condition: template
+        value_template: "{{ stage != '' }}"
+      - variables:
+          stage_data: "{{ stage | from_json }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_crop_stage_editor_mode
+        data:
+          option: "Edit Existing"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_stage_edit_id
+        data:
+          value: "{{ stage_data.id }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_stage_edit_name
+        data:
+          value: "{{ stage_data.name }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.hfm_stage_order
+        data:
+          value: "{{ stage_data.order | default(1) }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_crop_parent
+        data:
+          option: "{{ stage_data.crop_parent | default('All Crops') }}"
+
+  hfm_crop_stage_save:
+    alias: "HFM Save Crop Stage"
+    icon: mdi:content-save
+    description: "Add or update crop stage based on mode"
+    sequence:
+      - variables:
+          mode: "{{ states('input_select.hfm_crop_stage_editor_mode') }}"
+          stage_id: "{{ states('input_text.hfm_stage_edit_id') }}"
+          stage_name: "{{ states('input_text.hfm_stage_edit_name') }}"
+          stage_order: "{{ states('input_number.hfm_stage_order') | int }}"
+          crop_parent: "{{ states('input_select.hfm_crop_parent') }}"
+      - condition: template
+        value_template: "{{ stage_name != '' }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ mode == 'Add New' }}"
+            sequence:
+              - variables:
+                  new_id: "{{ stage_name | lower | replace(' ', '_') | regex_replace('[^a-z0-9_]', '') }}"
+              - service: shell_command.hfm_add_crop_stage
+                data:
+                  stage_id: "{{ new_id }}"
+                  name: "{{ stage_name }}"
+                  order: "{{ stage_order }}"
+                  crop_parent: "{{ crop_parent if crop_parent != 'All Crops' else '' }}"
+              - service: persistent_notification.create
+                data:
+                  title: "Crop Stage Added"
+                  message: "{{ stage_name }} has been added."
+                  notification_id: hfm_stage_saved
+          - conditions:
+              - condition: template
+                value_template: "{{ mode == 'Edit Existing' }}"
+            sequence:
+              - service: shell_command.hfm_edit_crop_stage
+                data:
+                  stage_id: "{{ stage_id }}"
+                  name: "{{ stage_name }}"
+                  order: "{{ stage_order }}"
+                  crop_parent: "{{ crop_parent if crop_parent != 'All Crops' else '' }}"
+              - service: persistent_notification.create
+                data:
+                  title: "Crop Stage Updated"
+                  message: "{{ stage_name }} has been updated."
+                  notification_id: hfm_stage_saved
+      - delay: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_events
+      - service: script.hfm_crop_stage_clear_form
+      - service: script.hfm_refresh_crop_stage_dropdown
+
+  hfm_crop_stage_delete:
+    alias: "HFM Delete Crop Stage"
+    icon: mdi:delete
+    description: "Delete the selected crop stage"
+    sequence:
+      - variables:
+          selected_name: "{{ states('input_select.hfm_selected_crop_stage') }}"
+          stages: "{{ state_attr('sensor.hfm_events', 'crop_stages') or [] }}"
+          stage_id: >
+            {% for s in stages if s.name == selected_name %}{{ s.id }}{% endfor %}
+      - condition: template
+        value_template: "{{ stage_id != '' }}"
+      - service: shell_command.hfm_delete_crop_stage
+        data:
+          stage_id: "{{ stage_id }}"
+      - delay: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_events
+      - service: script.hfm_crop_stage_clear_form
+      - service: script.hfm_refresh_crop_stage_dropdown
+      - service: persistent_notification.create
+        data:
+          title: "Crop Stage Deleted"
+          message: "{{ selected_name }} has been deleted."
+          notification_id: hfm_stage_deleted
+
+  hfm_crop_stage_clear_form:
+    alias: "HFM Clear Crop Stage Form"
+    icon: mdi:close-circle
+    description: "Reset all fields and return to View mode"
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_crop_stage_editor_mode
+        data:
+          option: "View"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_stage_edit_id
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_stage_edit_name
+        data:
+          value: ""
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.hfm_stage_order
+        data:
+          value: 1
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_crop_parent
+        data:
+          option: "All Crops"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_selected_crop_stage
+        data:
+          option: "Select Stage"
+
+  hfm_refresh_crop_stage_dropdown:
+    alias: "HFM Refresh Crop Stage Dropdown"
+    icon: mdi:refresh
+    description: "Populate crop stage dropdown from sensor"
+    sequence:
+      - variables:
+          stages: "{{ state_attr('sensor.hfm_events', 'crop_stages') or [] }}"
+          stage_names: >
+            {% set ns = namespace(names=['Select Stage']) %}
+            {% for s in stages | sort(attribute='order') %}
+              {% set ns.names = ns.names + [s.name] %}
+            {% endfor %}
+            {{ ns.names }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_selected_crop_stage
+        data:
+          options: "{{ stage_names }}"
+
+  # Legacy script for backwards compatibility
   hfm_add_crop_stage:
-    alias: "HFM Add Crop Stage"
+    alias: "HFM Add Crop Stage (Legacy)"
     icon: mdi:plus
     sequence:
       - service: shell_command.hfm_add_crop_stage
@@ -2759,8 +3119,317 @@ script:
 
   # --- Applicator Management Scripts ---
 
+  hfm_applicator_start_add:
+    alias: "HFM Start Add Applicator"
+    icon: mdi:plus
+    description: "Clear form and set mode to Add New"
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_applicator_editor_mode
+        data:
+          option: "Add New"
+      - service: script.hfm_applicator_clear_form
+
+  hfm_applicator_start_edit:
+    alias: "HFM Start Edit Applicator"
+    icon: mdi:pencil
+    description: "Load selected applicator into form"
+    sequence:
+      - variables:
+          selected_name: "{{ states('input_select.hfm_selected_applicator_for_edit') }}"
+          applicators: "{{ state_attr('sensor.hfm_events', 'active_applicators') or [] }}"
+          app_json: >
+            {% for a in applicators if a.name == selected_name %}{{ a | tojson }}{% endfor %}
+      - condition: template
+        value_template: "{{ app_json != '' }}"
+      - variables:
+          app: "{{ app_json | from_json }}"
+          attrs: "{{ app.attributes | default({}) }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_applicator_editor_mode
+        data:
+          option: "Edit Existing"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_id
+        data:
+          value: "{{ app.id }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_name
+        data:
+          value: "{{ app.name }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_applicator_type
+        data:
+          option: "{{ app.type }}"
+      # Load type-specific attributes
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_tank_size
+        data:
+          value: "{{ attrs.tank_size_l | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_boom_width
+        data:
+          value: "{{ attrs.boom_width_m | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_nozzle_size
+        data:
+          value: "{{ attrs.nozzle_size | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_nozzle_type
+        data:
+          value: "{{ attrs.nozzle_type | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_pressure
+        data:
+          value: "{{ attrs.operating_pressure | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_capacity
+        data:
+          value: "{{ attrs.capacity_kg | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_spreader_width
+        data:
+          value: "{{ attrs.spreader_width_m | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_drop_point
+        data:
+          value: "{{ attrs.drop_point_m | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_calibration
+        data:
+          value: "{{ attrs.calibration_constant | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_aircraft
+        data:
+          value: "{{ attrs.aircraft_type | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_swath_width
+        data:
+          value: "{{ attrs.swath_width_m | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_operator
+        data:
+          value: "{{ attrs.operator | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_system_name
+        data:
+          value: "{{ attrs.system_name | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_injection_rate
+        data:
+          value: "{{ attrs.injection_rate_l_hr | default('') }}"
+
+  hfm_applicator_save:
+    alias: "HFM Save Applicator"
+    icon: mdi:content-save
+    description: "Add or update applicator based on mode"
+    sequence:
+      - variables:
+          mode: "{{ states('input_select.hfm_applicator_editor_mode') }}"
+          app_id: "{{ states('input_text.hfm_applicator_id') }}"
+          app_name: "{{ states('input_text.hfm_applicator_name') }}"
+          app_type: "{{ states('input_select.hfm_applicator_type') }}"
+          # Build attributes JSON based on type
+          attrs_json: >
+            {% set t = app_type %}
+            {% set attrs = {} %}
+            {% if t in ['boom_spray', 'foliar'] %}
+              {% set attrs = {
+                'tank_size_l': states('input_text.hfm_applicator_tank_size'),
+                'boom_width_m': states('input_text.hfm_applicator_boom_width'),
+                'nozzle_size': states('input_text.hfm_applicator_nozzle_size'),
+                'nozzle_type': states('input_text.hfm_applicator_nozzle_type'),
+                'operating_pressure': states('input_text.hfm_applicator_pressure')
+              } %}
+            {% elif t == 'broadcast' %}
+              {% set attrs = {
+                'capacity_kg': states('input_text.hfm_applicator_capacity'),
+                'spreader_width_m': states('input_text.hfm_applicator_spreader_width'),
+                'drop_point_m': states('input_text.hfm_applicator_drop_point'),
+                'calibration_constant': states('input_text.hfm_applicator_calibration')
+              } %}
+            {% elif t == 'aerial' %}
+              {% set attrs = {
+                'aircraft_type': states('input_text.hfm_applicator_aircraft'),
+                'swath_width_m': states('input_text.hfm_applicator_swath_width'),
+                'operator': states('input_text.hfm_applicator_operator')
+              } %}
+            {% elif t == 'fertigation' %}
+              {% set attrs = {
+                'system_name': states('input_text.hfm_applicator_system_name'),
+                'injection_rate_l_hr': states('input_text.hfm_applicator_injection_rate'),
+                'tank_size_l': states('input_text.hfm_applicator_tank_size')
+              } %}
+            {% endif %}
+            {# Filter out empty values #}
+            {% set ns = namespace(filtered={}) %}
+            {% for k, v in attrs.items() if v != '' %}
+              {% set ns.filtered = dict(ns.filtered, **{k: v}) %}
+            {% endfor %}
+            {{ ns.filtered | tojson }}
+      - condition: template
+        value_template: "{{ app_name != '' and app_type != 'Select Type' }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ mode == 'Add New' }}"
+            sequence:
+              - service: shell_command.hfm_add_applicator
+                data:
+                  name: "{{ app_name }}"
+                  type: "{{ app_type }}"
+                  attributes: "{{ attrs_json }}"
+              - service: persistent_notification.create
+                data:
+                  title: "Applicator Added"
+                  message: "{{ app_name }} ({{ app_type }}) has been added."
+                  notification_id: hfm_applicator_saved
+          - conditions:
+              - condition: template
+                value_template: "{{ mode == 'Edit Existing' }}"
+            sequence:
+              - service: shell_command.hfm_edit_applicator
+                data:
+                  id: "{{ app_id }}"
+                  name: "{{ app_name }}"
+                  type: "{{ app_type }}"
+                  attributes: "{{ attrs_json }}"
+              - service: persistent_notification.create
+                data:
+                  title: "Applicator Updated"
+                  message: "{{ app_name }} has been updated."
+                  notification_id: hfm_applicator_saved
+      - delay: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_events
+      - service: script.hfm_applicator_clear_form
+      - service: script.hfm_refresh_applicator_dropdown
+
+  hfm_applicator_delete:
+    alias: "HFM Delete Applicator"
+    icon: mdi:delete
+    description: "Delete the selected applicator"
+    sequence:
+      - variables:
+          selected_name: "{{ states('input_select.hfm_selected_applicator_for_edit') }}"
+          applicators: "{{ state_attr('sensor.hfm_events', 'active_applicators') or [] }}"
+          applicator_id: >
+            {% for a in applicators if a.name == selected_name %}{{ a.id }}{% endfor %}
+      - condition: template
+        value_template: "{{ applicator_id | trim != '' }}"
+      - service: shell_command.hfm_delete_applicator
+        data:
+          id: "{{ applicator_id | trim }}"
+      - delay: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_events
+      - service: script.hfm_applicator_clear_form
+      - service: script.hfm_refresh_applicator_dropdown
+      - service: persistent_notification.create
+        data:
+          title: "Applicator Deactivated"
+          message: "{{ selected_name }} has been deactivated."
+          notification_id: hfm_applicator_deleted
+
+  hfm_applicator_clear_form:
+    alias: "HFM Clear Applicator Form"
+    icon: mdi:close-circle
+    description: "Reset all fields and return to View mode"
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_applicator_editor_mode
+        data:
+          option: "View"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_id
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_applicator_name
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_applicator_type
+        data:
+          option: "Select Type"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.hfm_selected_applicator_for_edit
+        data:
+          option: "Select Applicator"
+      # Clear all attribute fields
+      - service: input_text.set_value
+        target:
+          entity_id:
+            - input_text.hfm_applicator_tank_size
+            - input_text.hfm_applicator_boom_width
+            - input_text.hfm_applicator_nozzle_size
+            - input_text.hfm_applicator_nozzle_type
+            - input_text.hfm_applicator_pressure
+            - input_text.hfm_applicator_capacity
+            - input_text.hfm_applicator_spreader_width
+            - input_text.hfm_applicator_drop_point
+            - input_text.hfm_applicator_calibration
+            - input_text.hfm_applicator_aircraft
+            - input_text.hfm_applicator_swath_width
+            - input_text.hfm_applicator_operator
+            - input_text.hfm_applicator_system_name
+            - input_text.hfm_applicator_injection_rate
+        data:
+          value: ""
+
+  hfm_refresh_applicator_dropdown:
+    alias: "HFM Refresh Applicator Dropdown"
+    icon: mdi:refresh
+    description: "Populate applicator dropdown from sensor"
+    sequence:
+      - variables:
+          applicators: "{{ state_attr('sensor.hfm_events', 'active_applicators') or [] }}"
+          app_names: >
+            {% set ns = namespace(names=['Select Applicator']) %}
+            {% for a in applicators | sort(attribute='name') %}
+              {% set ns.names = ns.names + [a.name] %}
+            {% endfor %}
+            {{ ns.names }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_selected_applicator_for_edit
+        data:
+          options: "{{ app_names }}"
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_selected_applicator
+        data:
+          options: "{{ app_names }}"
+
+  # Legacy script for backwards compatibility
   hfm_add_applicator:
-    alias: "HFM Add Applicator"
+    alias: "HFM Add Applicator (Legacy)"
     icon: mdi:tractor-variant
     sequence:
       - condition: template
@@ -2798,7 +3467,7 @@ script:
           notification_id: hfm_applicator_added
 
   hfm_delete_applicator:
-    alias: "HFM Delete Applicator"
+    alias: "HFM Delete Applicator (Legacy)"
     icon: mdi:delete
     sequence:
       - variables:

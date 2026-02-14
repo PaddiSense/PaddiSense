@@ -4400,10 +4400,10 @@ views:
                             </div>
                             <div style="text-align:center;padding:12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
                               <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">${backupCount}</div>
-                              <div style="font-size:12px;color:var(--secondary-text-color);">Backups</div>
+                              <div style="font-size:12px;color:var(--secondary-text-color);">Backups (max 3)</div>
                             </div>
                             <div style="text-align:center;padding:12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
-                              <div style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${lastBackup === 'Never' ? 'Never' : lastBackup.split('T')[0]}</div>
+                              <div style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${lastBackup || 'Never'}</div>
                               <div style="font-size:12px;color:var(--secondary-text-color);">Last Backup</div>
                             </div>
                           </div>
@@ -4414,14 +4414,26 @@ views:
                     ]]]
 
               #----------------------------------------------------------------
-              # CROP STAGES - Styled list with delete buttons
+              # CROP STAGES SECTION
               #----------------------------------------------------------------
               - type: custom:button-card
                 template: hfm_title
                 name: CROP STAGES
 
+              # Stage selector dropdown
+              - type: entities
+                entities:
+                  - entity: input_select.hfm_selected_crop_stage
+                    name: Select Stage to View/Edit
+                card_mod:
+                  style: |
+                    ha-card { border-radius: 12px; }
+
+              # Selected stage details card
               - type: custom:button-card
                 entity: sensor.hfm_events
+                triggers_update:
+                  - input_select.hfm_selected_crop_stage
                 show_icon: false
                 show_name: false
                 show_state: false
@@ -4429,72 +4441,421 @@ views:
                   action: none
                 styles:
                   card:
-                    - background: transparent
-                    - box-shadow: none
-                    - padding: 0
+                    - background: var(--card-background-color,#fff)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 1px 3px rgba(0,0,0,0.08)
+                    - display: |
+                        [[[
+                          const sel = states['input_select.hfm_selected_crop_stage']?.state;
+                          return sel && sel !== 'Select Stage' ? 'block' : 'none';
+                        ]]]
                   grid:
                     - display: block
-                  custom_fields:
-                    stages:
-                      - width: 100%
                 custom_fields:
-                  stages: |
+                  details: |
                     [[[
                       try {
+                        const selName = states['input_select.hfm_selected_crop_stage']?.state;
+                        if (!selName || selName === 'Select Stage') return '';
                         const stages = entity?.attributes?.crop_stages || [];
-                        if (stages.length === 0) {
-                          return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">No crop stages configured</div>`;
-                        }
+                        const stage = stages.find(s => s.name === selName);
+                        if (!stage) return '<div style="color:var(--secondary-text-color);">Stage not found</div>';
 
-                        let html = `<div style="display:grid;gap:8px;">`;
-                        for (const s of stages) {
-                          html += `
-                            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card-background-color,#fff);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-                              <div style="width:32px;height:32px;border-radius:50%;background:rgba(141,110,99,0.15);display:flex;align-items:center;justify-content:center;">
-                                <span style="font-size:14px;font-weight:700;color:#8d6e63;">${s.order}</span>
-                              </div>
-                              <div style="flex:1;">
-                                <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${s.name}</div>
-                              </div>
-                              <ha-icon icon="mdi:sprout" style="--mdc-icon-size:20px;color:#8d6e63;"></ha-icon>
+                        return `
+                          <div style="display:grid;gap:8px;">
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider-color,#e0e0e0);">
+                              <span style="color:var(--secondary-text-color);">ID</span>
+                              <span style="font-weight:600;">${stage.id}</span>
                             </div>
-                          `;
-                        }
-                        html += `</div>`;
-                        return html;
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider-color,#e0e0e0);">
+                              <span style="color:var(--secondary-text-color);">Name</span>
+                              <span style="font-weight:600;">${stage.name}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider-color,#e0e0e0);">
+                              <span style="color:var(--secondary-text-color);">Order</span>
+                              <span style="font-weight:600;">${stage.order || '-'}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                              <span style="color:var(--secondary-text-color);">Crop</span>
+                              <span style="font-weight:600;">${stage.crop_parent || 'All Crops'}</span>
+                            </div>
+                          </div>
+                        `;
                       } catch (err) {
-                        return `<div style="color:var(--error-color);">Error loading stages</div>`;
+                        return `<div style="color:var(--error-color);">Error: ${err}</div>`;
                       }
                     ]]]
 
+              # Edit/Add/Delete buttons
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_action
+                    name: Edit
+                    icon: mdi:pencil
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_crop_stage_start_edit
+
+                  - type: custom:button-card
+                    template: hfm_success
+                    name: Add
+                    icon: mdi:plus
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_crop_stage_start_add
+
+                  - type: custom:button-card
+                    template: hfm_danger
+                    name: Delete
+                    icon: mdi:delete
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_crop_stage_delete
+                      confirmation:
+                        text: "Delete this crop stage?"
+
+              # Editor form (conditional on mode)
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_select.hfm_crop_stage_editor_mode
+                    state_not: View
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      entity: input_select.hfm_crop_stage_editor_mode
+                      show_icon: false
+                      show_state: false
+                      name: |
+                        [[[
+                          return entity.state === 'Add New' ? 'ADD NEW STAGE' : 'EDIT STAGE';
+                        ]]]
+                      styles:
+                        card:
+                          - height: 40px
+                          - border-radius: 12px
+                          - background: |
+                              [[[
+                                return entity.state === 'Add New' ? '#28a745' : '#0066cc';
+                              ]]]
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+
+                    - type: entities
+                      entities:
+                        - entity: input_text.hfm_stage_edit_name
+                          name: Stage Name
+                        - entity: input_number.hfm_stage_order
+                          name: Display Order
+                        - entity: input_select.hfm_crop_parent
+                          name: Crop Parent
+                      card_mod:
+                        style: |
+                          ha-card { border-radius: 12px; }
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          template: hfm_success
+                          name: Save
+                          icon: mdi:content-save
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_crop_stage_save
+
+                        - type: custom:button-card
+                          template: hfm_secondary
+                          name: Cancel
+                          icon: mdi:close
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_crop_stage_clear_form
+
+              #----------------------------------------------------------------
+              # APPLICATORS SECTION
+              #----------------------------------------------------------------
               - type: custom:button-card
                 template: hfm_title
-                name: ADD NEW STAGE
-                styles:
-                  card:
-                    - height: 40px
-                  name:
-                    - font-size: 14px
+                name: APPLICATORS
 
+              # Applicator selector dropdown
               - type: entities
                 entities:
-                  - entity: input_text.hfm_new_stage_id
-                    name: Stage ID (e.g. pre_flood)
-                  - entity: input_text.hfm_new_stage_name
-                    name: Stage Name (e.g. Pre-Flood)
+                  - entity: input_select.hfm_selected_applicator_for_edit
+                    name: Select Applicator to View/Edit
                 card_mod:
                   style: |
-                    ha-card {
-                      border-radius: 12px;
-                    }
+                    ha-card { border-radius: 12px; }
 
+              # Selected applicator details card
               - type: custom:button-card
-                template: hfm_action
-                name: Add Stage
-                icon: mdi:plus
+                entity: sensor.hfm_events
+                triggers_update:
+                  - input_select.hfm_selected_applicator_for_edit
+                show_icon: false
+                show_name: false
+                show_state: false
                 tap_action:
-                  action: call-service
-                  service: script.hfm_add_crop_stage
+                  action: none
+                styles:
+                  card:
+                    - background: var(--card-background-color,#fff)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 1px 3px rgba(0,0,0,0.08)
+                    - display: |
+                        [[[
+                          const sel = states['input_select.hfm_selected_applicator_for_edit']?.state;
+                          return sel && sel !== 'Select Applicator' ? 'block' : 'none';
+                        ]]]
+                  grid:
+                    - display: block
+                custom_fields:
+                  details: |
+                    [[[
+                      try {
+                        const selName = states['input_select.hfm_selected_applicator_for_edit']?.state;
+                        if (!selName || selName === 'Select Applicator') return '';
+                        const apps = entity?.attributes?.active_applicators || [];
+                        const app = apps.find(a => a.name === selName);
+                        if (!app) return '<div style="color:var(--secondary-text-color);">Applicator not found</div>';
+
+                        const typeLabels = {
+                          boom_spray: 'Boom Spray',
+                          broadcast: 'Broadcast',
+                          aerial: 'Aerial',
+                          fertigation: 'Fertigation',
+                          foliar: 'Foliar',
+                          seed_treatment: 'Seed Treatment'
+                        };
+
+                        let html = `
+                          <div style="display:grid;gap:8px;">
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider-color,#e0e0e0);">
+                              <span style="color:var(--secondary-text-color);">Name</span>
+                              <span style="font-weight:600;">${app.name}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider-color,#e0e0e0);">
+                              <span style="color:var(--secondary-text-color);">Type</span>
+                              <span style="font-weight:600;">${typeLabels[app.type] || app.type}</span>
+                            </div>
+                        `;
+
+                        // Show type-specific attributes
+                        const attrs = app.attributes || {};
+                        const attrLabels = {
+                          tank_size_l: 'Tank Size (L)',
+                          boom_width_m: 'Boom Width (m)',
+                          nozzle_size: 'Nozzle Size',
+                          nozzle_type: 'Nozzle Type',
+                          operating_pressure: 'Pressure',
+                          capacity_kg: 'Capacity (kg)',
+                          spreader_width_m: 'Spreader Width (m)',
+                          drop_point_m: 'Drop Point (m)',
+                          calibration_constant: 'Calibration Const',
+                          aircraft_type: 'Aircraft Type',
+                          swath_width_m: 'Swath Width (m)',
+                          operator: 'Operator',
+                          system_name: 'System Name',
+                          injection_rate_l_hr: 'Injection Rate (L/hr)'
+                        };
+
+                        for (const [k, v] of Object.entries(attrs)) {
+                          if (v) {
+                            html += `
+                              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider-color,#e0e0e0);">
+                                <span style="color:var(--secondary-text-color);">${attrLabels[k] || k}</span>
+                                <span style="font-weight:600;">${v}</span>
+                              </div>
+                            `;
+                          }
+                        }
+
+                        html += `</div>`;
+                        return html;
+                      } catch (err) {
+                        return `<div style="color:var(--error-color);">Error: ${err}</div>`;
+                      }
+                    ]]]
+
+              # Edit/Add/Delete buttons
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_action
+                    name: Edit
+                    icon: mdi:pencil
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_applicator_start_edit
+
+                  - type: custom:button-card
+                    template: hfm_success
+                    name: Add
+                    icon: mdi:plus
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_applicator_start_add
+
+                  - type: custom:button-card
+                    template: hfm_danger
+                    name: Delete
+                    icon: mdi:delete
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_applicator_delete
+                      confirmation:
+                        text: "Deactivate this applicator?"
+
+              # Applicator editor form (conditional on mode)
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_select.hfm_applicator_editor_mode
+                    state_not: View
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      entity: input_select.hfm_applicator_editor_mode
+                      show_icon: false
+                      show_state: false
+                      name: |
+                        [[[
+                          return entity.state === 'Add New' ? 'ADD NEW APPLICATOR' : 'EDIT APPLICATOR';
+                        ]]]
+                      styles:
+                        card:
+                          - height: 40px
+                          - border-radius: 12px
+                          - background: |
+                              [[[
+                                return entity.state === 'Add New' ? '#28a745' : '#0066cc';
+                              ]]]
+                        name:
+                          - font-size: 14px
+                          - font-weight: 700
+                          - color: white
+
+                    - type: entities
+                      entities:
+                        - entity: input_text.hfm_applicator_name
+                          name: Applicator Name
+                        - entity: input_select.hfm_applicator_type
+                          name: Type
+                      card_mod:
+                        style: |
+                          ha-card { border-radius: 12px; }
+
+                    # Boom Spray / Foliar attributes
+                    - type: conditional
+                      conditions:
+                        - condition: or
+                          conditions:
+                            - condition: state
+                              entity: input_select.hfm_applicator_type
+                              state: boom_spray
+                            - condition: state
+                              entity: input_select.hfm_applicator_type
+                              state: foliar
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_text.hfm_applicator_tank_size
+                            name: Tank Size (L)
+                          - entity: input_text.hfm_applicator_boom_width
+                            name: Boom Width (m)
+                          - entity: input_text.hfm_applicator_nozzle_size
+                            name: Nozzle Size
+                          - entity: input_text.hfm_applicator_nozzle_type
+                            name: Nozzle Type
+                          - entity: input_text.hfm_applicator_pressure
+                            name: Operating Pressure
+                        card_mod:
+                          style: |
+                            ha-card { border-radius: 12px; }
+
+                    # Broadcast attributes
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: input_select.hfm_applicator_type
+                          state: broadcast
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_text.hfm_applicator_capacity
+                            name: Capacity (kg)
+                          - entity: input_text.hfm_applicator_spreader_width
+                            name: Spreader Width (m)
+                          - entity: input_text.hfm_applicator_drop_point
+                            name: Drop Point (m)
+                          - entity: input_text.hfm_applicator_calibration
+                            name: Calibration Constant
+                        card_mod:
+                          style: |
+                            ha-card { border-radius: 12px; }
+
+                    # Aerial attributes
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: input_select.hfm_applicator_type
+                          state: aerial
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_text.hfm_applicator_aircraft
+                            name: Aircraft Type
+                          - entity: input_text.hfm_applicator_swath_width
+                            name: Swath Width (m)
+                          - entity: input_text.hfm_applicator_operator
+                            name: Operator
+                        card_mod:
+                          style: |
+                            ha-card { border-radius: 12px; }
+
+                    # Fertigation attributes
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: input_select.hfm_applicator_type
+                          state: fertigation
+                      card:
+                        type: entities
+                        entities:
+                          - entity: input_text.hfm_applicator_system_name
+                            name: System Name
+                          - entity: input_text.hfm_applicator_injection_rate
+                            name: Injection Rate (L/hr)
+                          - entity: input_text.hfm_applicator_tank_size
+                            name: Tank Size (L)
+                        card_mod:
+                          style: |
+                            ha-card { border-radius: 12px; }
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          template: hfm_success
+                          name: Save
+                          icon: mdi:content-save
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_applicator_save
+
+                        - type: custom:button-card
+                          template: hfm_secondary
+                          name: Cancel
+                          icon: mdi:close
+                          tap_action:
+                            action: call-service
+                            service: script.hfm_applicator_clear_form
 
               #----------------------------------------------------------------
               # BACKUP & EXPORT
@@ -4526,6 +4887,7 @@ views:
               - type: markdown
                 content: |
                   Exports save to: `/config/local_data/hfm/backups/`
+                  Backup retention: 3 most recent backups kept
                 card_mod:
                   style: |
                     ha-card {

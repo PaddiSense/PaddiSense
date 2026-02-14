@@ -66,19 +66,17 @@ def get_backup_info() -> dict:
     if not BACKUPS_DIR.exists():
         return {"last_backup": None, "backup_count": 0}
 
-    backups = sorted(BACKUPS_DIR.glob("hfm_export_*.json"), reverse=True)
+    backups = list(BACKUPS_DIR.glob("hfm_export_*.json"))
     if not backups:
         return {"last_backup": None, "backup_count": 0}
 
-    # Get latest backup timestamp from filename
-    latest = backups[0].name
-    # Parse: hfm_export_20260207_143522.json
-    try:
-        ts_part = latest.replace("hfm_export_", "").replace(".json", "")
-        dt = datetime.strptime(ts_part, "%Y%m%d_%H%M%S")
-        last_backup = dt.strftime("%Y-%m-%d %H:%M")
-    except ValueError:
-        last_backup = latest
+    # Sort by modification time (newest first)
+    backups.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+    latest = backups[0]
+
+    # Use file modification time (reliable for all filename formats)
+    mtime = datetime.fromtimestamp(latest.stat().st_mtime)
+    last_backup = mtime.strftime("%Y-%m-%d %H:%M")
 
     return {"last_backup": last_backup, "backup_count": len(backups)}
 
@@ -140,6 +138,12 @@ def main():
     for e in events:
         for pid in e.get("paddocks", []):
             events_by_paddock[pid] = events_by_paddock.get(pid, 0) + 1
+
+    # Transform events to add event_date at top level (from application_timing.date)
+    # This makes templates and JavaScript simpler
+    for e in events:
+        if "event_date" not in e and "application_timing" in e:
+            e["event_date"] = e.get("application_timing", {}).get("date", "")
 
     # Recent events (last 20, sorted by recorded_at descending)
     sorted_events = sorted(events, key=lambda x: x.get("recorded_at", ""), reverse=True)
