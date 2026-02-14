@@ -2063,267 +2063,437 @@ views:
                     }
 
               # ----------------------------------------------------------------
-              # CROP SELECTOR
+              # MODE SELECTOR: Add New / Edit Existing
               # ----------------------------------------------------------------
               - type: entities
                 entities:
-                  - entity: input_select.registry_crop
-                    name: Select Crop to Edit
+                  - entity: input_select.registry_crop_editor_mode
+                    name: Mode
                 card_mod:
                   style: |
                     ha-card {
                       border-radius: 12px;
+                      padding: 4px;
+                    }
+                    .mdc-list-item__primary-text {
+                      font-size: 1.3rem !important;
                     }
 
               # ----------------------------------------------------------------
-              # CROP DETAILS (when selected)
+              # EDIT EXISTING CROP (conditional)
               # ----------------------------------------------------------------
               - type: conditional
                 conditions:
                   - condition: state
-                    entity: input_select.registry_crop
-                    state_not: "Select..."
-                card:
-                  type: custom:button-card
-                  entity: sensor.farm_registry_data
-                  triggers_update:
-                    - sensor.farm_registry_data
-                    - input_select.registry_crop
-                  show_name: false
-                  show_icon: false
-                  show_state: false
-                  tap_action:
-                    action: none
-                  styles:
-                    card:
-                      - background: var(--card-background-color)
-                      - border-radius: 12px
-                      - padding: 16px
-                      - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
-                    grid:
-                      - display: block
-                  custom_fields:
-                    content: |
-                      [[[
-                        try {
-                          const selectedName = states['input_select.registry_crop']?.state || '';
-                          if (!selectedName || selectedName === 'Select...') {
-                            return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Select a crop to view details</div>`;
-                          }
-
-                          const crops = entity?.attributes?.crops || {};
-                          // Find crop by name
-                          let cropId = null;
-                          let crop = null;
-                          for (const [id, c] of Object.entries(crops)) {
-                            if (c.name === selectedName) {
-                              cropId = id;
-                              crop = c;
-                              break;
-                            }
-                          }
-
-                          if (!crop) {
-                            return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Crop not found</div>`;
-                          }
-
-                          const stages = crop.stages || [];
-                          const color = crop.color || '#4caf50';
-
-                          let html = `<div>`;
-                          // Header with color badge
-                          html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">`;
-                          html += `<div style="width:24px;height:24px;border-radius:4px;background:${color};"></div>`;
-                          html += `<div style="font-size:20px;font-weight:700;color:var(--primary-text-color);">${crop.name}</div>`;
-                          html += `</div>`;
-
-                          // Season months
-                          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                          const startMonth = months[(crop.typical_start_month || 1) - 1];
-                          const endMonth = months[(crop.typical_end_month || 12) - 1];
-                          html += `<div style="margin-bottom:16px;padding:10px 14px;background:var(--secondary-background-color);border-radius:8px;">`;
-                          html += `<div style="font-size:13px;color:var(--secondary-text-color);">Typical Season</div>`;
-                          html += `<div style="font-size:16px;font-weight:600;color:var(--primary-text-color);">${startMonth} - ${endMonth}</div>`;
-                          html += `</div>`;
-
-                          // Stages list
-                          html += `<div style="font-size:14px;font-weight:600;color:var(--secondary-text-color);margin-bottom:8px;">Growth Stages (${stages.length})</div>`;
-                          if (stages.length === 0) {
-                            html += `<div style="padding:12px;background:var(--secondary-background-color);border-radius:8px;text-align:center;color:var(--secondary-text-color);">No stages defined</div>`;
-                          } else {
-                            html += `<div style="display:grid;gap:6px;">`;
-                            for (const stage of stages) {
-                              html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--secondary-background-color);border-radius:8px;">`;
-                              html += `<span style="font-size:14px;font-weight:600;color:${color};">${stage.order || '-'}.</span>`;
-                              html += `<span style="font-size:14px;color:var(--primary-text-color);">${stage.name}</span>`;
-                              html += `</div>`;
-                            }
-                            html += `</div>`;
-                          }
-
-                          html += `</div>`;
-                          return html;
-                        } catch (e) {
-                          return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
-                        }
-                      ]]]
-
-              # ----------------------------------------------------------------
-              # EDIT CROP FORM (when selected)
-              # ----------------------------------------------------------------
-              - type: conditional
-                conditions:
-                  - condition: state
-                    entity: input_select.registry_crop
-                    state_not: "Select..."
+                    entity: input_select.registry_crop_editor_mode
+                    state: "Edit Existing Crop"
                 card:
                   type: vertical-stack
                   cards:
-                    - type: custom:button-card
-                      template: template_titleblock
-                      variables:
-                        var_name: EDIT CROP
-
-                    - type: entities
-                      entities:
-                        - entity: input_text.registry_edit_crop_name
-                          name: Crop Name
-                        - entity: input_text.registry_edit_crop_color
-                          name: Color (Hex)
-                        - entity: input_number.registry_crop_start_month
-                          name: Start Month
-                        - entity: input_number.registry_crop_end_month
-                          name: End Month
+                    - type: markdown
+                      content: |
+                        **Select a crop to edit.** Data auto-loads when you select.
                       card_mod:
                         style: |
                           ha-card {
                             border-radius: 12px;
+                            padding: 8px;
+                            background: var(--card-background-color);
                           }
 
-                    # Load button (pulls data into form)
-                    - type: custom:button-card
-                      template: template_secondary
-                      name: Load Crop Data
-                      icon: mdi:refresh
-                      tap_action:
-                        action: call-service
-                        service: script.registry_open_edit_crop
-                        service_data:
-                          id: |
+                    # Crop selector
+                    - type: entities
+                      entities:
+                        - entity: input_select.registry_crop
+                          name: Select Crop
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 4px;
+                          }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.3rem !important;
+                          }
+
+                    # Crop details card (when selected)
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: input_select.registry_crop
+                          state_not: "Select..."
+                      card:
+                        type: custom:button-card
+                        entity: sensor.farm_registry_data
+                        triggers_update:
+                          - sensor.farm_registry_data
+                          - input_select.registry_crop
+                        show_name: false
+                        show_icon: false
+                        show_state: false
+                        tap_action:
+                          action: none
+                        styles:
+                          card:
+                            - background: var(--card-background-color)
+                            - border-radius: 12px
+                            - padding: 16px
+                            - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                          grid:
+                            - display: block
+                        custom_fields:
+                          content: |
                             [[[
-                              const selectedName = states['input_select.registry_crop']?.state || '';
-                              const crops = states['sensor.farm_registry_data']?.attributes?.crops || {};
-                              for (const [id, c] of Object.entries(crops)) {
-                                if (c.name === selectedName) return id;
+                              try {
+                                const selectedName = states['input_select.registry_crop']?.state || '';
+                                if (!selectedName || selectedName === 'Select...') {
+                                  return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Select a crop to view details</div>`;
+                                }
+
+                                const crops = entity?.attributes?.crops || {};
+                                let cropId = null;
+                                let crop = null;
+                                for (const [id, c] of Object.entries(crops)) {
+                                  if (c.name === selectedName) {
+                                    cropId = id;
+                                    crop = c;
+                                    break;
+                                  }
+                                }
+
+                                if (!crop) {
+                                  return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Crop not found</div>`;
+                                }
+
+                                const stages = crop.stages || [];
+                                const color = crop.color || '#4caf50';
+                                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                const startMonth = months[(crop.typical_start_month || 1) - 1];
+                                const endMonth = months[(crop.typical_end_month || 12) - 1];
+
+                                let html = `<div style="border-left:4px solid ${color};padding-left:12px;">`;
+                                html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">`;
+                                html += `<div style="width:20px;height:20px;border-radius:4px;background:${color};"></div>`;
+                                html += `<div style="font-size:18px;font-weight:700;color:var(--primary-text-color);">${crop.name}</div>`;
+                                html += `<div style="font-size:13px;color:var(--secondary-text-color);">${startMonth} - ${endMonth}</div>`;
+                                html += `</div>`;
+
+                                html += `<div style="font-size:13px;font-weight:600;color:var(--secondary-text-color);margin-bottom:6px;">Growth Stages (${stages.length})</div>`;
+                                if (stages.length === 0) {
+                                  html += `<div style="padding:10px;background:var(--secondary-background-color);border-radius:8px;text-align:center;color:var(--secondary-text-color);font-size:13px;">No stages defined</div>`;
+                                } else {
+                                  html += `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+                                  for (const stage of stages) {
+                                    html += `<div style="padding:6px 12px;background:var(--secondary-background-color);border-radius:6px;font-size:13px;">`;
+                                    html += `<span style="color:${color};font-weight:600;">${stage.order}.</span> ${stage.name}`;
+                                    html += `</div>`;
+                                  }
+                                  html += `</div>`;
+                                }
+                                html += `</div>`;
+                                return html;
+                              } catch (e) {
+                                return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
                               }
-                              return '';
                             ]]]
 
-                    - type: horizontal-stack
-                      cards:
-                        - type: custom:button-card
-                          template: template_success
-                          name: Save Changes
-                          icon: mdi:content-save
-                          tap_action:
-                            action: call-service
-                            service: script.registry_save_crop_edit
+                    # Edit form (when selected)
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: input_select.registry_crop
+                          state_not: "Select..."
+                      card:
+                        type: vertical-stack
+                        cards:
+                          - type: custom:button-card
+                            template: template_titleblock
+                            variables:
+                              var_name: EDIT CROP DETAILS
 
-                        - type: custom:button-card
-                          template: template_danger
-                          name: Delete Crop
-                          icon: mdi:delete
-                          tap_action:
-                            action: call-service
-                            service: script.registry_delete_crop
-                            service_data:
-                              id: |
+                          - type: entities
+                            entities:
+                              - entity: input_text.registry_edit_crop_name
+                                name: Crop Name
+                              - entity: input_text.registry_edit_crop_color
+                                name: Color (Hex)
+                              - entity: input_number.registry_crop_start_month
+                                name: Start Month (1-12)
+                              - entity: input_number.registry_crop_end_month
+                                name: End Month (1-12)
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  border-radius: 12px;
+                                }
+
+                          # Action buttons row
+                          - type: horizontal-stack
+                            cards:
+                              - type: custom:button-card
+                                template: template_success
+                                name: Save
+                                icon: mdi:content-save
+                                tap_action:
+                                  action: call-service
+                                  service: script.registry_save_crop_edit
+                                confirmation:
+                                  text: Save crop changes?
+
+                              - type: custom:button-card
+                                template: template_danger
+                                name: Delete
+                                icon: mdi:delete
+                                tap_action:
+                                  action: call-service
+                                  service: script.registry_delete_crop
+                                  service_data:
+                                    id: "[[[ return states['input_text.registry_edit_crop_pointer'].state; ]]]"
+                                confirmation:
+                                  text: "Delete this crop type? This cannot be undone."
+
+                    # Manage stages (when selected)
+                    - type: conditional
+                      conditions:
+                        - condition: state
+                          entity: input_select.registry_crop
+                          state_not: "Select..."
+                      card:
+                        type: vertical-stack
+                        cards:
+                          - type: custom:button-card
+                            template: template_titleblock
+                            variables:
+                              var_name: GROWTH STAGES
+
+                          # Stages list display
+                          - type: custom:button-card
+                            entity: sensor.farm_registry_data
+                            triggers_update:
+                              - sensor.farm_registry_data
+                              - input_select.registry_crop
+                            show_name: false
+                            show_icon: false
+                            show_state: false
+                            tap_action:
+                              action: none
+                            styles:
+                              card:
+                                - background: var(--card-background-color)
+                                - border-radius: 12px
+                                - padding: 12px
+                              grid:
+                                - display: block
+                            custom_fields:
+                              stages: |
                                 [[[
-                                  const selectedName = states['input_select.registry_crop']?.state || '';
-                                  const crops = states['sensor.farm_registry_data']?.attributes?.crops || {};
-                                  for (const [id, c] of Object.entries(crops)) {
-                                    if (c.name === selectedName) return id;
+                                  try {
+                                    const selectedName = states['input_select.registry_crop']?.state || '';
+                                    const crops = entity?.attributes?.crops || {};
+                                    let crop = null;
+                                    for (const [id, c] of Object.entries(crops)) {
+                                      if (c.name === selectedName) {
+                                        crop = c;
+                                        break;
+                                      }
+                                    }
+
+                                    if (!crop) return '';
+                                    const stages = crop.stages || [];
+                                    const color = crop.color || '#4caf50';
+
+                                    if (stages.length === 0) {
+                                      return `<div style="text-align:center;padding:16px;color:var(--secondary-text-color);">No stages defined yet.</div>`;
+                                    }
+
+                                    let html = `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+                                    for (const stage of stages) {
+                                      html += `<div style="padding:8px 14px;background:var(--secondary-background-color);border-radius:8px;border-left:3px solid ${color};">`;
+                                      html += `<span style="font-weight:600;color:${color};">${stage.order}.</span> ${stage.name}`;
+                                      html += `</div>`;
+                                    }
+                                    html += `</div>`;
+                                    return html;
+                                  } catch (e) {
+                                    return `<div style="color:red;">Error: ${e}</div>`;
                                   }
-                                  return '';
                                 ]]]
-                          confirmation:
-                            text: "Delete this crop type? This cannot be undone."
+
+                          # Add new stage row
+                          - type: horizontal-stack
+                            cards:
+                              - type: entities
+                                entities:
+                                  - entity: input_text.registry_new_stage_name
+                                    name: New Stage Name
+                                card_mod:
+                                  style: |
+                                    ha-card {
+                                      border-radius: 12px;
+                                    }
+
+                              - type: custom:button-card
+                                template: template_action
+                                name: Add
+                                icon: mdi:plus
+                                styles:
+                                  card:
+                                    - height: 70px
+                                tap_action:
+                                  action: call-service
+                                  service: script.registry_add_crop_stage
+                                  service_data:
+                                    crop_id: "[[[ return states['input_text.registry_edit_crop_pointer'].state; ]]]"
+                                    name: "[[[ return states['input_text.registry_new_stage_name'].state; ]]]"
+
+                          # Delete stage row
+                          - type: horizontal-stack
+                            cards:
+                              - type: entities
+                                entities:
+                                  - entity: input_select.registry_crop_stage
+                                    name: Select Stage to Delete
+                                card_mod:
+                                  style: |
+                                    ha-card {
+                                      border-radius: 12px;
+                                    }
+
+                              - type: custom:button-card
+                                template: template_danger
+                                name: Delete
+                                icon: mdi:delete
+                                styles:
+                                  card:
+                                    - height: 70px
+                                tap_action:
+                                  action: call-service
+                                  service: script.registry_delete_selected_stage
+                                confirmation:
+                                  text: "Delete this growth stage?"
 
               # ----------------------------------------------------------------
-              # ADD STAGE TO SELECTED CROP
+              # ADD NEW CROP (conditional)
               # ----------------------------------------------------------------
               - type: conditional
                 conditions:
                   - condition: state
-                    entity: input_select.registry_crop
-                    state_not: "Select..."
+                    entity: input_select.registry_crop_editor_mode
+                    state: "Add New Crop"
                 card:
                   type: vertical-stack
                   cards:
                     - type: custom:button-card
                       template: template_titleblock
                       variables:
-                        var_name: ADD STAGE
+                        var_name: NEW CROP DETAILS
 
                     - type: entities
                       entities:
-                        - entity: input_text.registry_new_stage_name
-                          name: Stage Name
+                        - entity: input_text.registry_new_crop_name
+                          name: Crop Name
                       card_mod:
                         style: |
                           ha-card {
                             border-radius: 12px;
                           }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.2rem !important;
+                          }
+
+                    - type: markdown
+                      content: |
+                        New crops are created with default settings (green color, Jan-Dec season).
+                        You can edit these after creating the crop.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            background: transparent;
+                            box-shadow: none;
+                            padding: 0 12px;
+                            font-size: 13px;
+                          }
 
                     - type: custom:button-card
-                      template: template_action
-                      name: Add Stage
+                      template: template_success
+                      name: Create Crop
                       icon: mdi:plus
                       tap_action:
                         action: call-service
-                        service: script.registry_add_crop_stage
+                        service: script.registry_add_crop
                         service_data:
-                          crop_id: |
-                            [[[
-                              const selectedName = states['input_select.registry_crop']?.state || '';
-                              const crops = states['sensor.farm_registry_data']?.attributes?.crops || {};
-                              for (const [id, c] of Object.entries(crops)) {
-                                if (c.name === selectedName) return id;
-                              }
-                              return '';
-                            ]]]
-                          name: "[[[ return states['input_text.registry_new_stage_name'].state; ]]]"
+                          name: "[[[ return states['input_text.registry_new_crop_name'].state; ]]]"
+                          start_month: 1
+                          end_month: 12
+                          color: "#4caf50"
+                      confirmation:
+                        text: Create this new crop type?
 
               # ----------------------------------------------------------------
-              # ADD NEW CROP
+              # CROP TYPE LIST (always visible)
               # ----------------------------------------------------------------
               - type: custom:button-card
                 template: template_titleblock
                 variables:
-                  var_name: ADD NEW CROP
-
-              - type: entities
-                entities:
-                  - entity: input_text.registry_new_crop_name
-                    name: Crop Name
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                    }
+                  var_name: ALL CROP TYPES
 
               - type: custom:button-card
-                template: template_success
-                name: Create Crop
-                icon: mdi:plus
+                entity: sensor.farm_registry_data
+                triggers_update:
+                  - sensor.farm_registry_data
+                show_name: false
+                show_icon: false
+                show_state: false
                 tap_action:
-                  action: call-service
-                  service: script.registry_add_crop
-                  service_data:
-                    name: "[[[ return states['input_text.registry_new_crop_name'].state; ]]]"
-                    start_month: 1
-                    end_month: 12
-                    color: "#4caf50"
+                  action: none
+                styles:
+                  card:
+                    - background: transparent
+                    - box-shadow: none
+                  grid:
+                    - display: block
+                custom_fields:
+                  crops: |
+                    [[[
+                      try {
+                        const crops = entity?.attributes?.crops || {};
+                        const cropList = Object.entries(crops);
+
+                        if (cropList.length === 0) {
+                          return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
+                                    <ha-icon icon="mdi:sprout" style="--mdc-icon-size:40px;opacity:0.5;margin-bottom:10px;"></ha-icon>
+                                    <div>No crop types defined</div>
+                                  </div>`;
+                        }
+
+                        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">`;
+
+                        for (const [id, crop] of cropList) {
+                          const color = crop.color || '#4caf50';
+                          const stages = crop.stages || [];
+                          const start = months[(crop.typical_start_month || 1) - 1];
+                          const end = months[(crop.typical_end_month || 12) - 1];
+
+                          html += `
+                            <div style="background:var(--card-background-color);border-radius:12px;padding:14px;border-left:4px solid ${color};">
+                              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                                <div style="width:16px;height:16px;border-radius:3px;background:${color};"></div>
+                                <div style="font-size:16px;font-weight:700;">${crop.name}</div>
+                              </div>
+                              <div style="display:flex;gap:12px;font-size:12px;color:var(--secondary-text-color);">
+                                <span>${start} - ${end}</span>
+                                <span>${stages.length} stage${stages.length !== 1 ? 's' : ''}</span>
+                              </div>
+                            </div>`;
+                        }
+
+                        html += `</div>`;
+                        return html;
+                      } catch (e) {
+                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
+                      }
+                    ]]]
 
   # ===========================================================================
   # View 6: Settings

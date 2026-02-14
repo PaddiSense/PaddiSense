@@ -368,6 +368,13 @@ input_select:
       - "None"
     icon: mdi:sprout
 
+  # Stage selector (for deletion)
+  registry_crop_stage:
+    name: "Select Stage"
+    options:
+      - "Select..."
+    icon: mdi:leaf
+
   # Month selectors for crop assignment
   registry_crop_1_start_month:
     name: "Crop 1 Start Month"
@@ -539,6 +546,12 @@ input_text:
 
   registry_new_stage_name:
     name: "New Stage Name"
+    icon: mdi:leaf
+    max: 50
+
+  # Track selected stage for deletion
+  registry_selected_stage_id:
+    name: "Selected Stage ID"
     icon: mdi:leaf
     max: 50
 
@@ -1773,6 +1786,49 @@ script:
         target:
           entity_id: sensor.farm_registry_data
 
+  # Delete selected stage (from dropdown)
+  registry_delete_selected_stage:
+    alias: "Registry - Delete Selected Stage"
+    icon: mdi:delete
+    sequence:
+      - variables:
+          crop_id: "{{ states('input_text.registry_edit_crop_pointer') }}"
+          stage_name: "{{ states('input_select.registry_crop_stage') }}"
+          crop: "{{ state_attr('sensor.farm_registry_data', 'crops')[crop_id] | default({}) }}"
+          stages: "{{ crop.stages | default([]) }}"
+      - variables:
+          stage_id: >-
+            {% for s in stages if s.name == stage_name %}
+            {{ s.id }}
+            {% endfor %}
+      - condition: template
+        value_template: "{{ crop_id | length > 0 and stage_id | trim | length > 0 }}"
+      - service: shell_command.registry_delete_crop_stage
+        data:
+          crop_id: "{{ crop_id }}"
+          stage_id: "{{ stage_id | trim }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Refresh stage dropdown
+      - variables:
+          updated_crop: "{{ state_attr('sensor.farm_registry_data', 'crops')[crop_id] | default({}) }}"
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_crop_stage
+        data:
+          options: >-
+            {% set stages = updated_crop.stages | default([]) %}
+            {% set stage_names = stages | map(attribute='name') | list %}
+            {{ ['Select...'] + stage_names if stage_names else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop_stage
+        data:
+          option: "Select..."
+
   # Set paddock crop rotation (with parameters - for programmatic use)
   registry_set_paddock_crops:
     alias: "Registry - Set Paddock Crops"
@@ -2276,6 +2332,43 @@ automation:
           options: >-
             {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
             {{ ['Select...'] + crops if crops else ['Select...'] }}
+
+  # Load crop edit form when crop is selected
+  - id: registry_load_crop_on_select
+    alias: "Registry - Load Crop on Select"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_crop
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'Select...' }}"
+    action:
+      - variables:
+          crop_name: "{{ states('input_select.registry_crop') }}"
+          crops: "{{ state_attr('sensor.farm_registry_data', 'crops') or {} }}"
+      - variables:
+          crop_id: >-
+            {% for cid, c in crops.items() if (c.name | default('')) == crop_name %}
+            {{ cid }}
+            {% endfor %}
+          crop: "{{ crops[crop_id | trim] | default({}) }}"
+      - service: script.registry_open_edit_crop
+        data:
+          id: "{{ crop_id | trim }}"
+      # Update stage dropdown with this crop's stages
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_crop_stage
+        data:
+          options: >-
+            {% set stages = crop.stages | default([]) %}
+            {% set stage_names = stages | map(attribute='name') | list %}
+            {{ ['Select...'] + stage_names if stage_names else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop_stage
+        data:
+          option: "Select..."
 
   # Update business dropdowns when data changes
   - id: registry_update_business_dropdowns
