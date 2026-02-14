@@ -280,8 +280,38 @@ input_number:
     icon: mdi:plus-minus
     min: -1000
     max: 1000
+    initial: 0
     step: 1
     mode: box
+
+input_boolean:
+  str_attr_lick_active:
+    name: Lick Active
+    icon: mdi:cube
+
+  str_attr_vaccinated:
+    name: Vaccinated
+    icon: mdi:needle
+
+  str_attr_pregnant:
+    name: Pregnant
+    icon: mdi:human-pregnant
+
+  str_attr_for_sale:
+    name: For Sale
+    icon: mdi:tag
+
+  str_attr_weaned:
+    name: Weaned
+    icon: mdi:baby-bottle
+
+  str_attr_drenched:
+    name: Drenched
+    icon: mdi:water
+
+  str_confirm_delete:
+    name: Confirm Delete
+    icon: mdi:alert
 
 input_text:
   str_mob_name:
@@ -519,15 +549,34 @@ script:
   str_move_mob_submit:
     alias: "STR Move Mob Submit"
     icon: mdi:map-marker-right
+    description: "Unified move - handles both paddock moves and off-farm destinations"
     sequence:
-      - service: shell_command.str_move_mob
-        data:
-          mob_id: "{{ state_attr('sensor.str_selected_mob', 'mob_id') }}"
-          to_location: >
+      - variables:
+          destination: "{{ states('input_select.str_move_destination') }}"
+          is_off_farm: "{{ destination.startswith('➜ ') }}"
+          off_farm_reason: "{{ destination[2:] if destination.startswith('➜ ') else '' }}"
+          paddock_id: >
             {% set sel = states('input_select.str_move_destination') %}
             {% set paddocks = state_attr('sensor.str_mobs', 'paddock_names') or [] %}
             {% for p in paddocks if p.name == sel %}{{ p.id }}{% endfor %}
-          note: "{{ states('input_text.str_move_note') }}"
+      - choose:
+          # Off-farm destination (Agistment, Sold, etc.)
+          - conditions:
+              - condition: template
+                value_template: "{{ is_off_farm }}"
+            sequence:
+              - service: shell_command.str_set_off_farm
+                data:
+                  mob_id: "{{ state_attr('sensor.str_selected_mob', 'mob_id') }}"
+                  reason: "{{ off_farm_reason }}"
+                  note: "{{ states('input_text.str_move_note') }}"
+        # Default: Paddock move
+        default:
+          - service: shell_command.str_move_mob
+            data:
+              mob_id: "{{ state_attr('sensor.str_selected_mob', 'mob_id') }}"
+              to_location: "{{ paddock_id }}"
+              note: "{{ states('input_text.str_move_note') }}"
       - delay: 1
       - service: homeassistant.update_entity
         target:
@@ -537,25 +586,11 @@ script:
           entity_id: input_text.str_move_note
         data:
           value: ""
-
-  str_set_off_farm_submit:
-    alias: "STR Set Off-Farm Submit"
-    icon: mdi:truck-delivery
-    sequence:
-      - service: shell_command.str_set_off_farm
-        data:
-          mob_id: "{{ state_attr('sensor.str_selected_mob', 'mob_id') }}"
-          reason: "{{ states('input_select.str_off_farm_reason') }}"
-          note: "{{ states('input_text.str_move_note') }}"
-      - delay: 1
-      - service: homeassistant.update_entity
+      - service: input_select.select_option
         target:
-          entity_id: sensor.str_mobs
-      - service: input_text.set_value
-        target:
-          entity_id: input_text.str_move_note
+          entity_id: input_select.str_move_destination
         data:
-          value: ""
+          option: "Select Destination"
 
   str_return_to_farm_submit:
     alias: "STR Return to Farm Submit"
@@ -774,40 +809,57 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
     action:
+      - delay: 2
       - service: input_select.set_options
         target:
           entity_id: input_select.str_mob
         data:
           options: >
             {% set names = state_attr('sensor.str_mobs', 'mob_names') or [] %}
-            {% if names | length > 0 %}
-              {{ ['Select Mob'] + names }}
-            {% else %}
-              {{ ['Select Mob'] }}
-            {% endif %}
+            {{ ['Select Mob'] + names if names else ['Select Mob'] }}
 
-  # Update paddock selectors from registry
+  # Update paddock selector (for new mob form - paddocks only)
   - id: str_update_paddock_options
     alias: "STR Update Paddock Options"
     trigger:
       - platform: state
         entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
     action:
+      - delay: 2
       - service: input_select.set_options
         target:
-          entity_id:
-            - input_select.str_paddock
-            - input_select.str_move_destination
+          entity_id: input_select.str_paddock
         data:
           options: >
             {% set paddocks = state_attr('sensor.str_mobs', 'paddock_names') or [] %}
             {% set names = paddocks | map(attribute='name') | list %}
-            {% if names | length > 0 %}
-              {{ ['Select Paddock'] + names }}
-            {% else %}
-              {{ ['Select Paddock'] }}
-            {% endif %}
+            {{ ['Select Paddock'] + names if names else ['Select Paddock'] }}
+
+  # Update move destination selector (paddocks + off-farm locations)
+  - id: str_update_destination_options
+    alias: "STR Update Destination Options"
+    trigger:
+      - platform: state
+        entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: 2
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.str_move_destination
+        data:
+          options: >
+            {% set paddocks = state_attr('sensor.str_mobs', 'paddock_names') or [] %}
+            {% set paddock_names = paddocks | map(attribute='name') | list %}
+            {% set off_farm = state_attr('sensor.str_mobs', 'off_farm_locations') or [] %}
+            {% set off_farm_opts = off_farm | map('regex_replace', '^', '➜ ') | list %}
+            {{ ['Select Destination'] + paddock_names + ['───────────'] + off_farm_opts if paddock_names else ['Select Destination'] + ['───────────'] + off_farm_opts }}
 
   # Update age class selector
   - id: str_update_age_class_options
@@ -815,18 +867,17 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
     action:
+      - delay: 2
       - service: input_select.set_options
         target:
           entity_id: input_select.str_age_class
         data:
           options: >
             {% set classes = state_attr('sensor.str_mobs', 'age_classes') or [] %}
-            {% if classes | length > 0 %}
-              {{ classes }}
-            {% else %}
-              {{ ['Weaners'] }}
-            {% endif %}
+            {{ classes if classes else ['Weaners'] }}
 
   # Update cross selector
   - id: str_update_cross_options
@@ -834,18 +885,17 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
     action:
+      - delay: 2
       - service: input_select.set_options
         target:
           entity_id: input_select.str_cross
         data:
           options: >
             {% set crosses = state_attr('sensor.str_mobs', 'crosses') or [] %}
-            {% if crosses | length > 0 %}
-              {{ crosses }}
-            {% else %}
-              {{ ['Angus'] }}
-            {% endif %}
+            {{ crosses if crosses else ['Angus'] }}
 
   # Update off-farm reason selector
   - id: str_update_off_farm_options
@@ -853,18 +903,17 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
     action:
+      - delay: 2
       - service: input_select.set_options
         target:
           entity_id: input_select.str_off_farm_reason
         data:
           options: >
             {% set locs = state_attr('sensor.str_mobs', 'off_farm_locations') or [] %}
-            {% if locs | length > 0 %}
-              {{ locs }}
-            {% else %}
-              {{ ['Agistment'] }}
-            {% endif %}
+            {{ locs if locs else ['Agistment'] }}
 
   # Update backup file selector
   - id: str_update_backup_options
@@ -872,15 +921,14 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.str_mobs
+      - platform: homeassistant
+        event: start
     action:
+      - delay: 2
       - service: input_select.set_options
         target:
           entity_id: input_select.str_backup_file
         data:
           options: >
             {% set files = state_attr('sensor.str_mobs', 'backup_filenames') or [] %}
-            {% if files | length > 0 %}
-              {{ ['Select Backup'] + files }}
-            {% else %}
-              {{ ['Select Backup'] }}
-            {% endif %}
+            {{ ['Select Backup'] + files if files else ['Select Backup'] }}

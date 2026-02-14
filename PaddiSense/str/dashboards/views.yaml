@@ -7,11 +7,11 @@
 
 button_card_templates:
   #---------------------------------------------------------------------------
-  # Section title bar (dark background for contrast)
+  # Section title bar (yellow header - PaddiSense standard)
   #---------------------------------------------------------------------------
   str_title:
     color_type: card
-    color: "#1e1e1e"
+    color: "#E9E100"
     show_icon: false
     show_state: false
     tap_action:
@@ -27,7 +27,7 @@ button_card_templates:
         - font-size: 18px
         - font-weight: 700
         - text-align: center
-        - color: white
+        - color: "#000000"
 
   #---------------------------------------------------------------------------
   # Info display block (muted background)
@@ -93,15 +93,15 @@ button_card_templates:
       action: none
     styles:
       card:
-        - height: 60px
+        - height: 70px
         - border-radius: 12px
       name:
-        - font-size: 14px
-        - font-weight: 600
+        - font-size: 16px
+        - font-weight: 700
         - color: white
       icon:
         - color: white
-        - width: 24px
+        - width: 28px
 
   #---------------------------------------------------------------------------
   # Success action button (green)
@@ -219,15 +219,15 @@ button_card_templates:
       action: none
     styles:
       card:
-        - height: 60px
+        - height: 70px
         - border-radius: 12px
       name:
-        - font-size: 14px
-        - font-weight: 600
+        - font-size: 16px
+        - font-weight: 700
         - color: white
       icon:
         - color: white
-        - width: 24px
+        - width: 28px
 
 title: Stock Tracker
 views:
@@ -341,10 +341,16 @@ views:
                           entity: sensor.str_mobs
                           show_icon: true
                           icon: mdi:cow
-                          show_name: false
+                          show_name: true
                           show_state: false
+                          show_label: true
                           color_type: card
                           color: "#455a64"
+                          name: |
+                            [[[
+                              return entity.attributes.total_mobs || 0;
+                            ]]]
+                          label: Mobs
                           tap_action:
                             action: navigate
                             navigation_path: /str-stock/mobs
@@ -352,70 +358,82 @@ views:
                             action: none
                           styles:
                             card:
-                              - height: 70px
+                              - height: 80px
                               - border-radius: 12px
-                              - padding: 12px
                             grid:
-                              - display: block
+                              - grid-template-areas: '"i n" "i l"'
+                              - grid-template-columns: 30px 1fr
+                              - grid-template-rows: 1fr 1fr
                             icon:
-                              - display: none
-                            custom_fields:
-                              info:
-                                - width: 100%
-                          custom_fields:
-                            info: |
-                              [[[
-                                const val = entity.attributes.total_mobs || 0;
-                                return `<div style="display:flex;align-items:center;justify-content:center;gap:10px;height:100%;">
-                                  <ha-icon icon="mdi:cow" style="--mdc-icon-size:24px;color:white;flex-shrink:0;"></ha-icon>
-                                  <div style="text-align:left;">
-                                    <div style="font-size:22px;font-weight:700;color:white;line-height:1.2;">${val}</div>
-                                    <div style="font-size:11px;color:rgba(255,255,255,0.7);line-height:1;">Mobs</div>
-                                  </div>
-                                </div>`;
-                              ]]]
+                              - color: white
+                              - width: 24px
+                            name:
+                              - font-size: 22px
+                              - font-weight: 700
+                              - color: white
+                              - justify-self: start
+                              - align-self: end
+                            label:
+                              - font-size: 12px
+                              - color: rgba(255,255,255,0.7)
+                              - justify-self: start
+                              - align-self: start
 
                         - type: custom:button-card
                           entity: sensor.str_mobs
-                          show_icon: false
-                          show_name: false
+                          show_icon: true
+                          icon: mdi:home
+                          show_name: true
                           show_state: false
+                          show_label: true
                           color_type: card
                           color: "#388e3c"
+                          name: |
+                            [[[
+                              return entity.attributes.on_farm_head || 0;
+                            ]]]
+                          label: On Farm
                           tap_action:
                             action: none
                           hold_action:
                             action: none
                           styles:
                             card:
-                              - height: 70px
+                              - height: 80px
                               - border-radius: 12px
-                              - padding: 12px
                             grid:
-                              - display: block
-                            custom_fields:
-                              info:
-                                - width: 100%
-                          custom_fields:
-                            info: |
-                              [[[
-                                const val = entity.attributes.on_farm_head || 0;
-                                return `<div style="display:flex;align-items:center;justify-content:center;gap:10px;height:100%;">
-                                  <ha-icon icon="mdi:home" style="--mdc-icon-size:24px;color:white;flex-shrink:0;"></ha-icon>
-                                  <div style="text-align:left;">
-                                    <div style="font-size:22px;font-weight:700;color:white;line-height:1.2;">${val}</div>
-                                    <div style="font-size:11px;color:rgba(255,255,255,0.7);line-height:1;">On Farm</div>
-                                  </div>
-                                </div>`;
-                              ]]]
+                              - grid-template-areas: '"i n" "i l"'
+                              - grid-template-columns: 30px 1fr
+                              - grid-template-rows: 1fr 1fr
+                            icon:
+                              - color: white
+                              - width: 24px
+                            name:
+                              - font-size: 22px
+                              - font-weight: 700
+                              - color: white
+                              - justify-self: start
+                              - align-self: end
+                            label:
+                              - font-size: 12px
+                              - color: rgba(255,255,255,0.7)
+                              - justify-self: start
+                              - align-self: start
 
                         - type: custom:button-card
                           entity: sensor.str_mobs
-                          show_icon: false
-                          show_name: false
+                          show_icon: true
+                          icon: mdi:truck-delivery
+                          show_name: true
                           show_state: false
+                          show_label: true
                           color_type: card
                           color: "#ff9800"
+                          name: |
+                            [[[
+                              return entity.attributes.off_farm_head || 0;
+                            ]]]
+                          label: Off Farm
                           tap_action:
                             action: navigate
                             navigation_path: /str-stock/movements
@@ -423,26 +441,26 @@ views:
                             action: none
                           styles:
                             card:
-                              - height: 70px
+                              - height: 80px
                               - border-radius: 12px
-                              - padding: 12px
                             grid:
-                              - display: block
-                            custom_fields:
-                              info:
-                                - width: 100%
-                          custom_fields:
-                            info: |
-                              [[[
-                                const val = entity.attributes.off_farm_head || 0;
-                                return `<div style="display:flex;align-items:center;justify-content:center;gap:10px;height:100%;">
-                                  <ha-icon icon="mdi:truck-delivery" style="--mdc-icon-size:24px;color:white;flex-shrink:0;"></ha-icon>
-                                  <div style="text-align:left;">
-                                    <div style="font-size:22px;font-weight:700;color:white;line-height:1.2;">${val}</div>
-                                    <div style="font-size:11px;color:rgba(255,255,255,0.7);line-height:1;">Off Farm</div>
-                                  </div>
-                                </div>`;
-                              ]]]
+                              - grid-template-areas: '"i n" "i l"'
+                              - grid-template-columns: 30px 1fr
+                              - grid-template-rows: 1fr 1fr
+                            icon:
+                              - color: white
+                              - width: 24px
+                            name:
+                              - font-size: 22px
+                              - font-weight: 700
+                              - color: white
+                              - justify-self: start
+                              - align-self: end
+                            label:
+                              - font-size: 12px
+                              - color: rgba(255,255,255,0.7)
+                              - justify-self: start
+                              - align-self: start
 
               # ---------------------------------------------------------------
               # Mob Cards Grid (like IPM products)
@@ -608,7 +626,7 @@ views:
                           ]]]
 
               # ---------------------------------------------------------------
-              # Summaries Section - Age Class and Paddock side by side
+              # Summaries Section - Age Class and Paddock (stacked for mobile)
               # ---------------------------------------------------------------
               - type: conditional
                 conditions:
@@ -618,45 +636,85 @@ views:
                     entity: sensor.paddisense_str_status
                     state_not: "Not Initialized"
                 card:
-                  type: horizontal-stack
+                  type: vertical-stack
                   cards:
                     # Age Class Summary
-                    - type: markdown
-                      content: |
-                        **BY AGE CLASS**
-                        {% set summaries = state_attr('sensor.str_mobs', 'age_class_summaries') or [] %}
-                        {% if summaries | length == 0 %}
-                        *No data*
-                        {% else %}
-                        {% for s in summaries %}
-                        {{ s.age_class }}: **{{ s.total_head }}** head
-                        {% endfor %}
-                        {% endif %}
-                      card_mod:
-                        style: |
-                          ha-card {
-                            border-radius: 12px;
-                            padding: 16px;
-                          }
+                    - type: custom:button-card
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      tap_action:
+                        action: none
+                      styles:
+                        card:
+                          - background: var(--card-background-color)
+                          - border-radius: 12px
+                          - padding: 16px
+                          - box-shadow: 0 2px 6px rgba(0,0,0,0.08)
+                        grid:
+                          - display: block
+                      custom_fields:
+                        content: |
+                          [[[
+                            try {
+                              const summaries = states['sensor.str_mobs']?.attributes?.age_class_summaries || [];
+                              let html = '<div style="font-size:14px;font-weight:700;color:#E9E100;margin-bottom:12px;text-transform:uppercase;">By Age Class</div>';
+                              if (summaries.length === 0) {
+                                html += '<div style="color:var(--secondary-text-color);font-style:italic;">No data</div>';
+                              } else {
+                                html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+                                for (const s of summaries) {
+                                  html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,0,0,0.04);border-radius:8px;">
+                                    <span style="color:var(--primary-text-color);">${s.age_class}</span>
+                                    <span style="font-weight:700;color:var(--primary-text-color);">${s.total_head} head</span>
+                                  </div>`;
+                                }
+                                html += '</div>';
+                              }
+                              return html;
+                            } catch (e) {
+                              return `<div style="color:var(--error-color);padding:8px;">Error: ${String(e)}</div>`;
+                            }
+                          ]]]
 
                     # Paddock Summary
-                    - type: markdown
-                      content: |
-                        **BY PADDOCK**
-                        {% set summaries = state_attr('sensor.str_mobs', 'location_summaries') or [] %}
-                        {% if summaries | length == 0 %}
-                        *No mobs on paddocks*
-                        {% else %}
-                        {% for s in summaries %}
-                        {{ s.name }}: **{{ s.total_head }}** head
-                        {% endfor %}
-                        {% endif %}
-                      card_mod:
-                        style: |
-                          ha-card {
-                            border-radius: 12px;
-                            padding: 16px;
-                          }
+                    - type: custom:button-card
+                      show_name: false
+                      show_icon: false
+                      show_state: false
+                      tap_action:
+                        action: none
+                      styles:
+                        card:
+                          - background: var(--card-background-color)
+                          - border-radius: 12px
+                          - padding: 16px
+                          - box-shadow: 0 2px 6px rgba(0,0,0,0.08)
+                        grid:
+                          - display: block
+                      custom_fields:
+                        content: |
+                          [[[
+                            try {
+                              const summaries = states['sensor.str_mobs']?.attributes?.location_summaries || [];
+                              let html = '<div style="font-size:14px;font-weight:700;color:#E9E100;margin-bottom:12px;text-transform:uppercase;">By Paddock</div>';
+                              if (summaries.length === 0) {
+                                html += '<div style="color:var(--secondary-text-color);font-style:italic;">No mobs on paddocks</div>';
+                              } else {
+                                html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+                                for (const s of summaries) {
+                                  html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,0,0,0.04);border-radius:8px;">
+                                    <span style="color:var(--primary-text-color);">${s.name}</span>
+                                    <span style="font-weight:700;color:var(--primary-text-color);">${s.total_head} head</span>
+                                  </div>`;
+                                }
+                                html += '</div>';
+                              }
+                              return html;
+                            } catch (e) {
+                              return `<div style="color:var(--error-color);padding:8px;">Error: ${String(e)}</div>`;
+                            }
+                          ]]]
 
               # ---------------------------------------------------------------
               # Recent Movements (ASM-style cards)
@@ -689,7 +747,7 @@ views:
                           - background: transparent
                           - box-shadow: none
                           - padding: 0
-                          - width: 100%
+                          - margin: 0
                         grid:
                           - display: block
                         custom_fields:
@@ -709,14 +767,14 @@ views:
                               }
 
                               const actionConfig = {
-                                'add': { icon: 'mdi:plus-circle', color: '#4caf50', bg: 'rgba(76,175,80,0.12)', label: 'Added' },
-                                'move': { icon: 'mdi:map-marker-right', color: '#2196f3', bg: 'rgba(33,150,243,0.12)', label: 'Moved' },
-                                'off_farm': { icon: 'mdi:truck-delivery', color: '#ff9800', bg: 'rgba(255,152,0,0.12)', label: 'Off Farm' },
-                                'return': { icon: 'mdi:home', color: '#4caf50', bg: 'rgba(76,175,80,0.12)', label: 'Returned' },
-                                'adjust': { icon: 'mdi:plus-minus', color: '#9c27b0', bg: 'rgba(156,39,176,0.12)', label: 'Adjusted' }
+                                'add': { icon: 'mdi:plus-circle', color: '#4caf50', bg: 'rgba(76,175,80,0.15)', label: 'Added' },
+                                'move': { icon: 'mdi:map-marker-right', color: '#2196f3', bg: 'rgba(33,150,243,0.15)', label: 'Moved' },
+                                'off_farm': { icon: 'mdi:truck-delivery', color: '#ff9800', bg: 'rgba(255,152,0,0.15)', label: 'Off Farm' },
+                                'return': { icon: 'mdi:home', color: '#4caf50', bg: 'rgba(76,175,80,0.15)', label: 'Returned' },
+                                'adjust': { icon: 'mdi:plus-minus', color: '#9c27b0', bg: 'rgba(156,39,176,0.15)', label: 'Adjusted' }
                               };
 
-                              let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+                              let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
 
                               const displayMovements = movements.slice(0, 5);
 
@@ -728,21 +786,19 @@ views:
                                 const timestamp = m.timestamp || '';
                                 const date = timestamp.substring(0, 10);
 
-                                html += `<div style="background:var(--card-background-color,#fff);border-radius:10px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:3px solid ${cfg.color};display:flex;align-items:center;gap:12px;">`;
+                                html += `<div style="background:var(--card-background-color,#fff);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">`;
 
-                                // Icon
-                                html += `<div style="width:36px;height:36px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                          <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:20px;color:${cfg.color};"></ha-icon>
+                                // Header row
+                                html += `<div style="display:flex;align-items:center;gap:12px;">`;
+                                html += `<div style="width:44px;height:44px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                          <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:24px;color:${cfg.color};"></ha-icon>
                                         </div>`;
-
-                                // Content
                                 html += `<div style="flex:1;min-width:0;">`;
-                                html += `<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.mob_name || 'Unknown'}</div>`;
+                                html += `<div style="font-size:16px;font-weight:600;color:var(--primary-text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.mob_name || 'Unknown'}</div>`;
                                 html += `<div style="font-size:12px;color:var(--secondary-text-color);">${cfg.label}${m.to_location ? ' → ' + m.to_location : ''}</div>`;
                                 html += `</div>`;
-
-                                // Date
-                                html += `<div style="font-size:11px;color:var(--secondary-text-color);flex-shrink:0;">${date}</div>`;
+                                html += `<div style="font-size:12px;color:var(--secondary-text-color);flex-shrink:0;">${date}</div>`;
+                                html += `</div>`;
 
                                 html += `</div>`;
                               }
@@ -763,7 +819,7 @@ views:
                           ]]]
 
               # ---------------------------------------------------------------
-              # Quick Actions
+              # Quick Actions (stacked for mobile)
               # ---------------------------------------------------------------
               - type: conditional
                 conditions:
@@ -773,7 +829,7 @@ views:
                     entity: sensor.paddisense_str_status
                     state_not: "Not Initialized"
                 card:
-                  type: horizontal-stack
+                  type: vertical-stack
                   cards:
                     - type: custom:button-card
                       template: str_success
@@ -792,10 +848,9 @@ views:
                         navigation_path: /str-stock/movements
 
                     - type: custom:button-card
-                      template: str_action
+                      template: str_secondary
                       name: Settings
                       icon: mdi:cog
-                      color: "#555555"
                       tap_action:
                         action: navigate
                         navigation_path: /str-stock/settings
@@ -870,20 +925,159 @@ views:
                       name: ATTRIBUTES
                       color: "#546e7a"
 
-                    - type: entities
-                      entities:
-                        - entity: input_boolean.str_attr_lick_active
-                        - entity: input_boolean.str_attr_vaccinated
-                        - entity: input_boolean.str_attr_pregnant
-                        - entity: input_boolean.str_attr_for_sale
-                        - entity: input_boolean.str_attr_weaned
-                        - entity: input_boolean.str_attr_drenched
-                      card_mod:
-                        style: |
-                          ha-card {
-                            border-radius: 12px;
-                            padding: 4px;
-                          }
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: input_boolean.str_attr_lick_active
+                          name: Lick
+                          icon: mdi:cube
+                          show_state: false
+                          tap_action:
+                            action: toggle
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                            icon:
+                              - color: white
+                            name:
+                              - color: white
+                              - font-size: 14px
+                              - font-weight: 600
+                          state:
+                            - value: "on"
+                              color_type: card
+                              color: "#4caf50"
+                            - value: "off"
+                              color_type: card
+                              color: "#555555"
+
+                        - type: custom:button-card
+                          entity: input_boolean.str_attr_vaccinated
+                          name: Vaccinated
+                          icon: mdi:needle
+                          show_state: false
+                          tap_action:
+                            action: toggle
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                            icon:
+                              - color: white
+                            name:
+                              - color: white
+                              - font-size: 14px
+                              - font-weight: 600
+                          state:
+                            - value: "on"
+                              color_type: card
+                              color: "#2196f3"
+                            - value: "off"
+                              color_type: card
+                              color: "#555555"
+
+                        - type: custom:button-card
+                          entity: input_boolean.str_attr_pregnant
+                          name: Pregnant
+                          icon: mdi:human-pregnant
+                          show_state: false
+                          tap_action:
+                            action: toggle
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                            icon:
+                              - color: white
+                            name:
+                              - color: white
+                              - font-size: 14px
+                              - font-weight: 600
+                          state:
+                            - value: "on"
+                              color_type: card
+                              color: "#e91e63"
+                            - value: "off"
+                              color_type: card
+                              color: "#555555"
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          entity: input_boolean.str_attr_for_sale
+                          name: For Sale
+                          icon: mdi:tag
+                          show_state: false
+                          tap_action:
+                            action: toggle
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                            icon:
+                              - color: white
+                            name:
+                              - color: white
+                              - font-size: 14px
+                              - font-weight: 600
+                          state:
+                            - value: "on"
+                              color_type: card
+                              color: "#ff5722"
+                            - value: "off"
+                              color_type: card
+                              color: "#555555"
+
+                        - type: custom:button-card
+                          entity: input_boolean.str_attr_weaned
+                          name: Weaned
+                          icon: mdi:baby-bottle
+                          show_state: false
+                          tap_action:
+                            action: toggle
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                            icon:
+                              - color: white
+                            name:
+                              - color: white
+                              - font-size: 14px
+                              - font-weight: 600
+                          state:
+                            - value: "on"
+                              color_type: card
+                              color: "#4caf50"
+                            - value: "off"
+                              color_type: card
+                              color: "#555555"
+
+                        - type: custom:button-card
+                          entity: input_boolean.str_attr_drenched
+                          name: Drenched
+                          icon: mdi:water
+                          show_state: false
+                          tap_action:
+                            action: toggle
+                          styles:
+                            card:
+                              - height: 70px
+                              - border-radius: 12px
+                            icon:
+                              - color: white
+                            name:
+                              - color: white
+                              - font-size: 14px
+                              - font-weight: 600
+                          state:
+                            - value: "on"
+                              color_type: card
+                              color: "#00bcd4"
+                            - value: "off"
+                              color_type: card
+                              color: "#555555"
 
                     - type: entities
                       entities:
@@ -1015,7 +1209,7 @@ views:
                                   padding: 4px;
                                 }
 
-                          - type: horizontal-stack
+                          - type: vertical-stack
                             cards:
                               - type: custom:button-card
                                 template: str_success
@@ -1227,70 +1421,70 @@ views:
                   - entity: input_select.str_mob
                     state_not: "Select Mob"
                 card:
-                  type: vertical-stack
-                  cards:
-                    - type: custom:button-card
-                      entity: sensor.str_mobs
-                      show_icon: false
-                      show_name: false
-                      show_state: false
-                      tap_action:
-                        action: none
-                      hold_action:
-                        action: none
-                      styles:
-                        card:
-                          - background: var(--card-background-color)
-                          - border-radius: 12px
-                          - padding: 16px
-                          - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
-                          - width: 100%
-                        grid:
-                          - display: block
-                        custom_fields:
-                          info:
-                            - width: 100%
-                      custom_fields:
-                        info: |
-                          [[[
-                            try {
-                              const selectedMob = states['sensor.str_selected_mob'];
-                              if (!selectedMob || !selectedMob.attributes) return '';
+                  type: custom:button-card
+                  entity: sensor.str_mobs
+                  show_icon: false
+                  show_name: false
+                  show_state: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  styles:
+                    card:
+                      - background: var(--card-background-color)
+                      - border-radius: 12px
+                      - padding: 16px
+                      - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                      - margin: 0
+                    grid:
+                      - display: block
+                    custom_fields:
+                      info:
+                        - width: 100%
+                  custom_fields:
+                    info: |
+                      [[[
+                        try {
+                          const selectedMob = states['sensor.str_selected_mob'];
+                          if (!selectedMob || !selectedMob.attributes) return '';
 
-                              const mobId = selectedMob.attributes.mob_id;
-                              const mobs = entity.attributes.mobs || {};
-                              const m = mobs[mobId];
-                              if (!m) return '<div style="color:var(--secondary-text-color);">Loading...</div>';
+                          const mobId = selectedMob.attributes.mob_id;
+                          const mobs = entity.attributes.mobs || {};
+                          const m = mobs[mobId];
+                          if (!m) return '<div style="color:var(--secondary-text-color);">Loading...</div>';
 
-                              const isOffFarm = m.off_farm === true;
-                              const location = isOffFarm
-                                ? (m.off_farm_details?.reason || 'Off Farm')
-                                : m.location_name || 'No paddock';
-                              const statusColor = isOffFarm ? '#ff9800' : '#4caf50';
-                              const statusIcon = isOffFarm ? 'mdi:truck-delivery' : 'mdi:map-marker';
+                          const isOffFarm = m.off_farm === true;
+                          const location = isOffFarm
+                            ? (m.off_farm_details?.reason || 'Off Farm')
+                            : m.location_name || 'No paddock';
+                          const statusColor = isOffFarm ? '#ff9800' : '#4caf50';
+                          const statusIcon = isOffFarm ? 'mdi:truck-delivery' : 'mdi:map-marker';
 
-                              return `
-                                <div style="border-left:4px solid ${statusColor};padding-left:12px;">
-                                  <div style="font-size:20px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">${m.name || 'Unknown'}</div>
-                                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                                    <div style="display:flex;align-items:center;gap:8px;">
-                                      <ha-icon icon="${statusIcon}" style="--mdc-icon-size:20px;color:${statusColor};"></ha-icon>
-                                      <span style="font-size:16px;color:var(--primary-text-color);">${location}</span>
-                                    </div>
-                                    <div style="text-align:right;">
-                                      <span style="font-size:24px;font-weight:700;color:var(--primary-text-color);">${m.head_count || 0}</span>
-                                      <span style="font-size:14px;color:var(--secondary-text-color);"> head</span>
-                                    </div>
-                                  </div>
+                          return `
+                            <div style="border-left:4px solid ${statusColor};padding-left:12px;">
+                              <div style="font-size:20px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">${m.name || 'Unknown'}</div>
+                              <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                  <ha-icon icon="${statusIcon}" style="--mdc-icon-size:20px;color:${statusColor};"></ha-icon>
+                                  <span style="font-size:16px;color:var(--primary-text-color);">${location}</span>
                                 </div>
-                              `;
-                            } catch (e) {
-                              return '<div style="color:var(--error-color);">Error loading mob</div>';
-                            }
-                          ]]]
+                                <div style="text-align:right;">
+                                  <span style="font-size:24px;font-weight:700;color:var(--primary-text-color);">${m.head_count || 0}</span>
+                                  <span style="font-size:14px;color:var(--secondary-text-color);"> head</span>
+                                </div>
+                              </div>
+                            </div>
+                          `;
+                        } catch (e) {
+                          return '<div style="color:var(--error-color);">Error loading mob</div>';
+                        }
+                      ]]]
 
               # ---------------------------------------------------------------
               # Move to Paddock
+              # ---------------------------------------------------------------
+              # Move Destination (paddocks + off-farm locations)
               # ---------------------------------------------------------------
               - type: conditional
                 conditions:
@@ -1301,15 +1495,15 @@ views:
                   cards:
                     - type: custom:button-card
                       template: str_title
-                      name: MOVE TO PADDOCK
+                      name: MOVE DESTINATION
                       color: "#0066cc"
 
                     - type: entities
                       entities:
                         - entity: input_select.str_move_destination
-                          name: Destination Paddock
+                          name: Destination
                         - entity: input_text.str_move_note
-                          name: Movement Note
+                          name: Note (optional)
                       card_mod:
                         style: |
                           ha-card {
@@ -1324,6 +1518,26 @@ views:
                       tap_action:
                         action: call-service
                         service: script.str_move_mob_submit
+
+                    - type: custom:button-card
+                      entity: sensor.str_selected_mob
+                      template: str_success
+                      name: Return to Farm
+                      icon: mdi:home
+                      tap_action:
+                        action: call-service
+                        service: script.str_return_to_farm_submit
+                      show_entity_picture: false
+                      show_state: false
+                      styles:
+                        card:
+                          - display: |
+                              [[[
+                                const mobId = entity.attributes.mob_id;
+                                const mobs = states['sensor.str_mobs']?.attributes?.mobs || {};
+                                const mob = mobs[mobId];
+                                return (mob && mob.off_farm === true) ? 'flex' : 'none';
+                              ]]]
 
               # ---------------------------------------------------------------
               # Adjust Head Count
@@ -1365,149 +1579,6 @@ views:
                         service: script.str_adjust_count_submit
 
               # ---------------------------------------------------------------
-              # Off-Farm Actions
-              # ---------------------------------------------------------------
-              - type: conditional
-                conditions:
-                  - entity: input_select.str_mob
-                    state_not: "Select Mob"
-                card:
-                  type: vertical-stack
-                  cards:
-                    - type: custom:button-card
-                      template: str_title
-                      name: OFF-FARM STATUS
-                      color: "#ff9800"
-
-                    - type: entities
-                      entities:
-                        - entity: input_select.str_off_farm_reason
-                          name: Off-Farm Location/Reason
-                        - entity: input_text.str_move_note
-                          name: Note
-                      card_mod:
-                        style: |
-                          ha-card {
-                            border-radius: 12px;
-                            padding: 4px;
-                          }
-
-                    - type: horizontal-stack
-                      cards:
-                        - type: custom:button-card
-                          template: str_warning
-                          name: Send Off-Farm
-                          icon: mdi:truck-delivery
-                          tap_action:
-                            action: call-service
-                            service: script.str_set_off_farm_submit
-
-                        - type: custom:button-card
-                          template: str_success
-                          name: Return to Farm
-                          icon: mdi:home
-                          tap_action:
-                            action: call-service
-                            service: script.str_return_to_farm_submit
-
-              # ---------------------------------------------------------------
-              # Toggle Attributes
-              # ---------------------------------------------------------------
-              - type: conditional
-                conditions:
-                  - entity: input_select.str_mob
-                    state_not: "Select Mob"
-                card:
-                  type: vertical-stack
-                  cards:
-                    - type: custom:button-card
-                      template: str_title
-                      name: MOB ATTRIBUTES
-                      color: "#607d8b"
-
-                    - type: horizontal-stack
-                      cards:
-                        - type: custom:button-card
-                          template: str_secondary
-                          name: Lick
-                          icon: mdi:cube
-                          tap_action:
-                            action: call-service
-                            service: script.str_toggle_attribute
-                            data:
-                              attribute: lick_active
-                          styles:
-                            card:
-                              - height: 60px
-
-                        - type: custom:button-card
-                          template: str_secondary
-                          name: Vaccinated
-                          icon: mdi:needle
-                          tap_action:
-                            action: call-service
-                            service: script.str_toggle_attribute
-                            data:
-                              attribute: vaccinated
-                          styles:
-                            card:
-                              - height: 60px
-
-                        - type: custom:button-card
-                          template: str_secondary
-                          name: Pregnant
-                          icon: mdi:human-pregnant
-                          tap_action:
-                            action: call-service
-                            service: script.str_toggle_attribute
-                            data:
-                              attribute: pregnant
-                          styles:
-                            card:
-                              - height: 60px
-
-                    - type: horizontal-stack
-                      cards:
-                        - type: custom:button-card
-                          template: str_secondary
-                          name: For Sale
-                          icon: mdi:tag
-                          tap_action:
-                            action: call-service
-                            service: script.str_toggle_attribute
-                            data:
-                              attribute: for_sale
-                          styles:
-                            card:
-                              - height: 60px
-
-                        - type: custom:button-card
-                          template: str_secondary
-                          name: Weaned
-                          icon: mdi:baby-bottle
-                          tap_action:
-                            action: call-service
-                            service: script.str_toggle_attribute
-                            data:
-                              attribute: weaned
-                          styles:
-                            card:
-                              - height: 60px
-
-                        - type: custom:button-card
-                          template: str_secondary
-                          name: Drenched
-                          icon: mdi:water
-                          tap_action:
-                            action: call-service
-                            service: script.str_toggle_attribute
-                            data:
-                              attribute: drenched
-                          styles:
-                            card:
-                              - height: 60px
-
-              # ---------------------------------------------------------------
               # Movement History (ASM-style cards)
               # ---------------------------------------------------------------
               - type: custom:button-card
@@ -1528,7 +1599,7 @@ views:
                     - background: transparent
                     - box-shadow: none
                     - padding: 0
-                    - width: 100%
+                    - margin: 0
                   grid:
                     - display: block
                   custom_fields:
@@ -1547,14 +1618,13 @@ views:
                                   </div>`;
                         }
 
-                        // Action config (colors and icons)
                         const actionConfig = {
-                          'add': { icon: 'mdi:plus-circle', color: '#4caf50', bg: 'rgba(76,175,80,0.12)', label: 'Added' },
-                          'move': { icon: 'mdi:map-marker-right', color: '#2196f3', bg: 'rgba(33,150,243,0.12)', label: 'Moved' },
-                          'off_farm': { icon: 'mdi:truck-delivery', color: '#ff9800', bg: 'rgba(255,152,0,0.12)', label: 'Off Farm' },
-                          'return': { icon: 'mdi:home', color: '#4caf50', bg: 'rgba(76,175,80,0.12)', label: 'Returned' },
-                          'adjust': { icon: 'mdi:plus-minus', color: '#9c27b0', bg: 'rgba(156,39,176,0.12)', label: 'Adjusted' },
-                          'delete': { icon: 'mdi:delete', color: '#f44336', bg: 'rgba(244,67,54,0.12)', label: 'Deleted' }
+                          'add': { icon: 'mdi:plus-circle', color: '#4caf50', bg: 'rgba(76,175,80,0.15)', label: 'Added' },
+                          'move': { icon: 'mdi:map-marker-right', color: '#2196f3', bg: 'rgba(33,150,243,0.15)', label: 'Moved' },
+                          'off_farm': { icon: 'mdi:truck-delivery', color: '#ff9800', bg: 'rgba(255,152,0,0.15)', label: 'Off Farm' },
+                          'return': { icon: 'mdi:home', color: '#4caf50', bg: 'rgba(76,175,80,0.15)', label: 'Returned' },
+                          'adjust': { icon: 'mdi:plus-minus', color: '#9c27b0', bg: 'rgba(156,39,176,0.15)', label: 'Adjusted' },
+                          'delete': { icon: 'mdi:delete', color: '#f44336', bg: 'rgba(244,67,54,0.15)', label: 'Deleted' }
                         };
 
                         let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
@@ -1679,11 +1749,11 @@ views:
                       padding: 8px 12px;
                     }
 
-              - type: horizontal-stack
+              - type: vertical-stack
                 cards:
                   - type: custom:button-card
                     template: str_success
-                    name: Initialize
+                    name: Initialize System
                     icon: mdi:cog
                     tap_action:
                       action: call-service
@@ -1691,7 +1761,7 @@ views:
 
                   - type: custom:button-card
                     template: str_action
-                    name: Refresh
+                    name: Refresh Data
                     icon: mdi:refresh
                     tap_action:
                       action: call-service
@@ -1728,18 +1798,15 @@ views:
                       padding: 4px;
                     }
 
-              - type: horizontal-stack
+              - type: vertical-stack
                 cards:
                   - type: custom:button-card
                     template: str_success
-                    name: Add
+                    name: Add Age Class
                     icon: mdi:plus
                     tap_action:
                       action: call-service
                       service: script.str_add_age_class_submit
-                    styles:
-                      card:
-                        - height: 50px
 
                   - type: custom:button-card
                     template: str_danger
@@ -1748,9 +1815,6 @@ views:
                     tap_action:
                       action: call-service
                       service: script.str_remove_age_class_submit
-                    styles:
-                      card:
-                        - height: 50px
 
               # ---------------------------------------------------------------
               # Crosses Manager
@@ -1781,18 +1845,15 @@ views:
                       padding: 4px;
                     }
 
-              - type: horizontal-stack
+              - type: vertical-stack
                 cards:
                   - type: custom:button-card
                     template: str_success
-                    name: Add
+                    name: Add Cross
                     icon: mdi:plus
                     tap_action:
                       action: call-service
                       service: script.str_add_cross_submit
-                    styles:
-                      card:
-                        - height: 50px
 
                   - type: custom:button-card
                     template: str_danger
@@ -1801,9 +1862,6 @@ views:
                     tap_action:
                       action: call-service
                       service: script.str_remove_cross_submit
-                    styles:
-                      card:
-                        - height: 50px
 
               # ---------------------------------------------------------------
               # Attributes Manager
@@ -1850,9 +1908,6 @@ views:
                 tap_action:
                   action: call-service
                   service: script.str_add_attribute_submit
-                styles:
-                  card:
-                    - height: 50px
 
               # ---------------------------------------------------------------
               # Off-Farm Locations Manager
@@ -1883,18 +1938,15 @@ views:
                       padding: 4px;
                     }
 
-              - type: horizontal-stack
+              - type: vertical-stack
                 cards:
                   - type: custom:button-card
                     template: str_success
-                    name: Add
+                    name: Add Location
                     icon: mdi:plus
                     tap_action:
                       action: call-service
                       service: script.str_add_off_farm_location_submit
-                    styles:
-                      card:
-                        - height: 50px
 
                   - type: custom:button-card
                     template: str_danger
@@ -1903,9 +1955,6 @@ views:
                     tap_action:
                       action: call-service
                       service: script.str_remove_off_farm_location_submit
-                    styles:
-                      card:
-                        - height: 50px
 
               # ---------------------------------------------------------------
               # Data Management
@@ -1924,29 +1973,13 @@ views:
                       padding: 16px;
                     }
 
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: str_action
-                    name: Export Data
-                    icon: mdi:export
-                    tap_action:
-                      action: call-service
-                      service: script.str_export_data
-                    styles:
-                      card:
-                        - height: 60px
-
-                  - type: custom:button-card
-                    template: str_secondary
-                    name: Import Backup
-                    icon: mdi:import
-                    tap_action:
-                      action: more-info
-                      entity: input_select.str_backup_file
-                    styles:
-                      card:
-                        - height: 60px
+              - type: custom:button-card
+                template: str_action
+                name: Export Data
+                icon: mdi:export
+                tap_action:
+                  action: call-service
+                  service: script.str_export_data
 
               - type: entities
                 entities:
@@ -1966,9 +1999,6 @@ views:
                 tap_action:
                   action: call-service
                   service: script.str_import_backup_submit
-                styles:
-                  card:
-                    - height: 50px
 
               # ---------------------------------------------------------------
               # Reset (Danger Zone)
