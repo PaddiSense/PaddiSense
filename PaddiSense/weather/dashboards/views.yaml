@@ -3013,7 +3013,7 @@ views:
                       icon: mdi:pencil
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                           - background: "#1565c0"
                         name:
@@ -3042,7 +3042,7 @@ views:
                         ]]]
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3063,7 +3063,7 @@ views:
                       color: "#c62828"
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3100,7 +3100,7 @@ views:
                       icon: mdi:pencil
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                           - background: "#1565c0"
                         name:
@@ -3129,7 +3129,7 @@ views:
                         ]]]
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3150,7 +3150,7 @@ views:
                       color: "#c62828"
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3187,7 +3187,7 @@ views:
                       icon: mdi:pencil
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                           - background: "#1565c0"
                         name:
@@ -3216,7 +3216,7 @@ views:
                         ]]]
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3237,7 +3237,7 @@ views:
                       color: "#c62828"
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3274,7 +3274,7 @@ views:
                       icon: mdi:pencil
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                           - background: "#1565c0"
                         name:
@@ -3303,7 +3303,7 @@ views:
                         ]]]
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3324,7 +3324,7 @@ views:
                       color: "#c62828"
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -3415,7 +3415,7 @@ views:
                       icon: mdi:content-save
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                           - background: "#2e7d32"
                         name:
@@ -3435,7 +3435,7 @@ views:
                       icon: mdi:pause-circle
                       styles:
                         card:
-                          - height: 42px
+                          - height: 70px
                           - border-radius: 12px
                           - background: "#ff9800"
                         name:

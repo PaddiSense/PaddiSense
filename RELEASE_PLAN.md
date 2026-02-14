@@ -226,12 +226,13 @@ Review each module for:
 | registry | manager.yaml | Fixed (56px → 70px) |
 | hfm | views.yaml | Fixed (60px → 70px, 6 instances) |
 | asm | views.yaml | Fixed (56px/60px → 70px, 12 instances) |
-| ipm | inventory.yaml | Fixed (60px → 70px, 2 instances) |
+| ipm | inventory.yaml | Fixed (60px → 70px, 2 instances; 35px/45px → 70px, 6 instances) |
 | pwm | views.yaml | Fixed (60px → 70px, 4 instances) |
 | wss | views.yaml | Fixed (60px → 70px, 5 instances) |
 | registry | config.yaml | Fixed (60px → 70px, 1 instance) |
+| weather | views.yaml | Fixed (42px → 70px, 15 station buttons) |
 
-**Note:** 50px title bars and weather display tiles are intentionally smaller (not action buttons).
+**Note:** 50px title bars, weather forecast tiles (56px), and form section headers (36-40px) are intentionally smaller (not action buttons).
 
 ### Git/Repo Status
 - [x] main and dev branches synced (same commit 4cd5c73)

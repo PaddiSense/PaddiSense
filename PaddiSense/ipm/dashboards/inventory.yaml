@@ -712,7 +712,7 @@ views:
                         service: script.ipm_clear_active_1
                       styles:
                         card:
-                          - height: 35px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 12px
@@ -742,7 +742,7 @@ views:
                             entity_id: input_boolean.ipm_show_active_2
                         styles:
                           card:
-                            - height: 45px
+                            - height: 70px
                             - border-radius: 12px
                           name:
                             - font-size: 14px
@@ -788,7 +788,7 @@ views:
                               service: script.ipm_clear_active_2
                             styles:
                               card:
-                                - height: 35px
+                                - height: 70px
                                 - border-radius: 12px
                               name:
                                 - font-size: 12px
@@ -817,7 +817,7 @@ views:
                                   entity_id: input_boolean.ipm_show_active_3
                               styles:
                                 card:
-                                  - height: 45px
+                                  - height: 70px
                                   - border-radius: 12px
                                 name:
                                   - font-size: 14px
@@ -863,7 +863,7 @@ views:
                               service: script.ipm_clear_active_3
                             styles:
                               card:
-                                - height: 35px
+                                - height: 70px
                                 - border-radius: 12px
                               name:
                                 - font-size: 12px
@@ -892,7 +892,7 @@ views:
                                   entity_id: input_boolean.ipm_show_active_4
                               styles:
                                 card:
-                                  - height: 45px
+                                  - height: 70px
                                   - border-radius: 12px
                                 name:
                                   - font-size: 14px
@@ -938,7 +938,7 @@ views:
                               service: script.ipm_clear_active_4
                             styles:
                               card:
-                                - height: 35px
+                                - height: 70px
                                 - border-radius: 12px
                               name:
                                 - font-size: 12px
@@ -967,7 +967,7 @@ views:
                                   entity_id: input_boolean.ipm_show_active_5
                               styles:
                                 card:
-                                  - height: 45px
+                                  - height: 70px
                                   - border-radius: 12px
                                 name:
                                   - font-size: 14px
@@ -1013,7 +1013,7 @@ views:
                               service: script.ipm_clear_active_5
                             styles:
                               card:
-                                - height: 35px
+                                - height: 70px
                                 - border-radius: 12px
                               name:
                                 - font-size: 12px
@@ -1042,7 +1042,7 @@ views:
                                   entity_id: input_boolean.ipm_show_active_6
                               styles:
                                 card:
-                                  - height: 45px
+                                  - height: 70px
                                   - border-radius: 12px
                                 name:
                                   - font-size: 14px
@@ -1088,7 +1088,7 @@ views:
                               service: script.ipm_clear_active_6
                             styles:
                               card:
-                                - height: 35px
+                                - height: 70px
                                 - border-radius: 12px
                               name:
                                 - font-size: 12px
