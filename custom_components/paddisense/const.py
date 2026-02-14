@@ -250,6 +250,13 @@ REQUIRED_HACS_CARDS = [
 # Required HACS integrations per module
 # Each entry: {"repository": "owner/repo", "domain": "integration_domain"}
 MODULE_HACS_INTEGRATIONS = {
+    "core": [
+        {
+            "repository": "thomasloven/hass-browser_mod",
+            "domain": "browser_mod",
+            "name": "Browser Mod",
+        },
+    ],
     "weather": [
         {
             "repository": "bremor/bureau_of_meteorology",

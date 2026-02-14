@@ -2760,6 +2760,7 @@ views:
 
                         // Integration requirements
                         const integrations = [
+                          { name: 'Browser Mod', desc: 'Popups & navigation (Core)' },
                           { name: 'Bureau of Meteorology', desc: 'BOM weather data (Weather module)' },
                         ];
 
@@ -2808,7 +2809,7 @@ views:
                         html += '</div>';
 
                         // Integrations
-                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Integrations (1)</div>';
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Integrations (2)</div>';
                         html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
                         for (const int of integrations) {
                           html += `<div style="background:rgba(156,39,176,0.1);border:1px solid #9c27b0;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
@@ -2858,22 +2859,41 @@ views:
                     confirmation:
                       text: Install all required HACS frontend cards?
 
-              - type: custom:button-card
-                template: template_action
-                name: Install BOM Integration
-                icon: mdi:weather-cloudy
-                tap_action:
-                  action: call-service
-                  service: paddisense.install_module_hacs
-                  service_data:
-                    module_id: weather
-                hold_action:
-                  action: none
-                confirmation:
-                  text: |
-                    Install Bureau of Meteorology integration?
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: template_action
+                    name: Install Browser Mod
+                    icon: mdi:application-brackets
+                    tap_action:
+                      action: call-service
+                      service: paddisense.install_module_hacs
+                      service_data:
+                        module_id: core
+                    hold_action:
+                      action: none
+                    confirmation:
+                      text: |
+                        Install Browser Mod integration?
 
-                    This is required for Australian weather forecasts.
+                        Required for popups and navigation controls.
+
+                  - type: custom:button-card
+                    template: template_action
+                    name: Install BOM Integration
+                    icon: mdi:weather-cloudy
+                    tap_action:
+                      action: call-service
+                      service: paddisense.install_module_hacs
+                      service_data:
+                        module_id: weather
+                    hold_action:
+                      action: none
+                    confirmation:
+                      text: |
+                        Install Bureau of Meteorology integration?
+
+                        This is required for Australian weather forecasts.
 
               - type: custom:button-card
                 template: template_titleblock

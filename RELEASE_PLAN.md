@@ -193,13 +193,13 @@ Review each module for:
 - [x] Added "Install BOM Integration" button (Weather module)
 - [x] Updated HACS dependencies display (categorized: Core/PWM/Weather)
 
-### HACS Dependencies (12 cards + 1 integration)
+### HACS Dependencies (12 cards + 2 integrations)
 | Category | Cards |
 |----------|-------|
 | Core (8) | button-card, card-mod, auto-entities, mushroom, apexcharts-card, mini-graph-card, flex-table-card, restriction-card |
 | PWM (2) | circular-timer-card, flipdown-timer-card |
 | Weather (2) | windrose-card, weather-radar-card |
-| Integration | Bureau of Meteorology |
+| Integrations | Browser Mod (Core), Bureau of Meteorology (Weather) |
 
 ### UI Issues Found
 
