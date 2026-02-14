@@ -298,6 +298,23 @@ input_select:
     options:
       - Select Event
 
+  # History Filters
+  hfm_filter_event_type:
+    name: HFM Filter Event Type
+    icon: mdi:filter
+    options:
+      - All Events
+      - Chemical
+      - Nutrient
+      - Irrigation
+      - Crop Stage
+
+  hfm_filter_paddock:
+    name: HFM Filter Paddock
+    icon: mdi:vector-square
+    options:
+      - All Paddocks
+
   # Applicator Management
   hfm_applicator_type:
     name: HFM Applicator Type
@@ -882,6 +899,63 @@ automation:
             {% set names = state_attr('sensor.hfm_events', 'paddock_names') or [] %}
             {{ ['Select Paddock'] + names if names else ['Select Paddock'] }}
 
+  - id: hfm_update_filter_paddock_options
+    alias: "HFM Update Filter Paddock Options"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_events
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: 3
+      - variables:
+          events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
+          paddock_names: >
+            {% set ns = namespace(names=[]) %}
+            {% for e in events %}
+              {% if e.paddock and e.paddock.name and e.paddock.name not in ns.names %}
+                {% set ns.names = ns.names + [e.paddock.name] %}
+              {% endif %}
+            {% endfor %}
+            {{ ['All Paddocks'] + (ns.names | sort) }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_filter_paddock
+        data:
+          options: "{{ paddock_names }}"
+
+  - id: hfm_update_edit_event_options
+    alias: "HFM Update Edit Event Options"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_events
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: 4
+      - variables:
+          events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
+          type_labels:
+            chemical: "Chem"
+            nutrient: "Nutr"
+            irrigation: "Irri"
+            crop_stage: "Crop"
+          event_options: >
+            {% set ns = namespace(opts=['Select Event']) %}
+            {% for e in events[:50] %}
+              {% set date = e.event_date | default('?') %}
+              {% set etype = type_labels.get(e.event_type, e.event_type[:4]) if e.event_type else '?' %}
+              {% set pname = e.paddock.name if e.paddock else '?' %}
+              {% set label = date ~ ' | ' ~ etype ~ ' | ' ~ pname %}
+              {% set ns.opts = ns.opts + [label] %}
+            {% endfor %}
+            {{ ns.opts }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_edit_event
+        data:
+          options: "{{ event_options }}"
+
   - id: hfm_update_product_options
     alias: "HFM Update Product Options"
     trigger:
@@ -1448,6 +1522,28 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.hfm_events
+      - service: script.hfm_refresh_filter_options
+
+  hfm_refresh_filter_options:
+    alias: "HFM Refresh Filter Options"
+    icon: mdi:filter-cog
+    description: "Refresh paddock filter dropdown with paddocks from events"
+    sequence:
+      - variables:
+          events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
+          paddock_names: >
+            {% set ns = namespace(names=['All Paddocks']) %}
+            {% for e in events %}
+              {% if e.paddock and e.paddock.name and e.paddock.name not in ns.names %}
+                {% set ns.names = ns.names + [e.paddock.name] %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.names }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_filter_paddock
+        data:
+          options: "{{ paddock_names }}"
 
   # --- Weather Capture Scripts ---
 
@@ -2153,14 +2249,18 @@ script:
           selected: "{{ states('input_select.hfm_edit_event') }}"
           parts: "{{ selected.split(' | ') }}"
           sel_date: "{{ parts[0] if parts | length > 0 else '' }}"
-          sel_type: "{{ parts[1] | lower | replace(' ', '_') if parts | length > 1 else '' }}"
+          sel_type_short: "{{ parts[1] if parts | length > 1 else '' }}"
           sel_paddock: "{{ parts[2] if parts | length > 2 else '' }}"
+          type_map:
+            Chem: "chemical"
+            Nutr: "nutrient"
+            Irri: "irrigation"
+            Crop: "crop_stage"
+          sel_type: "{{ type_map.get(sel_type_short, sel_type_short | lower) }}"
           events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
-          pmap: "{{ state_attr('sensor.hfm_events', 'paddock_map') or {} }}"
           event_id: >
             {% for e in events %}
-              {% set first_paddock = e.paddocks[0] if e.paddocks else '' %}
-              {% set pname = pmap.get(first_paddock, first_paddock) if first_paddock else 'Unknown' %}
+              {% set pname = e.paddock.name if e.paddock else 'Unknown' %}
               {% if e.event_date == sel_date and e.event_type == sel_type and pname == sel_paddock %}
                 {{ e.id }}
               {% endif %}
@@ -2183,14 +2283,18 @@ script:
           selected: "{{ states('input_select.hfm_edit_event') }}"
           parts: "{{ selected.split(' | ') }}"
           sel_date: "{{ parts[0] if parts | length > 0 else '' }}"
-          sel_type: "{{ parts[1] | lower | replace(' ', '_') if parts | length > 1 else '' }}"
+          sel_type_short: "{{ parts[1] if parts | length > 1 else '' }}"
           sel_paddock: "{{ parts[2] if parts | length > 2 else '' }}"
+          type_map:
+            Chem: "chemical"
+            Nutr: "nutrient"
+            Irri: "irrigation"
+            Crop: "crop_stage"
+          sel_type: "{{ type_map.get(sel_type_short, sel_type_short | lower) }}"
           events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
-          pmap: "{{ state_attr('sensor.hfm_events', 'paddock_map') or {} }}"
           event_id: >
             {% for e in events %}
-              {% set first_paddock = e.paddocks[0] if e.paddocks else '' %}
-              {% set pname = pmap.get(first_paddock, first_paddock) if first_paddock else 'Unknown' %}
+              {% set pname = e.paddock.name if e.paddock else 'Unknown' %}
               {% if e.event_date == sel_date and e.event_type == sel_type and pname == sel_paddock %}
                 {{ e.id }}
               {% endif %}
@@ -2213,17 +2317,22 @@ script:
           selected: "{{ states('input_select.hfm_edit_event') }}"
           parts: "{{ selected.split(' | ') }}"
           sel_date: "{{ parts[0] if parts | length > 0 else '' }}"
-          sel_type: "{{ parts[1] | lower | replace(' ', '_') if parts | length > 1 else '' }}"
+          sel_type_short: "{{ parts[1] if parts | length > 1 else '' }}"
           sel_paddock: "{{ parts[2] if parts | length > 2 else '' }}"
+          # Map short labels back to full event types
+          type_map:
+            Chem: "chemical"
+            Nutr: "nutrient"
+            Irri: "irrigation"
+            Crop: "crop_stage"
+          sel_type: "{{ type_map.get(sel_type_short, sel_type_short | lower) }}"
       - condition: template
         value_template: "{{ sel_date != '' and sel_type != '' }}"
       - variables:
           events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
-          pmap: "{{ state_attr('sensor.hfm_events', 'paddock_map') or {} }}"
           event: >
             {% for e in events %}
-              {% set first_paddock = e.paddocks[0] if e.paddocks else '' %}
-              {% set pname = pmap.get(first_paddock, first_paddock) if first_paddock else 'Unknown' %}
+              {% set pname = e.paddock.name if e.paddock else 'Unknown' %}
               {% if e.event_date == sel_date and e.event_type == sel_type and pname == sel_paddock %}
                 {{ e | tojson }}
               {% endif %}

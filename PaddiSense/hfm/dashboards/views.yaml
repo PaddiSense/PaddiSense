@@ -4167,14 +4167,36 @@ views:
                   navigation_path: /hfm-heyfarm/hfm-new
 
               #----------------------------------------------------------------
+              # FILTERS
+              #----------------------------------------------------------------
+              - type: entities
+                entities:
+                  - entity: input_select.hfm_filter_event_type
+                    name: Filter by Type
+                  - entity: input_select.hfm_filter_paddock
+                    name: Filter by Paddock
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                    }
+                    .mdc-list-item__primary-text {
+                      font-size: 1.1rem !important;
+                    }
+
+              #----------------------------------------------------------------
               # ALL EVENTS - IPM-style cards
               #----------------------------------------------------------------
               - type: custom:button-card
                 template: hfm_title
-                name: ALL EVENTS
+                name: EVENTS
 
               - type: custom:button-card
                 entity: sensor.hfm_events
+                triggers_update:
+                  - sensor.hfm_events
+                  - input_select.hfm_filter_event_type
+                  - input_select.hfm_filter_paddock
                 show_icon: false
                 show_name: false
                 show_state: false
@@ -4201,15 +4223,46 @@ views:
                                   </div>`;
                         }
 
-                        const events = entity.attributes.all_events || [];
+                        const allEvents = entity.attributes.all_events || [];
                         const pmap = entity.attributes.paddock_map || {};
 
-                        if (events.length === 0) {
+                        // Get filter selections
+                        const filterType = states['input_select.hfm_filter_event_type']?.state || 'All Events';
+                        const filterPaddock = states['input_select.hfm_filter_paddock']?.state || 'All Paddocks';
+                        const filterMap = {
+                          'Chemical': 'chemical',
+                          'Nutrient': 'nutrient',
+                          'Irrigation': 'irrigation',
+                          'Crop Stage': 'crop_stage'
+                        };
+
+                        // Apply filters
+                        let events = allEvents;
+                        if (filterType !== 'All Events') {
+                          events = events.filter(e => e.event_type === filterMap[filterType]);
+                        }
+                        if (filterPaddock !== 'All Paddocks') {
+                          events = events.filter(e => e.paddock?.name === filterPaddock);
+                        }
+
+                        if (allEvents.length === 0) {
                           return `
                             <div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
                               <ha-icon icon="mdi:calendar-blank" style="--mdc-icon-size:48px;margin-bottom:12px;"></ha-icon>
                               <div style="font-size:16px;">No events recorded yet</div>
                               <div style="font-size:14px;margin-top:8px;">Use <b>New Event</b> to add one</div>
+                            </div>`;
+                        }
+
+                        if (events.length === 0) {
+                          let filterDesc = [];
+                          if (filterType !== 'All Events') filterDesc.push(filterType);
+                          if (filterPaddock !== 'All Paddocks') filterDesc.push(filterPaddock);
+                          const filterText = filterDesc.length > 0 ? filterDesc.join(' + ') : 'matching';
+                          return `
+                            <div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
+                              <ha-icon icon="mdi:filter-off" style="--mdc-icon-size:36px;margin-bottom:8px;"></ha-icon>
+                              <div style="font-size:14px;">No ${filterText} events found</div>
                             </div>`;
                         }
 
