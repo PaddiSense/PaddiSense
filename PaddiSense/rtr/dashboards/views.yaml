@@ -189,8 +189,13 @@ views:
                       </div>`;
                     }
 
-                    // Sort by paddock name
+                    // Sort by moisture (highest to lowest), then by paddock name
                     rtrSensors.sort((a, b) => {
+                      const moistA = parseFloat(a.state.attributes.moisture_predict) || -999;
+                      const moistB = parseFloat(b.state.attributes.moisture_predict) || -999;
+                      if (moistA !== moistB) {
+                        return moistB - moistA;  // Highest moisture first
+                      }
                       const nameA = a.state.attributes.paddock || a.paddockId;
                       const nameB = b.state.attributes.paddock || b.paddockId;
                       return nameA.localeCompare(nameB);
