@@ -38,10 +38,12 @@ command_line:
         - paddocks
         - bays
         - seasons
+        - businesses
         - crops
         - current_crops
         - current_month
         - hierarchy
+        - business_names
         - farm_names
         - paddock_names
         - season_names
@@ -69,6 +71,8 @@ shell_command:
     --farm '{{ farm | default("farm_1") }}'
     --bay_prefix '{{ bay_prefix | default("B-") }}'
     --bay_count {{ bay_count }}
+    {% if brown_area is defined and brown_area %}--brown_area {{ brown_area }}{% endif %}
+    {% if green_area is defined and green_area %}--green_area {{ green_area }}{% endif %}
 
   registry_edit_paddock: >-
     python3 /config/PaddiSense/registry/python/registry_backend.py edit_paddock
@@ -76,6 +80,8 @@ shell_command:
     {% if name is defined %}--name '{{ name }}'{% endif %}
     {% if farm is defined %}--farm '{{ farm }}'{% endif %}
     {% if current_season is defined %}--current_season {{ current_season }}{% endif %}
+    {% if brown_area is defined %}--brown_area {{ brown_area }}{% endif %}
+    {% if green_area is defined %}--green_area {{ green_area }}{% endif %}
 
   registry_delete_paddock: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_paddock --id '{{ id }}'"
 
@@ -119,13 +125,27 @@ shell_command:
   registry_delete_season: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_season --id '{{ id }}'"
   registry_set_active_season: "python3 /config/PaddiSense/registry/python/registry_backend.py set_active_season --id '{{ id }}'"
 
+  # Business commands
+  registry_add_business: "python3 /config/PaddiSense/registry/python/registry_backend.py add_business --name '{{ name }}'"
+
+  registry_edit_business: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_business
+    --id '{{ id }}'
+    {% if name is defined %}--name '{{ name }}'{% endif %}
+
+  registry_delete_business: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_business --id '{{ id }}'"
+
   # Farm commands
-  registry_add_farm: "python3 /config/PaddiSense/registry/python/registry_backend.py add_farm --name '{{ name }}'"
+  registry_add_farm: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py add_farm
+    --name '{{ name }}'
+    {% if business is defined %}--business '{{ business }}'{% endif %}
 
   registry_edit_farm: >-
     python3 /config/PaddiSense/registry/python/registry_backend.py edit_farm
     --id '{{ id }}'
     {% if name is defined %}--name '{{ name }}'{% endif %}
+    {% if business is defined %}--business '{{ business }}'{% endif %}
 
   registry_delete_farm: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_farm --id '{{ id }}'"
 
@@ -224,6 +244,34 @@ template:
 # -----------------------------------------------------------------------------
 input_select:
   # Editor mode selectors (IPM-style pattern)
+  registry_business_editor_mode:
+    name: "Business Editor Mode"
+    options:
+      - "Add New Business"
+      - "Edit Existing Business"
+    icon: mdi:domain
+
+  # Business selector (for editing)
+  registry_business:
+    name: "Registry Business"
+    options:
+      - "Select..."
+    icon: mdi:domain
+
+  # Business filter for farms
+  registry_farm_business_filter:
+    name: "Filter by Business"
+    options:
+      - "All Businesses"
+    icon: mdi:filter
+
+  # Business assignment for new/edit farm
+  registry_new_farm_business:
+    name: "Assign to Business"
+    options:
+      - "None"
+    icon: mdi:domain
+
   registry_farm_editor_mode:
     name: "Farm Editor Mode"
     options:
@@ -414,6 +462,22 @@ input_text:
     icon: mdi:view-grid
     max: 50
 
+  # Business helpers
+  registry_new_business_name:
+    name: "New Business Name"
+    icon: mdi:domain
+    max: 100
+
+  registry_edit_business_name:
+    name: "Business Name"
+    icon: mdi:domain
+    max: 100
+
+  registry_edit_business_pointer:
+    name: "Edit Business Pointer"
+    icon: mdi:target
+    max: 50
+
   # Farm helpers
   registry_new_farm_name:
     name: "New Farm Name"
@@ -498,6 +562,42 @@ input_number:
     step: 1
     mode: box
 
+  registry_new_paddock_brown_area:
+    name: "Brown Area (ha)"
+    icon: mdi:ruler-square
+    min: 0
+    max: 10000
+    step: 0.1
+    mode: box
+    unit_of_measurement: "ha"
+
+  registry_new_paddock_green_area:
+    name: "Green Area (ha)"
+    icon: mdi:ruler-square
+    min: 0
+    max: 10000
+    step: 0.1
+    mode: box
+    unit_of_measurement: "ha"
+
+  registry_edit_paddock_brown_area:
+    name: "Brown Area (ha)"
+    icon: mdi:ruler-square
+    min: 0
+    max: 10000
+    step: 0.1
+    mode: box
+    unit_of_measurement: "ha"
+
+  registry_edit_paddock_green_area:
+    name: "Green Area (ha)"
+    icon: mdi:ruler-square
+    min: 0
+    max: 10000
+    step: 0.1
+    mode: box
+    unit_of_measurement: "ha"
+
   registry_crop_start_month:
     name: "Crop Start Month"
     icon: mdi:calendar-start
@@ -569,6 +669,29 @@ script:
           entity_id: sensor.farm_registry_data
       - delay:
           seconds: 1
+      # Business dropdowns
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['Select...'] + (businesses | list) if businesses else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm_business_filter
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['All Businesses'] + (businesses | list) if businesses else ['All Businesses'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_new_farm_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['None'] + (businesses | list) if businesses else ['None'] }}
+      # Other dropdowns
       - service: input_select.set_options
         target:
           entity_id: input_select.registry_season
@@ -908,6 +1031,16 @@ script:
           entity_id: input_number.registry_edit_paddock_bay_count
         data:
           value: "{{ paddock.bay_count | default(1) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_edit_paddock_brown_area
+        data:
+          value: "{{ paddock.brown_area_ha | default(0) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_edit_paddock_green_area
+        data:
+          value: "{{ paddock.green_area_ha | default(0) }}"
       - choose:
           - conditions:
               - condition: template
@@ -1006,6 +1139,147 @@ script:
         data:
           option: "Select..."
 
+  # --------------------------------------------------------------------------
+  # BUSINESS SCRIPTS
+  # --------------------------------------------------------------------------
+
+  # Add business
+  registry_add_business:
+    alias: "Registry - Add Business"
+    icon: mdi:domain
+    fields:
+      name:
+        description: "Business name"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_add_business
+        data:
+          name: "{{ name }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_business_name
+        data:
+          value: ""
+
+  # Delete business
+  registry_delete_business:
+    alias: "Registry - Delete Business"
+    icon: mdi:delete
+    fields:
+      id:
+        description: "Business ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_delete_business
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form after delete
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_business_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_business_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_business
+        data:
+          option: "Select..."
+
+  # Open edit business (loads values into helpers)
+  registry_open_edit_business:
+    alias: "Registry - Open Edit Business"
+    icon: mdi:pencil
+    fields:
+      id:
+        description: "Business ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_business_pointer
+        data:
+          value: "{{ id }}"
+      - variables:
+          business: "{{ state_attr('sensor.farm_registry_data', 'businesses')[id] | default({}) }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_business_name
+        data:
+          value: "{{ business.name | default('') }}"
+
+  # Save business edit
+  registry_save_business_edit:
+    alias: "Registry - Save Business Edit"
+    icon: mdi:content-save
+    sequence:
+      - variables:
+          business_id: "{{ states('input_text.registry_edit_business_pointer') }}"
+          new_name: "{{ states('input_text.registry_edit_business_name') }}"
+      # Validate that a business is selected
+      - condition: template
+        value_template: "{{ business_id | length > 0 }}"
+      - service: shell_command.registry_edit_business
+        data:
+          id: "{{ business_id }}"
+          name: "{{ new_name }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Refresh dropdown with updated data
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['Select...'] + (businesses | list) if businesses else ['Select...'] }}
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_business_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_business_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_business
+        data:
+          option: "Select..."
+
+  # --------------------------------------------------------------------------
+  # FARM SCRIPTS
+  # --------------------------------------------------------------------------
+
   # Add farm
   registry_add_farm:
     alias: "Registry - Add Farm"
@@ -1016,10 +1290,15 @@ script:
         required: true
         selector:
           text:
+      business:
+        description: "Business ID (optional)"
+        selector:
+          text:
     sequence:
       - service: shell_command.registry_add_farm
         data:
           name: "{{ name }}"
+          business: "{{ business | default('') }}"
       - delay:
           seconds: 1
       - service: homeassistant.update_entity
@@ -1031,6 +1310,11 @@ script:
           entity_id: input_text.registry_new_farm_name
         data:
           value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_new_farm_business
+        data:
+          option: "None"
 
   # Delete farm
   registry_delete_farm:
@@ -1051,6 +1335,22 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+      # Clear form after delete
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_farm_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_farm_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          option: "Select..."
 
   # Open edit farm (loads values into helpers)
   registry_open_edit_farm:
@@ -1070,11 +1370,20 @@ script:
           value: "{{ id }}"
       - variables:
           farm: "{{ state_attr('sensor.farm_registry_data', 'farms')[id] | default({}) }}"
+          businesses: "{{ state_attr('sensor.farm_registry_data', 'businesses') | default({}) }}"
+      - variables:
+          business_id: "{{ farm.business_id | default('') }}"
+          business_name: "{{ businesses[business_id].name if business_id and business_id in businesses else 'None' }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.registry_edit_farm_name
         data:
           value: "{{ farm.name | default('') }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_new_farm_business
+        data:
+          option: "{{ business_name }}"
 
   # Save farm edit
   registry_save_farm_edit:
@@ -1084,6 +1393,14 @@ script:
       - variables:
           farm_id: "{{ states('input_text.registry_edit_farm_pointer') }}"
           new_name: "{{ states('input_text.registry_edit_farm_name') }}"
+          business_name: "{{ states('input_select.registry_new_farm_business') }}"
+          businesses: "{{ state_attr('sensor.farm_registry_data', 'businesses') or {} }}"
+      - variables:
+          # Convert business name to ID
+          business_id: >-
+            {% if business_name == 'None' %}{% else %}
+            {% for bid, b in businesses.items() if b.name == business_name %}{{ bid }}{% endfor %}
+            {% endif %}
       # Validate that a farm is selected
       - condition: template
         value_template: "{{ farm_id | length > 0 }}"
@@ -1091,6 +1408,7 @@ script:
         data:
           id: "{{ farm_id }}"
           name: "{{ new_name }}"
+          business: "{{ business_id | trim }}"
       - delay:
           seconds: 1
       - service: homeassistant.update_entity
@@ -1572,6 +1890,8 @@ script:
           paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
           new_name: "{{ states('input_text.registry_edit_paddock_name') }}"
           current_season: "{{ is_state('input_boolean.registry_edit_current_season', 'on') }}"
+          brown_area: "{{ states('input_number.registry_edit_paddock_brown_area') | float(0) }}"
+          green_area: "{{ states('input_number.registry_edit_paddock_green_area') | float(0) }}"
           crop_1_name: "{{ states('input_select.registry_paddock_crop_1') }}"
           crop_2_name: "{{ states('input_select.registry_paddock_crop_2') }}"
           crop_1_start_name: "{{ states('input_select.registry_crop_1_start_month') }}"
@@ -1598,12 +1918,14 @@ script:
           crop_1_end: "{{ month_map[crop_1_end_name] | default(12) }}"
           crop_2_start: "{{ month_map[crop_2_start_name] | default(1) }}"
           crop_2_end: "{{ month_map[crop_2_end_name] | default(12) }}"
-      # Save paddock details (name, current_season)
+      # Save paddock details (name, current_season, areas)
       - service: shell_command.registry_edit_paddock
         data:
           id: "{{ paddock_id }}"
           name: "{{ new_name }}"
           current_season: "{{ current_season }}"
+          brown_area: "{{ brown_area }}"
+          green_area: "{{ green_area }}"
       - delay:
           milliseconds: 300
       # Save crop rotation
@@ -1678,6 +2000,16 @@ script:
           entity_id: input_number.registry_new_paddock_bay_count
         data:
           value: 4
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_new_paddock_brown_area
+        data:
+          value: 0
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_new_paddock_green_area
+        data:
+          value: 0
       - service: input_select.select_option
         target:
           entity_id: input_select.registry_new_paddock_farm
@@ -1747,6 +2079,8 @@ script:
       - variables:
           paddock_name: "{{ states('input_text.registry_new_paddock_name') }}"
           bay_count: "{{ states('input_number.registry_new_paddock_bay_count') | int }}"
+          brown_area: "{{ states('input_number.registry_new_paddock_brown_area') | float(0) }}"
+          green_area: "{{ states('input_number.registry_new_paddock_green_area') | float(0) }}"
           farm_name: "{{ states('input_select.registry_new_paddock_farm') }}"
           farms: "{{ state_attr('sensor.farm_registry_data', 'farms') or {} }}"
       - variables:
@@ -1762,6 +2096,8 @@ script:
           bay_count: "{{ bay_count }}"
           farm: "{{ farm_id | default('farm_1') | trim }}"
           bay_prefix: "B-"
+          brown_area: "{{ brown_area }}"
+          green_area: "{{ green_area }}"
       - delay:
           seconds: 1
       # Refresh data
@@ -1811,6 +2147,28 @@ automation:
       - delay:
           seconds: 2
       # Update all dropdowns
+      # Business dropdowns
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['Select...'] + (businesses | list) if businesses else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm_business_filter
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['All Businesses'] + (businesses | list) if businesses else ['All Businesses'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_new_farm_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['None'] + (businesses | list) if businesses else ['None'] }}
       - service: input_select.set_options
         target:
           entity_id: input_select.registry_season
@@ -1918,6 +2276,95 @@ automation:
           options: >-
             {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
             {{ ['Select...'] + crops if crops else ['Select...'] }}
+
+  # Update business dropdowns when data changes
+  - id: registry_update_business_dropdowns
+    alias: "Registry - Update Business Dropdowns"
+    trigger:
+      - platform: state
+        entity_id: sensor.farm_registry_data
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.farm_registry_data', 'business_names') is not none }}"
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['Select...'] + (businesses | list) if businesses else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm_business_filter
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['All Businesses'] + (businesses | list) if businesses else ['All Businesses'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_new_farm_business
+        data:
+          options: >-
+            {% set businesses = state_attr('sensor.farm_registry_data', 'business_names') or [] %}
+            {{ ['None'] + (businesses | list) if businesses else ['None'] }}
+
+  # Load business edit form when business is selected
+  - id: registry_load_business_on_select
+    alias: "Registry - Load Business on Select"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_business
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.state != 'Select...' }}"
+    action:
+      - variables:
+          business_name: "{{ states('input_select.registry_business') }}"
+          businesses: "{{ state_attr('sensor.farm_registry_data', 'businesses') or {} }}"
+      - variables:
+          business_id: >-
+            {% for bid, b in businesses.items() if (b.name | default('')) == business_name %}
+            {{ bid }}
+            {% endfor %}
+      - service: script.registry_open_edit_business
+        data:
+          id: "{{ business_id | trim }}"
+
+  # Filter farms when business filter changes
+  - id: registry_filter_farms_by_business
+    alias: "Registry - Filter Farms by Business"
+    trigger:
+      - platform: state
+        entity_id: input_select.registry_farm_business_filter
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          options: >-
+            {% set filter_business = states('input_select.registry_farm_business_filter') %}
+            {% set farms = state_attr('sensor.farm_registry_data', 'farms') or {} %}
+            {% set businesses = state_attr('sensor.farm_registry_data', 'businesses') or {} %}
+            {% set ns = namespace(result=[]) %}
+            {% for fid, f in farms.items() %}
+              {% if filter_business == 'All Businesses' %}
+                {% set ns.result = ns.result + [f.name | default(fid)] %}
+              {% else %}
+                {% set business_id = f.business_id | default('') %}
+                {% set business_data = businesses[business_id] | default({}) %}
+                {% set business_name = business_data.name | default('') %}
+                {% if business_name == filter_business %}
+                  {% set ns.result = ns.result + [f.name | default(fid)] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ['Select...'] + (ns.result | sort) if ns.result else ['Select...'] }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_farm
+        data:
+          option: "Select..."
 
   # Update paddock dropdown when data changes (all paddocks)
   - id: registry_update_paddock_dropdown

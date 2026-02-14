@@ -714,23 +714,170 @@ views:
         cards:
           - type: vertical-stack
             cards:
+              #----------------------------------------------------------------
+              # BUSINESS MANAGEMENT SECTION
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: template_titleblock
+                variables:
+                  var_name: BUSINESS MANAGEMENT
+
+              # Business editor mode selector
+              - type: entities
+                entities:
+                  - entity: input_select.registry_business_editor_mode
+                    name: Mode
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                      padding: 4px;
+                    }
+                    .mdc-list-item__primary-text {
+                      font-size: 1.3rem !important;
+                    }
+
+              # Edit Existing Business (conditional)
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_select.registry_business_editor_mode
+                    state: "Edit Existing Business"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: input_select.registry_business
+                          name: Select Business
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 4px;
+                            background: var(--card-background-color);
+                          }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.3rem !important;
+                          }
+
+                    - type: entities
+                      entities:
+                        - entity: input_text.registry_edit_business_name
+                          name: Business Name
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 6px;
+                            background: var(--card-background-color);
+                          }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.2rem !important;
+                          }
+
+                    - type: horizontal-stack
+                      cards:
+                        - type: custom:button-card
+                          template: template_success
+                          name: Save Changes
+                          icon: mdi:content-save
+                          tap_action:
+                            action: call-service
+                            service: script.registry_save_business_edit
+                          hold_action:
+                            action: none
+                          confirmation:
+                            text: Save business changes?
+
+                        - type: custom:button-card
+                          template: template_danger
+                          name: Delete
+                          icon: mdi:delete
+                          tap_action:
+                            action: call-service
+                            service: script.registry_delete_business
+                            service_data:
+                              id: "[[[ return states['input_text.registry_edit_business_pointer'].state; ]]]"
+                          hold_action:
+                            action: none
+                          confirmation:
+                            text: Delete this business? Businesses with farms cannot be deleted.
+
+              # Add New Business (conditional)
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: input_select.registry_business_editor_mode
+                    state: "Add New Business"
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: entities
+                      entities:
+                        - entity: input_text.registry_new_business_name
+                          name: Business Name
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 6px;
+                            background: var(--card-background-color);
+                          }
+                          .mdc-list-item__primary-text {
+                            font-size: 1.2rem !important;
+                          }
+
+                    - type: custom:button-card
+                      entity: input_text.registry_new_business_name
+                      name: Add Business
+                      icon: mdi:domain
+                      color_type: card
+                      color: "#28a745"
+                      tap_action:
+                        action: call-service
+                        service: script.registry_add_business
+                        service_data:
+                          name: "[[[ return states['input_text.registry_new_business_name'].state; ]]]"
+                        confirmation:
+                          text: |
+                            [[[
+                              const name = states['input_text.registry_new_business_name'].state || '';
+                              if (!name || name.trim() === '') {
+                                return 'Please enter a business name first.';
+                              }
+                              return `Add new business: ${name}?`;
+                            ]]]
+                      styles:
+                        card:
+                          - height: 70px
+                          - border-radius: 12px
+                        name:
+                          - font-size: 16px
+                          - font-weight: 700
+                          - color: white
+                        icon:
+                          - color: white
+                          - width: 24px
+
+              #----------------------------------------------------------------
+              # FARM MANAGEMENT SECTION
+              #----------------------------------------------------------------
               - type: custom:button-card
                 template: template_titleblock
                 variables:
                   var_name: FARM MANAGEMENT
 
-              # Refresh button for dropdowns (helps after install)
-              - type: custom:button-card
-                template: template_secondary
-                name: Refresh Data
-                icon: mdi:refresh
-                tap_action:
-                  action: call-service
-                  service: script.registry_refresh_dropdowns
-                hold_action:
-                  action: none
+              # Business filter for farms
+              - type: entities
+                entities:
+                  - entity: input_select.registry_farm_business_filter
+                    name: Filter by Business
+                card_mod:
+                  style: |
+                    ha-card { border-radius: 12px; }
 
-              # Editor mode selector
+              # Farm editor mode selector
               - type: entities
                 entities:
                   - entity: input_select.registry_farm_editor_mode
@@ -791,6 +938,8 @@ views:
                       entities:
                         - entity: input_text.registry_edit_farm_name
                           name: Farm Name
+                        - entity: input_select.registry_new_farm_business
+                          name: Assign to Business
                       card_mod:
                         style: |
                           ha-card {
@@ -850,6 +999,8 @@ views:
                       entities:
                         - entity: input_text.registry_new_farm_name
                           name: Farm Name
+                        - entity: input_select.registry_new_farm_business
+                          name: Assign to Business
                       card_mod:
                         style: |
                           ha-card {
@@ -872,6 +1023,16 @@ views:
                         service: script.registry_add_farm
                         service_data:
                           name: "[[[ return states['input_text.registry_new_farm_name'].state; ]]]"
+                          business: |
+                            [[[
+                              const businessName = states['input_select.registry_new_farm_business']?.state || 'None';
+                              if (businessName === 'None') return '';
+                              const businesses = hass.states['sensor.farm_registry_data']?.attributes?.businesses || {};
+                              for (const [bid, b] of Object.entries(businesses)) {
+                                if (b.name === businessName) return bid;
+                              }
+                              return '';
+                            ]]]
                         confirmation:
                           text: |
                             [[[
@@ -883,7 +1044,7 @@ views:
                             ]]]
                       styles:
                         card:
-                          - height: 60px
+                          - height: 70px
                           - border-radius: 12px
                         name:
                           - font-size: 16px
@@ -929,6 +1090,7 @@ views:
                         }
 
                         const farms = entity.attributes.farms || {};
+                        const businesses = entity.attributes.businesses || {};
                         const paddocks = entity.attributes.paddocks || {};
                         const farmList = Object.entries(farms);
 
@@ -944,6 +1106,9 @@ views:
 
                         for (const [fid, farm] of farmList) {
                           const name = farm.name || fid;
+                          const businessId = farm.business_id || '';
+                          const business = businesses[businessId] || {};
+                          const businessName = business.name || '';
                           const farmPaddocks = Object.values(paddocks).filter(p => p.farm_id === fid);
                           const paddockNames = farmPaddocks.map(p => p.name || 'Unnamed').sort();
 
@@ -955,6 +1120,7 @@ views:
                                 </div>
                                 <div style="flex:1;min-width:0;">
                                   <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                                  ${businessName ? `<div style="font-size:13px;color:var(--secondary-text-color);display:flex;align-items:center;gap:4px;margin-top:2px;"><ha-icon icon="mdi:domain" style="--mdc-icon-size:14px;"></ha-icon>${businessName}</div>` : ''}
                                 </div>
                               </div>
                               <div style="padding-top:12px;border-top:1px solid var(--divider-color,#e0e0e0);">
@@ -1060,8 +1226,10 @@ views:
                         const farmName = farm.name || 'Unassigned';
                         const bayCount = paddock.bay_count || 0;
                         const isActive = paddock.current_season === true;
-                        const area = paddock.area_ha || null;
-                        const areaDisplay = area ? area.toFixed(1) + ' ha' : '--';
+                        const brownArea = paddock.brown_area_ha || null;
+                        const greenArea = paddock.green_area_ha || null;
+                        const brownDisplay = brownArea ? brownArea.toFixed(1) : '--';
+                        const greenDisplay = greenArea ? greenArea.toFixed(1) : '--';
 
                         // Crop info
                         const cropName = currentCrop?.crop_name || '';
@@ -1103,8 +1271,13 @@ views:
                               </div>
                               <div style="width:1px;background:var(--divider-color,#e0e0e0);"></div>
                               <div style="flex:1;text-align:center;">
-                                <div style="font-size:20px;font-weight:600;color:var(--primary-text-color);">${areaDisplay}</div>
-                                <div style="font-size:12px;color:var(--secondary-text-color);">Total Area</div>
+                                <div style="font-size:18px;font-weight:600;color:#8B4513;">${brownDisplay}</div>
+                                <div style="font-size:12px;color:var(--secondary-text-color);">Brown ha</div>
+                              </div>
+                              <div style="width:1px;background:var(--divider-color,#e0e0e0);"></div>
+                              <div style="flex:1;text-align:center;">
+                                <div style="font-size:18px;font-weight:600;color:#228B22;">${greenDisplay}</div>
+                                <div style="font-size:12px;color:var(--secondary-text-color);">Green ha</div>
                               </div>
                               <div style="width:1px;background:var(--divider-color,#e0e0e0);"></div>
                               <div style="flex:1;text-align:center;">
@@ -1205,6 +1378,10 @@ views:
                           name: Paddock Name
                         - entity: input_number.registry_edit_paddock_bay_count
                           name: Number of Bays
+                        - entity: input_number.registry_edit_paddock_brown_area
+                          name: Brown Area (ha)
+                        - entity: input_number.registry_edit_paddock_green_area
+                          name: Green Area (ha)
                         - entity: input_boolean.registry_edit_current_season
                           name: Active This Season
                       card_mod:
@@ -1274,6 +1451,10 @@ views:
                           name: Paddock Name
                         - entity: input_number.registry_new_paddock_bay_count
                           name: Number of Bays
+                        - entity: input_number.registry_new_paddock_brown_area
+                          name: Brown Area (ha)
+                        - entity: input_number.registry_new_paddock_green_area
+                          name: Green Area (ha)
                         - entity: input_select.registry_new_paddock_farm
                           name: Assign to Farm
                       card_mod:
@@ -1360,8 +1541,10 @@ views:
                           const farmId = paddock.farm_id || '';
                           const farm = farms[farmId] || {};
                           const farmName = farm.name || 'Unassigned';
-                          const area = paddock.area_ha || null;
-                          const areaDisplay = area ? area.toFixed(1) + ' ha' : '--';
+                          const brownArea = paddock.brown_area_ha || null;
+                          const greenArea = paddock.green_area_ha || null;
+                          const brownDisplay = brownArea ? brownArea.toFixed(1) : '--';
+                          const greenDisplay = greenArea ? greenArea.toFixed(1) : '--';
 
                           // Current crop
                           const currentCrop = currentCrops[pid];
@@ -1431,8 +1614,13 @@ views:
                                 </div>
                                 <div style="width:1px;background:var(--divider-color,#e0e0e0);"></div>
                                 <div style="flex:1;text-align:center;">
-                                  <div style="font-size:18px;font-weight:600;color:var(--primary-text-color);">${areaDisplay}</div>
-                                  <div style="font-size:11px;color:var(--secondary-text-color);">Area</div>
+                                  <div style="font-size:16px;font-weight:600;color:#8B4513;">${brownDisplay}</div>
+                                  <div style="font-size:11px;color:var(--secondary-text-color);">Brown</div>
+                                </div>
+                                <div style="width:1px;background:var(--divider-color,#e0e0e0);"></div>
+                                <div style="flex:1;text-align:center;">
+                                  <div style="font-size:16px;font-weight:600;color:#228B22;">${greenDisplay}</div>
+                                  <div style="font-size:11px;color:var(--secondary-text-color);">Green</div>
                                 </div>
                                 <div style="width:1px;background:var(--divider-color,#e0e0e0);"></div>
                                 <div style="flex:1;text-align:center;">

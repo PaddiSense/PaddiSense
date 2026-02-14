@@ -51,6 +51,8 @@ def load_config() -> dict[str, Any]:
     if not CONFIG_FILE.exists():
         return {
             "initialized": False,
+            "businesses": {},
+            "farms": {},
             "paddocks": {},
             "bays": {},
             "seasons": {},
@@ -61,6 +63,8 @@ def load_config() -> dict[str, Any]:
     except (json.JSONDecodeError, IOError):
         return {
             "initialized": False,
+            "businesses": {},
+            "farms": {},
             "paddocks": {},
             "bays": {},
             "seasons": {},
@@ -157,7 +161,7 @@ def cmd_add_paddock(args: argparse.Namespace) -> int:
     now = datetime.now().isoformat(timespec="seconds")
     bay_prefix = args.bay_prefix or "B-"
 
-    paddocks[paddock_id] = {
+    paddock_data = {
         "farm_id": args.farm or "farm_1",
         "name": args.name,
         "bay_prefix": bay_prefix,
@@ -166,6 +170,16 @@ def cmd_add_paddock(args: argparse.Namespace) -> int:
         "created": now,
         "modified": now,
     }
+
+    # Add brown area (total paddock area) if provided
+    if args.brown_area is not None:
+        paddock_data["brown_area_ha"] = args.brown_area
+
+    # Add green area (cropped/irrigated area) if provided
+    if args.green_area is not None:
+        paddock_data["green_area_ha"] = args.green_area
+
+    paddocks[paddock_id] = paddock_data
 
     # Create bays
     for i in range(1, args.bay_count + 1):
@@ -220,6 +234,14 @@ def cmd_edit_paddock(args: argparse.Namespace) -> int:
     if args.current_season is not None:
         paddock["current_season"] = args.current_season
         changes.append(f"current_season={args.current_season}")
+
+    if args.brown_area is not None:
+        paddock["brown_area_ha"] = args.brown_area
+        changes.append(f"brown_area_ha={args.brown_area}")
+
+    if args.green_area is not None:
+        paddock["green_area_ha"] = args.green_area
+        changes.append(f"green_area_ha={args.green_area}")
 
     # Crop 1 assignment (early season crop)
     if args.crop_1_id is not None:
@@ -610,11 +632,19 @@ def cmd_add_farm(args: argparse.Namespace) -> int:
         return 1
 
     now = datetime.now().isoformat(timespec="seconds")
-    farms[farm_id] = {
+    farm_data = {
         "name": args.name,
         "created": now,
         "modified": now,
     }
+
+    # Add business assignment if provided
+    if args.business:
+        businesses = config.get("businesses", {})
+        if args.business in businesses:
+            farm_data["business_id"] = args.business
+
+    farms[farm_id] = farm_data
 
     log_transaction(config, "add", "farm", farm_id, args.name, "")
     save_config(config)
@@ -642,6 +672,19 @@ def cmd_edit_farm(args: argparse.Namespace) -> int:
     if args.name is not None:
         farm["name"] = args.name
         changes.append(f"name={args.name}")
+
+    # Business assignment
+    if args.business is not None:
+        if args.business == "" or args.business.lower() == "none":
+            # Clear business assignment
+            if "business_id" in farm:
+                del farm["business_id"]
+                changes.append("business=cleared")
+        else:
+            businesses = config.get("businesses", {})
+            if args.business in businesses:
+                farm["business_id"] = args.business
+                changes.append(f"business={args.business}")
 
     farm["modified"] = datetime.now().isoformat(timespec="seconds")
 
@@ -685,6 +728,102 @@ def cmd_delete_farm(args: argparse.Namespace) -> int:
         "success": True,
         "farm_id": args.id,
         "message": f"Deleted farm '{farm_name}'"
+    }))
+    return 0
+
+
+# =============================================================================
+# BUSINESS COMMANDS
+# =============================================================================
+
+
+def cmd_add_business(args: argparse.Namespace) -> int:
+    """Add a new business."""
+    config = load_config()
+    businesses = config.setdefault("businesses", {})
+
+    business_id = generate_id(args.name)
+
+    if business_id in businesses:
+        print(json.dumps({"error": f"Business '{business_id}' already exists"}))
+        return 1
+
+    now = datetime.now().isoformat(timespec="seconds")
+    businesses[business_id] = {
+        "name": args.name,
+        "created": now,
+        "modified": now,
+    }
+
+    log_transaction(config, "add", "business", business_id, args.name, "")
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "business_id": business_id,
+        "message": f"Created business '{args.name}'"
+    }))
+    return 0
+
+
+def cmd_edit_business(args: argparse.Namespace) -> int:
+    """Edit an existing business."""
+    config = load_config()
+    businesses = config.get("businesses", {})
+
+    if args.id not in businesses:
+        print(json.dumps({"error": f"Business '{args.id}' not found"}))
+        return 1
+
+    business = businesses[args.id]
+    changes = []
+
+    if args.name is not None:
+        business["name"] = args.name
+        changes.append(f"name={args.name}")
+
+    business["modified"] = datetime.now().isoformat(timespec="seconds")
+
+    log_transaction(config, "edit", "business", args.id, business["name"], ", ".join(changes))
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "business_id": args.id,
+        "message": f"Updated business '{business['name']}'"
+    }))
+    return 0
+
+
+def cmd_delete_business(args: argparse.Namespace) -> int:
+    """Delete a business (only if no farms assigned)."""
+    config = load_config()
+    businesses = config.get("businesses", {})
+    farms = config.get("farms", {})
+
+    if args.id not in businesses:
+        print(json.dumps({"error": f"Business '{args.id}' not found"}))
+        return 1
+
+    # Check for assigned farms
+    assigned_farms = [f for f in farms.values() if f.get("business_id") == args.id]
+    if assigned_farms:
+        print(json.dumps({
+            "error": f"Cannot delete business with {len(assigned_farms)} assigned farms",
+            "farm_count": len(assigned_farms)
+        }))
+        return 1
+
+    business_name = businesses[args.id].get("name", args.id)
+    del businesses[args.id]
+
+    log_transaction(config, "delete", "business", args.id, business_name, "")
+    save_config(config)
+
+    print(json.dumps({
+        "success": True,
+        "business_id": args.id,
+        "message": f"Deleted business '{business_name}'"
     }))
     return 0
 
@@ -1174,6 +1313,8 @@ def main() -> int:
     p_add.add_argument("--bay_count", type=int, required=True, help="Number of bays")
     p_add.add_argument("--current_season", type=lambda x: x.lower() == "true",
                        help="Is paddock in current season (true/false)")
+    p_add.add_argument("--brown_area", type=float, help="Brown area (total paddock) in hectares")
+    p_add.add_argument("--green_area", type=float, help="Green area (cropped/irrigated) in hectares")
 
     p_edit = subparsers.add_parser("edit_paddock", help="Edit a paddock")
     p_edit.add_argument("--id", required=True, help="Paddock ID")
@@ -1181,6 +1322,8 @@ def main() -> int:
     p_edit.add_argument("--farm", help="Farm ID")
     p_edit.add_argument("--current_season", type=lambda x: x.lower() == "true",
                         help="Is paddock in current season (true/false)")
+    p_edit.add_argument("--brown_area", type=float, help="Brown area (total paddock) in hectares")
+    p_edit.add_argument("--green_area", type=float, help="Green area (cropped/irrigated) in hectares")
     # Crop rotation arguments
     p_edit.add_argument("--crop_1_id", help="Crop 1 ID (early season)")
     p_edit.add_argument("--crop_1_start", type=int, help="Crop 1 start month (1-12)")
@@ -1235,13 +1378,26 @@ def main() -> int:
     # Farm commands
     f_add = subparsers.add_parser("add_farm", help="Add a new farm")
     f_add.add_argument("--name", required=True, help="Farm name")
+    f_add.add_argument("--business", help="Business ID to assign farm to")
 
     f_edit = subparsers.add_parser("edit_farm", help="Edit a farm")
     f_edit.add_argument("--id", required=True, help="Farm ID")
     f_edit.add_argument("--name", help="New name")
+    f_edit.add_argument("--business", help="Business ID (use empty string to clear)")
 
     f_del = subparsers.add_parser("delete_farm", help="Delete a farm")
     f_del.add_argument("--id", required=True, help="Farm ID")
+
+    # Business commands
+    b_add = subparsers.add_parser("add_business", help="Add a new business")
+    b_add.add_argument("--name", required=True, help="Business name")
+
+    b_edit = subparsers.add_parser("edit_business", help="Edit a business")
+    b_edit.add_argument("--id", required=True, help="Business ID")
+    b_edit.add_argument("--name", help="New name")
+
+    b_del = subparsers.add_parser("delete_business", help="Delete a business")
+    b_del.add_argument("--id", required=True, help="Business ID")
 
     # Crop commands
     c_add = subparsers.add_parser("add_crop", help="Add a new crop type")
@@ -1308,6 +1464,9 @@ def main() -> int:
         "add_farm": cmd_add_farm,
         "edit_farm": cmd_edit_farm,
         "delete_farm": cmd_delete_farm,
+        "add_business": cmd_add_business,
+        "edit_business": cmd_edit_business,
+        "delete_business": cmd_delete_business,
         "add_crop": cmd_add_crop,
         "edit_crop": cmd_edit_crop,
         "delete_crop": cmd_delete_crop,
