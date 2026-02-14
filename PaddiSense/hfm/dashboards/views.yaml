@@ -291,7 +291,7 @@ button_card_templates:
 ##############################################################################
 views:
   #============================================================================
-  # VIEW 1: OVERVIEW
+  # VIEW 1: OVERVIEW (Combined with History)
   #============================================================================
   - title: Hey Farmer
     path: hfm
@@ -311,39 +311,8 @@ views:
                 name: HEY FARMER
 
               #----------------------------------------------------------------
-              # QUICK STATS
+              # EVENTS BY TYPE - Color-coded stat buttons (2x2 grid)
               #----------------------------------------------------------------
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: hfm_info_block
-                    entity: sensor.hfm_events
-                    name: Total Events
-                    show_icon: false
-
-                  - type: custom:button-card
-                    template: hfm_info_block
-                    entity: sensor.hfm_events_today
-                    name: Today
-                    show_icon: false
-
-                  - type: custom:button-card
-                    template: hfm_info_block
-                    entity: sensor.hfm_pending_events
-                    name: Pending
-                    show_icon: false
-                    color: |
-                      [[[
-                        return Number(entity.state) > 0 ? '#ffc107' : '#546e7a';
-                      ]]]
-
-              #----------------------------------------------------------------
-              # EVENTS BY TYPE - Color-coded filter buttons
-              #----------------------------------------------------------------
-              - type: custom:button-card
-                template: hfm_title
-                name: EVENTS BY TYPE
-
               - type: horizontal-stack
                 cards:
                   - type: custom:button-card
@@ -362,22 +331,25 @@ views:
                       ]]]
                     styles:
                       card:
-                        - height: 80px
+                        - height: 70px
                         - border-radius: 12px
                       icon:
                         - color: white
-                        - width: 28px
+                        - width: 24px
                       name:
-                        - font-size: 12px
+                        - font-size: 11px
                         - font-weight: 600
                         - color: white
                       state:
-                        - font-size: 24px
+                        - font-size: 22px
                         - font-weight: 800
                         - color: white
                     tap_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-history
+                      action: call-service
+                      service: input_select.select_option
+                      service_data:
+                        entity_id: input_select.hfm_filter_event_type
+                        option: Nutrient
 
                   - type: custom:button-card
                     entity: sensor.hfm_events
@@ -395,25 +367,26 @@ views:
                       ]]]
                     styles:
                       card:
-                        - height: 80px
+                        - height: 70px
                         - border-radius: 12px
                       icon:
                         - color: white
-                        - width: 28px
+                        - width: 24px
                       name:
-                        - font-size: 12px
+                        - font-size: 11px
                         - font-weight: 600
                         - color: white
                       state:
-                        - font-size: 24px
+                        - font-size: 22px
                         - font-weight: 800
                         - color: white
                     tap_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-history
+                      action: call-service
+                      service: input_select.select_option
+                      service_data:
+                        entity_id: input_select.hfm_filter_event_type
+                        option: Chemical
 
-              - type: horizontal-stack
-                cards:
                   - type: custom:button-card
                     entity: sensor.hfm_events
                     name: Irrigation
@@ -430,26 +403,29 @@ views:
                       ]]]
                     styles:
                       card:
-                        - height: 80px
+                        - height: 70px
                         - border-radius: 12px
                       icon:
                         - color: white
-                        - width: 28px
+                        - width: 24px
                       name:
-                        - font-size: 12px
+                        - font-size: 11px
                         - font-weight: 600
                         - color: white
                       state:
-                        - font-size: 24px
+                        - font-size: 22px
                         - font-weight: 800
                         - color: white
                     tap_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-history
+                      action: call-service
+                      service: input_select.select_option
+                      service_data:
+                        entity_id: input_select.hfm_filter_event_type
+                        option: Irrigation
 
                   - type: custom:button-card
                     entity: sensor.hfm_events
-                    name: Crop Stage
+                    name: Crop
                     icon: mdi:sprout
                     show_icon: true
                     show_name: true
@@ -463,25 +439,28 @@ views:
                       ]]]
                     styles:
                       card:
-                        - height: 80px
+                        - height: 70px
                         - border-radius: 12px
                       icon:
                         - color: white
-                        - width: 28px
+                        - width: 24px
                       name:
-                        - font-size: 12px
+                        - font-size: 11px
                         - font-weight: 600
                         - color: white
                       state:
-                        - font-size: 24px
+                        - font-size: 22px
                         - font-weight: 800
                         - color: white
                     tap_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-history
+                      action: call-service
+                      service: input_select.select_option
+                      service_data:
+                        entity_id: input_select.hfm_filter_event_type
+                        option: Crop Stage
 
               #----------------------------------------------------------------
-              # QUICK ACTIONS
+              # QUICK ACTIONS - New Event + Find Event
               #----------------------------------------------------------------
               - type: horizontal-stack
                 cards:
@@ -495,11 +474,248 @@ views:
 
                   - type: custom:button-card
                     template: hfm_secondary
-                    name: Export
-                    icon: mdi:export
+                    name: Find Event
+                    icon: mdi:magnify
                     tap_action:
                       action: call-service
-                      service: script.hfm_export
+                      service: input_select.select_option
+                      service_data:
+                        entity_id: input_select.hfm_filter_event_type
+                        option: All Events
+
+              #----------------------------------------------------------------
+              # EVENT HISTORY SECTION
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: hfm_title
+                name: EVENT HISTORY
+
+              #----------------------------------------------------------------
+              # FILTERS
+              #----------------------------------------------------------------
+              - type: entities
+                entities:
+                  - entity: input_select.hfm_filter_event_type
+                    name: Filter by Type
+                  - entity: input_select.hfm_filter_paddock
+                    name: Filter by Paddock
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                    }
+                    .mdc-list-item__primary-text {
+                      font-size: 1.1rem !important;
+                    }
+
+              #----------------------------------------------------------------
+              # SELECT EVENT TO MANAGE
+              #----------------------------------------------------------------
+              - type: entities
+                entities:
+                  - entity: input_select.hfm_edit_event
+                    name: Select Event
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                    }
+                    .mdc-list-item__primary-text {
+                      font-size: 1.1rem !important;
+                    }
+
+              #----------------------------------------------------------------
+              # EDIT/CONFIRM BUTTONS
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_action
+                    name: Edit
+                    icon: mdi:pencil
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_load_event_for_edit
+                    hold_action:
+                      action: navigate
+                      navigation_path: /hfm-heyfarm/hfm-new
+
+                  - type: custom:button-card
+                    template: hfm_success
+                    name: Confirm
+                    icon: mdi:check-circle
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_confirm_event
+
+                  - type: custom:button-card
+                    template: hfm_danger
+                    name: Delete
+                    icon: mdi:delete
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_delete_event
+                      confirmation:
+                        text: "Delete this event?"
+
+              #----------------------------------------------------------------
+              # EVENTS LIST (filtered)
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                entity: sensor.hfm_events
+                triggers_update:
+                  - sensor.hfm_events
+                  - input_select.hfm_filter_event_type
+                  - input_select.hfm_filter_paddock
+                show_icon: false
+                show_name: false
+                show_state: false
+                styles:
+                  card:
+                    - background: transparent
+                    - box-shadow: none
+                    - padding: 0
+                    - margin: 0
+                  grid:
+                    - display: block
+                  custom_fields:
+                    events:
+                      - width: 100%
+                custom_fields:
+                  events: |
+                    [[[
+                      try {
+                        const safeStr = (v) => (v === null || v === undefined) ? '' : String(v);
+
+                        if (!entity || !entity.attributes) {
+                          return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
+                                    Loading events…
+                                  </div>`;
+                        }
+
+                        const allEvents = entity.attributes.all_events || [];
+                        const pmap = entity.attributes.paddock_map || {};
+
+                        // Get filter selections
+                        const filterType = states['input_select.hfm_filter_event_type']?.state || 'All Events';
+                        const filterPaddock = states['input_select.hfm_filter_paddock']?.state || 'All Paddocks';
+                        const filterMap = {
+                          'Chemical': 'chemical',
+                          'Nutrient': 'nutrient',
+                          'Irrigation': 'irrigation',
+                          'Crop Stage': 'crop_stage'
+                        };
+
+                        // Apply filters
+                        let events = allEvents;
+                        if (filterType !== 'All Events') {
+                          events = events.filter(e => e.event_type === filterMap[filterType]);
+                        }
+                        if (filterPaddock !== 'All Paddocks') {
+                          events = events.filter(e => e.paddock?.name === filterPaddock);
+                        }
+
+                        if (allEvents.length === 0) {
+                          return `
+                            <div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
+                              <ha-icon icon="mdi:calendar-blank" style="--mdc-icon-size:48px;margin-bottom:12px;"></ha-icon>
+                              <div style="font-size:16px;">No events recorded yet</div>
+                              <div style="font-size:14px;margin-top:8px;">Use <b>New Event</b> to add one</div>
+                            </div>`;
+                        }
+
+                        if (events.length === 0) {
+                          let filterDesc = [];
+                          if (filterType !== 'All Events') filterDesc.push(filterType);
+                          if (filterPaddock !== 'All Paddocks') filterDesc.push(filterPaddock);
+                          const filterText = filterDesc.length > 0 ? filterDesc.join(' + ') : 'matching';
+                          return `
+                            <div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
+                              <ha-icon icon="mdi:filter-off" style="--mdc-icon-size:36px;margin-bottom:8px;"></ha-icon>
+                              <div style="font-size:14px;">No ${filterText} events found</div>
+                            </div>`;
+                        }
+
+                        const typeConfig = {
+                          'nutrient':   { icon: 'mdi:flask',  color: '#43a047', bg: 'rgba(67,160,71,0.15)', label: 'Nutrient' },
+                          'chemical':   { icon: 'mdi:spray',  color: '#e53935', bg: 'rgba(229,57,53,0.15)', label: 'Chemical' },
+                          'irrigation': { icon: 'mdi:water',  color: '#1e88e5', bg: 'rgba(30,136,229,0.15)', label: 'Irrigation' },
+                          'crop_stage': { icon: 'mdi:sprout', color: '#8d6e63', bg: 'rgba(141,110,99,0.15)', label: 'Crop Stage' }
+                        };
+
+                        let html = `<div style="display:grid;grid-template-columns:1fr;gap:12px;padding:4px;">`;
+
+                        // Limit to first 20 events for performance
+                        const displayEvents = events.slice(0, 20);
+                        for (let i = 0; i < displayEvents.length; i++) {
+                          const e = displayEvents[i] || {};
+                          const eType = safeStr(e.event_type);
+                          const cfg = typeConfig[eType] || { icon: 'mdi:calendar', color: '#757575', bg: 'rgba(117,117,117,0.15)', label: eType };
+
+                          // Get paddock name
+                          const paddockStr = e.paddock?.name || 'Unknown';
+
+                          // Status indicator
+                          const status = safeStr(e.confirmation_status);
+                          const isPending = status === 'pending';
+                          const statusColor = isPending ? '#ffc107' : '#28a745';
+                          const statusIcon = isPending ? 'mdi:clock-alert' : 'mdi:check-circle';
+
+                          // Details based on type
+                          let detailHtml = '';
+                          if (eType === 'nutrient' || eType === 'chemical') {
+                            const products = e.products || [];
+                            if (products.length > 0) {
+                              detailHtml = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">`;
+                              for (let pr = 0; pr < products.length; pr++) {
+                                const prod = products[pr];
+                                const pName = safeStr(prod.product_name);
+                                const pRate = prod.rate || '';
+                                const pUnit = safeStr(prod.rate_unit);
+                                detailHtml += `<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;">
+                                  <span style="color:var(--primary-text-color);">${pName}</span>
+                                  <span style="color:var(--secondary-text-color);font-weight:500;">${pRate} ${pUnit}</span>
+                                </div>`;
+                              }
+                              detailHtml += `</div>`;
+                            }
+                          } else if (eType === 'irrigation' && e.irrigation_type) {
+                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:4px;">Type: ${safeStr(e.irrigation_type)}</div>`;
+                          } else if (eType === 'crop_stage' && e.crop_stage) {
+                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:4px;">Stage: ${safeStr(e.crop_stage)}</div>`;
+                          }
+
+                          html += `
+                            <div style="background:var(--card-background-color,#fff);border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">
+                              <div style="display:flex;align-items:flex-start;gap:12px;">
+                                <div style="width:44px;height:44px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                  <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:24px;color:${cfg.color};"></ha-icon>
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                  <div style="display:flex;justify-content:space-between;align-items:center;">
+                                    <div style="font-size:15px;font-weight:700;color:var(--primary-text-color);">${cfg.label}</div>
+                                    <ha-icon icon="${statusIcon}" style="--mdc-icon-size:18px;color:${statusColor};"></ha-icon>
+                                  </div>
+                                  <div style="font-size:13px;color:var(--secondary-text-color);">${safeStr(e.event_date)} • ${paddockStr}</div>
+                                  ${detailHtml}
+                                </div>
+                              </div>
+                            </div>`;
+                        }
+
+                        if (events.length > 20) {
+                          html += `<div style="text-align:center;padding:12px;color:var(--secondary-text-color);font-size:13px;">
+                            Showing 20 of ${events.length} events. Use filters to narrow results.
+                          </div>`;
+                        }
+
+                        html += `</div>`;
+                        return html;
+                      } catch (err) {
+                        console.error('HFM events render error:', err);
+                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${err}</div>`;
+                      }
+                    ]]]
 
   #============================================================================
   # VIEW 2: NEW EVENT WIZARD
@@ -4070,7 +4286,8 @@ views:
                     text: "Discard this event?"
 
   #============================================================================
-  # VIEW 3: EVENT HISTORY
+  # VIEW 3: EVENT HISTORY (Redirect to main view)
+  # Kept for backward compatibility with existing links
   #============================================================================
   - title: History
     path: hfm-history
@@ -4082,292 +4299,31 @@ views:
         cards:
           - type: vertical-stack
             cards:
-              #----------------------------------------------------------------
-              # HEADER with back button
-              #----------------------------------------------------------------
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: hfm_nav
-                    name: Back
-                    icon: mdi:arrow-left
-                    tap_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm
-
-                  - type: custom:button-card
-                    template: hfm_title
-                    name: EVENT HISTORY
-                    styles:
-                      card:
-                        - height: 70px
-                        - flex: 3
-
-              #----------------------------------------------------------------
-              # EDIT/DELETE CONTROLS
-              #----------------------------------------------------------------
-              - type: entities
-                entities:
-                  - entity: input_select.hfm_edit_event
-                    name: Select Event to Manage
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.2rem !important;
-                    }
-
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: hfm_action
-                    name: Edit
-                    icon: mdi:pencil
-                    tap_action:
-                      action: call-service
-                      service: script.hfm_load_event_for_edit
-                    hold_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-new
-
-                  - type: custom:button-card
-                    template: hfm_success
-                    name: Confirm
-                    icon: mdi:check-circle
-                    tap_action:
-                      action: call-service
-                      service: script.hfm_confirm_event
-
-                  - type: custom:button-card
-                    template: hfm_danger
-                    name: Delete
-                    icon: mdi:delete
-                    tap_action:
-                      action: call-service
-                      service: script.hfm_delete_event
-                      confirmation:
-                        text: "Delete this event?"
-
-              # Navigation to edit form after loading event
-              - type: custom:button-card
-                template: hfm_nav
-                name: Go to Edit Form
-                icon: mdi:arrow-right-circle
-                entity: input_boolean.hfm_edit_mode
-                show_entity_picture: false
-                state:
-                  - value: "on"
-                    color: "#0066cc"
-                  - value: "off"
-                    color: "#555555"
-                tap_action:
-                  action: navigate
-                  navigation_path: /hfm-heyfarm/hfm-new
-
-              #----------------------------------------------------------------
-              # FILTERS
-              #----------------------------------------------------------------
-              - type: entities
-                entities:
-                  - entity: input_select.hfm_filter_event_type
-                    name: Filter by Type
-                  - entity: input_select.hfm_filter_paddock
-                    name: Filter by Paddock
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                    }
-                    .mdc-list-item__primary-text {
-                      font-size: 1.1rem !important;
-                    }
-
-              #----------------------------------------------------------------
-              # ALL EVENTS - IPM-style cards
-              #----------------------------------------------------------------
               - type: custom:button-card
                 template: hfm_title
-                name: EVENTS
+                name: EVENT HISTORY
 
               - type: custom:button-card
-                entity: sensor.hfm_events
-                triggers_update:
-                  - sensor.hfm_events
-                  - input_select.hfm_filter_event_type
-                  - input_select.hfm_filter_paddock
-                show_icon: false
-                show_name: false
-                show_state: false
+                template: hfm_action
+                name: Go to Hey Farmer
+                icon: mdi:arrow-left
                 styles:
                   card:
-                    - background: transparent
-                    - box-shadow: none
-                    - padding: 0
-                    - margin: 0
-                  grid:
-                    - display: block
-                  custom_fields:
-                    events:
-                      - width: 100%
-                custom_fields:
-                  events: |
-                    [[[
-                      try {
-                        const safeStr = (v) => (v === null || v === undefined) ? '' : String(v);
+                    - height: 100px
+                tap_action:
+                  action: navigate
+                  navigation_path: /hfm-heyfarm/hfm
 
-                        if (!entity || !entity.attributes) {
-                          return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
-                                    Loading events…
-                                  </div>`;
-                        }
-
-                        const allEvents = entity.attributes.all_events || [];
-                        const pmap = entity.attributes.paddock_map || {};
-
-                        // Get filter selections
-                        const filterType = states['input_select.hfm_filter_event_type']?.state || 'All Events';
-                        const filterPaddock = states['input_select.hfm_filter_paddock']?.state || 'All Paddocks';
-                        const filterMap = {
-                          'Chemical': 'chemical',
-                          'Nutrient': 'nutrient',
-                          'Irrigation': 'irrigation',
-                          'Crop Stage': 'crop_stage'
-                        };
-
-                        // Apply filters
-                        let events = allEvents;
-                        if (filterType !== 'All Events') {
-                          events = events.filter(e => e.event_type === filterMap[filterType]);
-                        }
-                        if (filterPaddock !== 'All Paddocks') {
-                          events = events.filter(e => e.paddock?.name === filterPaddock);
-                        }
-
-                        if (allEvents.length === 0) {
-                          return `
-                            <div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
-                              <ha-icon icon="mdi:calendar-blank" style="--mdc-icon-size:48px;margin-bottom:12px;"></ha-icon>
-                              <div style="font-size:16px;">No events recorded yet</div>
-                              <div style="font-size:14px;margin-top:8px;">Use <b>New Event</b> to add one</div>
-                            </div>`;
-                        }
-
-                        if (events.length === 0) {
-                          let filterDesc = [];
-                          if (filterType !== 'All Events') filterDesc.push(filterType);
-                          if (filterPaddock !== 'All Paddocks') filterDesc.push(filterPaddock);
-                          const filterText = filterDesc.length > 0 ? filterDesc.join(' + ') : 'matching';
-                          return `
-                            <div style="text-align:center;padding:30px;color:var(--secondary-text-color);">
-                              <ha-icon icon="mdi:filter-off" style="--mdc-icon-size:36px;margin-bottom:8px;"></ha-icon>
-                              <div style="font-size:14px;">No ${filterText} events found</div>
-                            </div>`;
-                        }
-
-                        const typeConfig = {
-                          'nutrient':   { icon: 'mdi:flask',  color: '#43a047', bg: 'rgba(67,160,71,0.15)', label: 'Nutrient' },
-                          'chemical':   { icon: 'mdi:spray',  color: '#e53935', bg: 'rgba(229,57,53,0.15)', label: 'Chemical' },
-                          'irrigation': { icon: 'mdi:water',  color: '#1e88e5', bg: 'rgba(30,136,229,0.15)', label: 'Irrigation' },
-                          'crop_stage': { icon: 'mdi:sprout', color: '#8d6e63', bg: 'rgba(141,110,99,0.15)', label: 'Crop Stage' }
-                        };
-
-                        let html = `<div style="display:grid;grid-template-columns:1fr;gap:12px;padding:4px;">`;
-
-                        for (let i = 0; i < events.length; i++) {
-                          const e = events[i] || {};
-                          const eType = safeStr(e.event_type);
-                          const cfg = typeConfig[eType] || { icon: 'mdi:calendar', color: '#757575', bg: 'rgba(117,117,117,0.15)', label: eType };
-
-                          // Get paddock names
-                          const paddocks = e.paddocks || [];
-                          let paddockNames = [];
-                          for (let p = 0; p < paddocks.length; p++) {
-                            const pid = paddocks[p];
-                            paddockNames.push(pmap[pid] || pid);
-                          }
-                          const paddockStr = paddockNames.join(', ') || 'Unknown';
-
-                          // Status indicator
-                          const status = safeStr(e.confirmation_status);
-                          const isPending = status === 'pending';
-                          const statusColor = isPending ? '#ffc107' : '#28a745';
-                          const statusIcon = isPending ? 'mdi:clock-alert' : 'mdi:check-circle';
-                          const statusLabel = isPending ? 'Pending' : 'Confirmed';
-
-                          // Details based on type
-                          let detailHtml = '';
-                          if (eType === 'nutrient' || eType === 'chemical') {
-                            const products = e.products || [];
-                            if (products.length > 0) {
-                              detailHtml = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">`;
-                              for (let pr = 0; pr < products.length; pr++) {
-                                const prod = products[pr];
-                                const pName = safeStr(prod.product_name);
-                                const pRate = prod.rate || '';
-                                const pUnit = safeStr(prod.rate_unit);
-                                detailHtml += `<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;">
-                                  <span style="color:var(--primary-text-color);">${pName}</span>
-                                  <span style="color:var(--secondary-text-color);font-weight:500;">${pRate} ${pUnit}</span>
-                                </div>`;
-                              }
-                              detailHtml += `</div>`;
-                            }
-                            if (e.application_method) {
-                              detailHtml += `<div style="font-size:12px;color:var(--secondary-text-color);margin-top:4px;">Method: ${safeStr(e.application_method)}</div>`;
-                            }
-                          } else if (eType === 'irrigation' && e.irrigation_type) {
-                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">
-                              Type: ${safeStr(e.irrigation_type)}
-                            </div>`;
-                          } else if (eType === 'crop_stage' && e.crop_stage) {
-                            detailHtml = `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:8px;padding-top:8px;border-top:1px solid var(--divider-color,#e0e0e0);">
-                              Stage: ${safeStr(e.crop_stage)}
-                            </div>`;
-                          }
-
-                          // Notes
-                          if (e.notes) {
-                            detailHtml += `<div style="font-size:12px;color:var(--secondary-text-color);margin-top:4px;font-style:italic;">${safeStr(e.notes)}</div>`;
-                          }
-
-                          html += `<div style="background:var(--card-background-color,#fff);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border-left:4px solid ${cfg.color};">`;
-
-                          // Header row
-                          html += `<div style="display:flex;align-items:center;gap:12px;">`;
-                          html += `<div style="width:44px;height:44px;border-radius:50%;background:${cfg.bg};display:flex;align-items:center;justify-content:center;">
-                                    <ha-icon icon="${cfg.icon}" style="--mdc-icon-size:24px;color:${cfg.color};"></ha-icon>
-                                  </div>`;
-                          html += `<div style="flex:1;min-width:0;">`;
-                          html += `<div style="font-size:16px;font-weight:600;color:var(--primary-text-color);">${cfg.label}</div>`;
-                          html += `<div style="font-size:13px;color:var(--secondary-text-color);">${paddockStr}</div>`;
-                          html += `</div>`;
-                          html += `<div style="text-align:right;">`;
-                          html += `<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${safeStr(e.event_date)}</div>`;
-                          html += `<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
-                                    <ha-icon icon="${statusIcon}" style="--mdc-icon-size:14px;color:${statusColor};"></ha-icon>
-                                    <span style="font-size:11px;color:${statusColor};font-weight:500;">${statusLabel}</span>
-                                  </div>`;
-                          html += `</div></div>`;
-
-                          // Details
-                          html += detailHtml;
-
-                          html += `</div>`;
-                        }
-
-                        html += `</div>`;
-                        return html;
-
-                      } catch (err) {
-                        console.error('HFM History render error:', err);
-                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);color:var(--primary-text-color);">
-                                  <div style="font-weight:700;margin-bottom:6px;">Render error</div>
-                                  <div style="font-family:monospace;font-size:12px;opacity:.85;">${String(err)}</div>
-                                </div>`;
-                      }
-                    ]]]
+              - type: markdown
+                content: |
+                  Event history has been moved to the main **Hey Farmer** view.
+                  Tap the button above to access filtering, editing, and event management.
+                card_mod:
+                  style: |
+                    ha-card {
+                      text-align: center;
+                      border-radius: 12px;
+                    }
 
   #============================================================================
   # VIEW 4: SETTINGS
