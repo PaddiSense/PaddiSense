@@ -11,7 +11,11 @@ views:
   - title: Predictions
     path: predictions
     icon: mdi:rice
-    cards:
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
       # Header with title
       - type: custom:button-card
         entity: sensor.paddisense_real_time_rice
@@ -561,7 +565,11 @@ views:
   - title: Settings
     path: settings
     icon: mdi:cog
-    cards:
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
       # Header
       - type: custom:button-card
         show_name: false
@@ -656,52 +664,50 @@ views:
               box-shadow: none;
             }
 
-      # Action Buttons
-      - type: horizontal-stack
-        cards:
-          - type: custom:button-card
-            entity: script.rtr_set_url
-            name: Save URL
-            icon: mdi:content-save
-            show_state: false
-            tap_action:
-              action: call-service
-              service: script.rtr_set_url
-            styles:
-              card:
-                - background: "#43a047"
-                - border-radius: 0 0 0 16px
-                - padding: 14px 16px
-              icon:
-                - color: white
-                - width: 18px
-                - height: 18px
-              name:
-                - color: white
-                - font-size: 14px
-                - font-weight: 600
+      # Action Buttons - stacked for mobile
+      - type: custom:button-card
+        entity: script.rtr_set_url
+        name: Save URL
+        icon: mdi:content-save
+        show_state: false
+        tap_action:
+          action: call-service
+          service: script.rtr_set_url
+        styles:
+          card:
+            - background: "#43a047"
+            - border-radius: 0
+            - height: 70px
+          icon:
+            - color: white
+            - width: 24px
+            - height: 24px
+          name:
+            - color: white
+            - font-size: 16px
+            - font-weight: 700
 
-          - type: custom:button-card
-            entity: script.rtr_refresh_data
-            name: Refresh Data
-            icon: mdi:refresh
-            show_state: false
-            tap_action:
-              action: call-service
-              service: script.rtr_refresh_data
-            styles:
-              card:
-                - background: "#0066cc"
-                - border-radius: 0 0 16px 0
-                - padding: 14px 16px
-              icon:
-                - color: white
-                - width: 18px
-                - height: 18px
-              name:
-                - color: white
-                - font-size: 14px
-                - font-weight: 600
+      - type: custom:button-card
+        entity: script.rtr_refresh_data
+        name: Refresh Data
+        icon: mdi:refresh
+        show_state: false
+        tap_action:
+          action: call-service
+          service: script.rtr_refresh_data
+        styles:
+          card:
+            - background: "#0066cc"
+            - border-radius: 0 0 16px 16px
+            - height: 70px
+          icon:
+            - color: white
+            - width: 24px
+            - height: 24px
+          name:
+            - color: white
+            - font-size: 16px
+            - font-weight: 700
 
       # Help section
       - type: markdown
