@@ -3426,27 +3426,24 @@ views:
                                 name: |
                                   [[[
                                     const time = states['sensor.hfm_spray_start_time']?.state || '';
-                                    return 'START\n' + time;
+                                    const status = entity?.state === 'Captured' ? '✓' : '○';
+                                    return `START ${time}\n${status} Hold to clear`;
                                   ]]]
-                                icon: |
-                                  [[[
-                                    return entity?.state === 'Captured' ? 'mdi:check-circle' : 'mdi:clock-outline';
-                                  ]]]
-                                show_icon: true
+                                show_icon: false
                                 show_name: true
                                 styles:
                                   card:
-                                    - height: 50px
-                                    - border-radius: 0
+                                    - height: 70px
+                                    - border-radius: 8px 0 0 0
                                     - background: |
                                         [[[
                                           return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
                                         ]]]
                                   name:
-                                    - font-size: 10px
+                                    - font-size: 11px
                                     - font-weight: 600
                                     - white-space: pre-line
-                                  icon:
+                                    - text-align: center
                                     - color: |
                                         [[[
                                           return entity?.state === 'Captured' ? '#28a745' : '#757575';
@@ -3466,27 +3463,24 @@ views:
                                 name: |
                                   [[[
                                     const time = states['sensor.hfm_spray_mid_time']?.state || '';
-                                    return 'MID\n' + time;
+                                    const status = entity?.state === 'Captured' ? '✓' : '○';
+                                    return `MID ${time}\n${status} Hold to clear`;
                                   ]]]
-                                icon: |
-                                  [[[
-                                    return entity?.state === 'Captured' ? 'mdi:check-circle' : 'mdi:clock-outline';
-                                  ]]]
-                                show_icon: true
+                                show_icon: false
                                 show_name: true
                                 styles:
                                   card:
-                                    - height: 50px
+                                    - height: 70px
                                     - border-radius: 0
                                     - background: |
                                         [[[
                                           return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
                                         ]]]
                                   name:
-                                    - font-size: 10px
+                                    - font-size: 11px
                                     - font-weight: 600
                                     - white-space: pre-line
-                                  icon:
+                                    - text-align: center
                                     - color: |
                                         [[[
                                           return entity?.state === 'Captured' ? '#28a745' : '#757575';
@@ -3506,27 +3500,24 @@ views:
                                 name: |
                                   [[[
                                     const time = states['sensor.hfm_spray_end_time']?.state || '';
-                                    return 'END\n' + time;
+                                    const status = entity?.state === 'Captured' ? '✓' : '○';
+                                    return `END ${time}\n${status} Hold to clear`;
                                   ]]]
-                                icon: |
-                                  [[[
-                                    return entity?.state === 'Captured' ? 'mdi:check-circle' : 'mdi:clock-outline';
-                                  ]]]
-                                show_icon: true
+                                show_icon: false
                                 show_name: true
                                 styles:
                                   card:
-                                    - height: 50px
-                                    - border-radius: 0
+                                    - height: 70px
+                                    - border-radius: 0 8px 0 0
                                     - background: |
                                         [[[
                                           return entity?.state === 'Captured' ? 'rgba(40, 167, 69, 0.2)' : 'rgba(117, 117, 117, 0.1)';
                                         ]]]
                                   name:
-                                    - font-size: 10px
+                                    - font-size: 11px
                                     - font-weight: 600
                                     - white-space: pre-line
-                                  icon:
+                                    - text-align: center
                                     - color: |
                                         [[[
                                           return entity?.state === 'Captured' ? '#28a745' : '#757575';
