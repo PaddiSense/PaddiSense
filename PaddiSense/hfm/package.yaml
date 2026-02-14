@@ -503,6 +503,16 @@ input_number:
     mode: box
     unit_of_measurement: "min"
 
+  hfm_water_rate:
+    name: HFM Water Rate (L/ha)
+    icon: mdi:water
+    min: 10
+    max: 1000
+    step: 10
+    initial: 100
+    mode: box
+    unit_of_measurement: "L/ha"
+
 input_boolean:
   hfm_edit_mode:
     name: HFM Edit Mode
@@ -1539,7 +1549,7 @@ script:
       - service: shell_command.hfm_update_draft
         data:
           device_id: "{{ effective_device_id }}"
-          data: '{"wizard_step": 1, "data": {"event_type": null, "date": null, "start_time": null, "duration_minutes": null, "farm_id": null, "paddocks": [], "products": [], "applicator_id": null, "application_method": null, "crop_stage": null, "irrigation_type": null, "notes": "", "weather_start": null, "weather_mid": null, "weather_end": null}}'
+          data: '{"wizard_step": 1, "data": {"event_type": null, "date": null, "start_time": null, "duration_minutes": null, "water_rate_lha": null, "farm_id": null, "paddocks": [], "products": [], "applicator_id": null, "application_method": null, "crop_stage": null, "irrigation_type": null, "notes": "", "weather_start": null, "weather_mid": null, "weather_end": null}}'
       # Reset UI helpers
       - service: script.hfm_wizard_reset
       # Update sensors
@@ -1566,6 +1576,7 @@ script:
           wizard_step: "{{ states('input_number.hfm_wizard_step') | int }}"
           start_time: "{{ states('input_text.hfm_start_time') }}"
           duration: "{{ states('input_number.hfm_duration_minutes') | int }}"
+          water_rate: "{{ states('input_number.hfm_water_rate') | float(0) }}"
           notes: "{{ states('input_text.hfm_notes') }}"
           farm_id: "{{ states('sensor.hfm_selected_farm_id') }}"
           # Build paddock from single select (legacy) or multi-select
@@ -1670,6 +1681,7 @@ script:
                 "date": {% if event_date %}"{{ event_date }}"{% else %}null{% endif %},
                 "start_time": {% if start_time %}"{{ start_time }}"{% else %}null{% endif %},
                 "duration_minutes": {% if duration > 0 %}{{ duration }}{% else %}null{% endif %},
+                "water_rate_lha": {% if water_rate > 0 %}{{ water_rate }}{% else %}null{% endif %},
                 "farm_id": {% if farm_id %}"{{ farm_id }}"{% else %}null{% endif %},
                 "paddocks": {{ paddocks | to_json }},
                 "products": {{ products_json | to_json }},
