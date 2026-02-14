@@ -1241,48 +1241,99 @@ automation:
 
   - id: hfm_schedule_weather_captures
     alias: "HFM Schedule Weather Captures"
-    description: "Calculate and schedule weather capture times based on Step 2 data"
+    description: "Calculate and schedule weather capture times, or capture immediately for past events"
     trigger:
       - platform: state
-        entity_id: input_text.hfm_start_time
+        entity_id: input_number.hfm_hour
+      - platform: state
+        entity_id: input_select.hfm_ampm
       - platform: state
         entity_id: input_number.hfm_duration_minutes
       - platform: state
-        entity_id: input_text.hfm_event_date
+        entity_id: sensor.hfm_event_date
       - platform: state
         entity_id: input_number.hfm_wizard_step
         to: "4"
     condition:
       - condition: template
         value_template: >
-          {{ states('input_text.hfm_start_time') | regex_match('^[0-9]{1,2}:[0-9]{2}$')
-             and states('input_text.hfm_event_date') | regex_match('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') }}
+          {{ states('sensor.hfm_spray_start_time') | regex_match('^[0-9]{1,2}:[0-9]{2}$')
+             and states('sensor.hfm_event_date') | regex_match('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+             and states('input_select.hfm_event_type') == 'Chemical Application' }}
     action:
       - variables:
-          event_date: "{{ states('input_text.hfm_event_date') }}"
-          start_time: "{{ states('input_text.hfm_start_time') }}"
+          event_date: "{{ states('sensor.hfm_event_date') }}"
+          start_time: "{{ states('sensor.hfm_spray_start_time') }}"
           duration: "{{ states('input_number.hfm_duration_minutes') | float(60) }}"
           start_dt: "{{ strptime(event_date ~ ' ' ~ start_time, '%Y-%m-%d %H:%M') }}"
           middle_dt: "{{ start_dt + timedelta(minutes=(duration/2)|int) }}"
           end_dt: "{{ start_dt + timedelta(minutes=duration|int) }}"
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.hfm_weather_capture_start
-        data:
-          datetime: "{{ start_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.hfm_weather_capture_middle
-        data:
-          datetime: "{{ middle_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
-      - service: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.hfm_weather_capture_end
-        data:
-          datetime: "{{ end_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
-      - service: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.hfm_weather_capture_enabled
+          # Check if event is in the past (end time already passed)
+          is_past_event: "{{ end_dt < now() }}"
+          start_passed: "{{ start_dt < now() }}"
+          middle_passed: "{{ middle_dt < now() }}"
+          end_passed: "{{ end_dt < now() }}"
+      # For past events, immediately capture all phases with current weather
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ is_past_event }}"
+            sequence:
+              - service: script.hfm_capture_weather_phase
+                data:
+                  phase: start
+              - delay:
+                  milliseconds: 300
+              - service: script.hfm_capture_weather_phase
+                data:
+                  phase: mid
+              - delay:
+                  milliseconds: 300
+              - service: script.hfm_capture_weather_phase
+                data:
+                  phase: end
+              - service: persistent_notification.create
+                data:
+                  title: "Weather Captured (Past Event)"
+                  message: "All 3 weather records captured with current conditions for past event"
+                  notification_id: hfm_weather_complete
+        default:
+          # For future/current events, schedule the captures
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.hfm_weather_capture_start
+            data:
+              datetime: "{{ start_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.hfm_weather_capture_middle
+            data:
+              datetime: "{{ middle_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.hfm_weather_capture_end
+            data:
+              datetime: "{{ end_dt.strftime('%Y-%m-%d %H:%M:%S') }}"
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.hfm_weather_capture_enabled
+          # Immediately capture any phases whose time has already passed
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ start_passed }}"
+                sequence:
+                  - service: script.hfm_capture_weather_phase
+                    data:
+                      phase: start
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ middle_passed }}"
+                sequence:
+                  - service: script.hfm_capture_weather_phase
+                    data:
+                      phase: mid
 
   - id: hfm_auto_capture_weather_start
     alias: "HFM Auto Capture Weather - Start"
