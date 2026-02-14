@@ -9,10 +9,12 @@
 ## Phase 1: Repository & Git Hygiene
 
 ### 1.1 Main Repo Status
-- [ ] Confirm `dev` branch is clean
-- [ ] Review untracked files (currently: `registrations/` - expected, separate repo)
-- [ ] Check all modules have matching VERSION files
-- [ ] Verify `modules.json` is accurate
+- [x] Confirm `dev` branch is clean
+- [x] Review untracked files (currently: `registrations/` - expected, separate repo)
+- [x] Check all modules have matching VERSION files (all at 1.0.0-pr.1)
+- [x] Verify `modules.json` is accurate
+- [x] Fixed: const.py VERSION synced to 1.0.0-pr.1
+- [x] Fixed: Removed leftover `/config/PaddiSense/github-repo/` folder
 
 ### 1.2 Registrations Repo (Private)
 - [ ] Verify `registrations/` repo is up-to-date
@@ -24,17 +26,20 @@
 ## Phase 2: New Grower Install Flow (Full Test)
 
 ### 2.1 Pre-Install Requirements
-- [ ] Fresh HAOS install documented
-- [ ] HACS installation steps verified
-- [ ] Required HACS frontend cards listed (button-card, card-mod, auto-entities)
+- [x] Fresh HAOS install documented (README.md)
+- [x] HACS installation steps verified (Install HACS button in Settings)
+- [x] Required HACS frontend cards listed (12 cards in const.py)
+- [x] Required HACS integrations listed (Browser Mod, BOM)
 
-### 2.2 Config Flow Wizard
-- [ ] Step 1: Welcome screen - fresh/upgrade detection
-- [ ] Step 2: Registration (name + email) - validates and stores locally
-- [ ] Step 3: License (optional) - skip for free modules
-- [ ] Step 4: Git check - verifies git availability
-- [ ] Step 5: Clone repository - clean install
-- [ ] Step 6: Installation completes - registry initialized
+### 2.2 Config Flow Wizard (Code Review - VERIFIED)
+- [x] Step 1: Welcome screen - fresh/upgrade/import detection
+- [x] Step 2: Registration (name + email) - validates and stores locally
+- [x] Step 3: License (optional) - currently skipped, all modules free
+- [x] Step 4: Git check - verifies git availability
+- [x] Step 5: Clone repository - clean install with local_data preservation
+- [x] Step 6: Installation completes - registry initialized
+- [x] Telemetry fires on registration (report_registration)
+- [x] HACS cards auto-install attempted during clone
 
 ### 2.3 Post-Install First Run
 - [ ] PaddiSense Manager dashboard accessible

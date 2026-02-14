@@ -2,7 +2,7 @@
 from pathlib import Path
 
 DOMAIN = "paddisense"
-VERSION = "1.0.0"
+VERSION = "1.0.0-pr.1"
 
 # =============================================================================
 # PATHS
