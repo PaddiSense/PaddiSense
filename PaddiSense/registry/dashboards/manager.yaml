@@ -3,11 +3,12 @@
 # Comprehensive management interface for PaddiSense Farm Management System
 #
 # Views:
-#   1. Modules - Install/remove modules, version & update status
-#   2. Farm Management - Add/edit farms
-#   3. Paddock Editor - Add/edit paddocks
-#   4. Season - Manage seasons
-#   5. Settings - Backup, restore, HACS dependencies, advanced options
+#   1. Farms - Business & Farm management, Excel import
+#   2. Paddocks - Add/edit paddocks
+#   3. Seasons - Manage growing seasons
+#   4. Crops - Crop types and rotation
+#   5. Modules - Install/remove modules, version & update status
+#   6. Settings - Backup, restore, HACS dependencies, advanced options
 ##############################################################################
 
 title: PaddiSense Manager
@@ -383,327 +384,7 @@ button_card_templates:
 
 views:
   # ===========================================================================
-  # View 1: Module Management
-  # ===========================================================================
-  - title: Modules
-    path: modules
-    type: sections
-    max_columns: 1
-    sections:
-      - type: grid
-        cards:
-          - type: vertical-stack
-            cards:
-              # ----------------------------------------------------------------
-              # Setup Required Card - Shows when integration not configured
-              # ----------------------------------------------------------------
-              - type: conditional
-                conditions:
-                  - condition: state
-                    entity: sensor.paddisense_version
-                    state_not: unavailable
-                card:
-                  type: custom:button-card
-                  show_name: false
-                  show_icon: false
-                  tap_action:
-                    action: none
-                  styles:
-                    card:
-                      - display: none
-
-              - type: custom:button-card
-                entity: sensor.paddisense_version
-                show_name: false
-                show_icon: false
-                show_state: false
-                tap_action:
-                  action: navigate
-                  navigation_path: /config/integrations/dashboard
-                styles:
-                  card:
-                    - background: var(--card-background-color)
-                    - border-radius: 16px
-                    - padding: 24px
-                    - box-shadow: 0 4px 12px rgba(0,0,0,0.15)
-                    - border-left: 6px solid "#fd7e14"
-                    - display: |
-                        [[[
-                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'none' : 'block';
-                        ]]]
-                  grid:
-                    - display: block
-                custom_fields:
-                  setup: |
-                    [[[
-                      return `
-                        <div style="text-align:center;">
-                          <div style="width:80px;height:80px;border-radius:50%;background:rgba(253,126,20,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-                            <ha-icon icon="mdi:alert-circle-outline" style="--mdc-icon-size:48px;color:#fd7e14;"></ha-icon>
-                          </div>
-                          <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:12px;">Setup Required</div>
-                          <div style="font-size:14px;color:var(--secondary-text-color);line-height:1.6;margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
-                            PaddiSense integration needs to be configured before you can manage modules.
-                            <br><br>
-                            Please complete the setup wizard to register your account and activate your license.
-                          </div>
-                          <div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;">
-                            <div style="background:#0066cc;color:white;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
-                              <ha-icon icon="mdi:cog" style="--mdc-icon-size:22px;"></ha-icon>
-                              Go to Integrations
-                            </div>
-                            <div style="font-size:12px;color:var(--secondary-text-color);">
-                              Settings → Devices & Services → Add Integration → Search "PaddiSense"
-                            </div>
-                          </div>
-                        </div>
-                      `;
-                    ]]]
-
-              # Title - hidden when not configured
-              - type: custom:button-card
-                entity: sensor.paddisense_version
-                template: template_titleblock
-                variables:
-                  var_name: MODULE MANAGEMENT
-                styles:
-                  card:
-                    - display: |
-                        [[[
-                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'flex' : 'none';
-                        ]]]
-
-              # Version & Update Status Card (display only)
-              - type: custom:button-card
-                entity: sensor.paddisense_version
-                show_icon: false
-                show_name: false
-                show_state: false
-                tap_action:
-                  action: none
-                hold_action:
-                  action: none
-                styles:
-                  card:
-                    - background: var(--card-background-color)
-                    - border-radius: 12px
-                    - padding: 16px
-                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
-                    - display: |
-                        [[[
-                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'block' : 'none';
-                        ]]]
-                  grid:
-                    - display: block
-                custom_fields:
-                  status: |
-                    [[[
-                      if (!entity || !entity.attributes) {
-                        return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Loading...</div>`;
-                      }
-
-                      const version = entity.state || 'Unknown';
-                      const latestVersion = entity.attributes.latest_version || 'Not checked';
-                      const updateAvailable = entity.attributes.update_available === true;
-                      const lastChecked = entity.attributes.last_checked ? new Date(entity.attributes.last_checked).toLocaleString() : 'Never';
-
-                      const statusBadge = updateAvailable
-                        ? `<span style="background:#fd7e14;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UPDATE AVAILABLE: v${latestVersion}</span>`
-                        : `<span style="background:#4caf50;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UP TO DATE</span>`;
-
-                      return `
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <ha-icon icon="mdi:package-variant" style="--mdc-icon-size:28px;color:#0066cc;"></ha-icon>
-                          <div style="flex:1;">
-                            <div style="font-size:14px;font-weight:700;color:var(--primary-text-color);">PaddiSense v${version}</div>
-                            <div style="font-size:11px;color:var(--secondary-text-color);">Last checked: ${lastChecked}</div>
-                          </div>
-                          ${statusBadge}
-                        </div>
-                      `;
-                    ]]]
-
-              # Check for Updates button (full width)
-              - type: custom:button-card
-                entity: sensor.paddisense_version
-                name: Check for Updates
-                icon: mdi:cloud-download
-                color_type: card
-                color: "#0066cc"
-                tap_action:
-                  action: call-service
-                  service: paddisense.check_for_updates
-                styles:
-                  card:
-                    - height: 70px
-                    - border-radius: 12px
-                  name:
-                    - font-size: 14px
-                    - font-weight: 700
-                    - color: white
-                  icon:
-                    - color: white
-                    - width: 22px
-
-              # Update button (only visible when update available)
-              - type: custom:button-card
-                entity: sensor.paddisense_version
-                name: |
-                  [[[
-                    const ver = entity?.attributes?.latest_version || 'latest';
-                    return `Update to v${ver}`;
-                  ]]]
-                icon: mdi:download
-                color_type: card
-                color: "#28a745"
-                tap_action:
-                  action: call-service
-                  service: paddisense.update_paddisense
-                  service_data:
-                    backup_first: true
-                  confirmation:
-                    text: Update PaddiSense? A backup will be created first.
-                styles:
-                  card:
-                    - height: 70px
-                    - border-radius: 12px
-                    - display: |
-                        [[[
-                          const updateAvailable = entity?.attributes?.update_available === true;
-                          return updateAvailable ? 'flex' : 'none';
-                        ]]]
-                  name:
-                    - font-size: 14px
-                    - font-weight: 700
-                    - color: white
-                  icon:
-                    - color: white
-                    - width: 22px
-
-              # Module Cards - Using horizontal-stack with info + button
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: weather
-                      title: Weather
-                      desc: Local weather data
-                      icon: mdi:weather-cloudy
-                      color: '#2196f3'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: weather
-                      title: Weather
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: ipm
-                      title: Inventory Product Manager
-                      desc: Farm consumables
-                      icon: mdi:warehouse
-                      color: '#4caf50'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: ipm
-                      title: Inventory Product Manager
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: asm
-                      title: Asset Service Manager
-                      desc: Farm maintenance & inspections
-                      icon: mdi:tractor
-                      color: '#ff9800'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: asm
-                      title: Asset Service Manager
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: hfm
-                      title: Hey Farmer
-                      desc: Farm event data
-                      icon: mdi:chart-areaspline
-                      color: '#7b1fa2'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: hfm
-                      title: Hey Farmer
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: rtr
-                      title: Real Time Rice
-                      desc: Rice prediction model data
-                      icon: mdi:rice
-                      color: '#43a047'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: rtr
-                      title: Real Time Rice
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: str
-                      title: Stock Tracker
-                      desc: Manage your mobs
-                      icon: mdi:cow
-                      color: '#8d6e63'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: str
-                      title: Stock Tracker
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: pwm
-                      title: Precision Water Management
-                      desc: Irrigation automation
-                      icon: mdi:water
-                      color: '#00bcd4'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: pwm
-                      title: Precision Water Management
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: pds_module_info
-                    variables:
-                      module_id: wss
-                      title: Worker Safety System
-                      desc: Know where your people are
-                      icon: mdi:account-hard-hat
-                      color: '#e53935'
-                  - type: custom:button-card
-                    template: pds_module_button
-                    variables:
-                      module_id: wss
-                      title: Worker Safety System
-
-  # ===========================================================================
-  # View 2: Farm Management
+  # View 1: Farm Management
   # ===========================================================================
   - title: Farms
     path: farms
@@ -714,6 +395,21 @@ views:
         cards:
           - type: vertical-stack
             cards:
+              #----------------------------------------------------------------
+              # QUICK ACTIONS
+              #----------------------------------------------------------------
+              - type: custom:button-card
+                template: template_action
+                name: Import from Excel/CSV
+                icon: mdi:file-excel
+                tap_action:
+                  action: navigate
+                  navigation_path: /paddisense-manager/settings
+                styles:
+                  card:
+                    - height: 70px
+                    - background: "linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)"
+
               #----------------------------------------------------------------
               # BUSINESS MANAGEMENT SECTION
               #----------------------------------------------------------------
@@ -1200,7 +896,7 @@ views:
                     ]]]
 
   # ===========================================================================
-  # View 3: Paddock Management (HFM Settings Pattern)
+  # View 2: Paddock Management
   # ===========================================================================
   - title: Paddocks
     path: paddocks
@@ -1727,7 +1423,7 @@ views:
                     ]]]
 
   # ===========================================================================
-  # View 4: Season Management
+  # View 3: Season Management
   # ===========================================================================
   - title: Seasons
     path: seasons
@@ -2090,7 +1786,7 @@ views:
                     ]]]
 
   # ===========================================================================
-  # View 5: Crop Types
+  # View 4: Crop Types
   # ===========================================================================
   - title: Crops
     path: crops
@@ -2553,6 +2249,326 @@ views:
                     ]]]
 
   # ===========================================================================
+  # View 5: Module Management
+  # ===========================================================================
+  - title: Modules
+    path: modules
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              # ----------------------------------------------------------------
+              # Setup Required Card - Shows when integration not configured
+              # ----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: sensor.paddisense_version
+                    state_not: unavailable
+                card:
+                  type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - display: none
+
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                show_name: false
+                show_icon: false
+                show_state: false
+                tap_action:
+                  action: navigate
+                  navigation_path: /config/integrations/dashboard
+                styles:
+                  card:
+                    - background: var(--card-background-color)
+                    - border-radius: 16px
+                    - padding: 24px
+                    - box-shadow: 0 4px 12px rgba(0,0,0,0.15)
+                    - border-left: 6px solid "#fd7e14"
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'none' : 'block';
+                        ]]]
+                  grid:
+                    - display: block
+                custom_fields:
+                  setup: |
+                    [[[
+                      return `
+                        <div style="text-align:center;">
+                          <div style="width:80px;height:80px;border-radius:50%;background:rgba(253,126,20,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                            <ha-icon icon="mdi:alert-circle-outline" style="--mdc-icon-size:48px;color:#fd7e14;"></ha-icon>
+                          </div>
+                          <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:12px;">Setup Required</div>
+                          <div style="font-size:14px;color:var(--secondary-text-color);line-height:1.6;margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
+                            PaddiSense integration needs to be configured before you can manage modules.
+                            <br><br>
+                            Please complete the setup wizard to register your account and activate your license.
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto;">
+                            <div style="background:#0066cc;color:white;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                              <ha-icon icon="mdi:cog" style="--mdc-icon-size:22px;"></ha-icon>
+                              Go to Integrations
+                            </div>
+                            <div style="font-size:12px;color:var(--secondary-text-color);">
+                              Settings → Devices & Services → Add Integration → Search "PaddiSense"
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    ]]]
+
+              # Title - hidden when not configured
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                template: template_titleblock
+                variables:
+                  var_name: MODULE MANAGEMENT
+                styles:
+                  card:
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'flex' : 'none';
+                        ]]]
+
+              # Version & Update Status Card (display only)
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                show_icon: false
+                show_name: false
+                show_state: false
+                tap_action:
+                  action: none
+                hold_action:
+                  action: none
+                styles:
+                  card:
+                    - background: var(--card-background-color)
+                    - border-radius: 12px
+                    - padding: 16px
+                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                    - display: |
+                        [[[
+                          return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'block' : 'none';
+                        ]]]
+                  grid:
+                    - display: block
+                custom_fields:
+                  status: |
+                    [[[
+                      if (!entity || !entity.attributes) {
+                        return `<div style="text-align:center;padding:20px;color:var(--secondary-text-color);">Loading...</div>`;
+                      }
+
+                      const version = entity.state || 'Unknown';
+                      const latestVersion = entity.attributes.latest_version || 'Not checked';
+                      const updateAvailable = entity.attributes.update_available === true;
+                      const lastChecked = entity.attributes.last_checked ? new Date(entity.attributes.last_checked).toLocaleString() : 'Never';
+
+                      const statusBadge = updateAvailable
+                        ? `<span style="background:#fd7e14;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UPDATE AVAILABLE: v${latestVersion}</span>`
+                        : `<span style="background:#4caf50;color:white;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;">UP TO DATE</span>`;
+
+                      return `
+                        <div style="display:flex;align-items:center;gap:12px;">
+                          <ha-icon icon="mdi:package-variant" style="--mdc-icon-size:28px;color:#0066cc;"></ha-icon>
+                          <div style="flex:1;">
+                            <div style="font-size:14px;font-weight:700;color:var(--primary-text-color);">PaddiSense v${version}</div>
+                            <div style="font-size:11px;color:var(--secondary-text-color);">Last checked: ${lastChecked}</div>
+                          </div>
+                          ${statusBadge}
+                        </div>
+                      `;
+                    ]]]
+
+              # Check for Updates button (full width)
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                name: Check for Updates
+                icon: mdi:cloud-download
+                color_type: card
+                color: "#0066cc"
+                tap_action:
+                  action: call-service
+                  service: paddisense.check_for_updates
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                    - width: 22px
+
+              # Update button (only visible when update available)
+              - type: custom:button-card
+                entity: sensor.paddisense_version
+                name: |
+                  [[[
+                    const ver = entity?.attributes?.latest_version || 'latest';
+                    return `Update to v${ver}`;
+                  ]]]
+                icon: mdi:download
+                color_type: card
+                color: "#28a745"
+                tap_action:
+                  action: call-service
+                  service: paddisense.update_paddisense
+                  service_data:
+                    backup_first: true
+                  confirmation:
+                    text: Update PaddiSense? A backup will be created first.
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - display: |
+                        [[[
+                          const updateAvailable = entity?.attributes?.update_available === true;
+                          return updateAvailable ? 'flex' : 'none';
+                        ]]]
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                    - width: 22px
+
+              # Module Cards - Using horizontal-stack with info + button
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: weather
+                      title: Weather
+                      desc: Local weather data
+                      icon: mdi:weather-cloudy
+                      color: '#2196f3'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: weather
+                      title: Weather
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: ipm
+                      title: Inventory Product Manager
+                      desc: Farm consumables
+                      icon: mdi:warehouse
+                      color: '#4caf50'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: ipm
+                      title: Inventory Product Manager
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: asm
+                      title: Asset Service Manager
+                      desc: Farm maintenance & inspections
+                      icon: mdi:tractor
+                      color: '#ff9800'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: asm
+                      title: Asset Service Manager
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: hfm
+                      title: Hey Farmer
+                      desc: Farm event data
+                      icon: mdi:chart-areaspline
+                      color: '#7b1fa2'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: hfm
+                      title: Hey Farmer
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: rtr
+                      title: Real Time Rice
+                      desc: Rice prediction model data
+                      icon: mdi:rice
+                      color: '#43a047'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: rtr
+                      title: Real Time Rice
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: str
+                      title: Stock Tracker
+                      desc: Manage your mobs
+                      icon: mdi:cow
+                      color: '#8d6e63'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: str
+                      title: Stock Tracker
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: pwm
+                      title: Precision Water Management
+                      desc: Irrigation automation
+                      icon: mdi:water
+                      color: '#00bcd4'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: pwm
+                      title: Precision Water Management
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: pds_module_info
+                    variables:
+                      module_id: wss
+                      title: Worker Safety System
+                      desc: Know where your people are
+                      icon: mdi:account-hard-hat
+                      color: '#e53935'
+                  - type: custom:button-card
+                    template: pds_module_button
+                    variables:
+                      module_id: wss
+                      title: Worker Safety System
+
+  # ===========================================================================
   # View 6: Settings
   # ===========================================================================
   - title: Settings
@@ -2611,7 +2627,32 @@ views:
               - type: custom:button-card
                 template: template_titleblock
                 variables:
-                  var_name: IMPORT FROM EXCEL
+                  var_name: IMPORT / EXPORT
+
+              - type: markdown
+                content: |
+                  Import farms and paddocks from a CSV file. Download the template first, fill it out in Excel, save as CSV, then upload to `/config` and import.
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                      padding: 12px;
+                      background: var(--card-background-color);
+                    }
+
+              # Export Template button
+              - type: custom:button-card
+                template: template_action
+                name: Download CSV Template
+                icon: mdi:file-download
+                tap_action:
+                  action: call-service
+                  service: paddisense.export_registry_template
+                confirmation:
+                  text: |
+                    Export a CSV template to /config/paddisense_import_template.csv?
+
+                    Open this file in Excel, add your farms and paddocks, save as CSV, then import.
 
               - type: custom:button-card
                 show_icon: false
@@ -2631,37 +2672,40 @@ views:
                   info: |
                     [[[
                       return `
-                        <div style="margin-bottom:16px;">
-                          <div style="font-size:14px;color:var(--primary-text-color);margin-bottom:12px;">
-                            Import farms and paddocks from an Excel or CSV file. Place your file in the <code>/config</code> directory.
-                          </div>
-                          <div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Required Columns:</div>
-                          <div style="background:rgba(0,102,204,0.1);border:1px solid #0066cc;border-radius:8px;padding:12px;font-family:monospace;">
-                            <table style="width:100%;border-collapse:collapse;">
+                        <div>
+                          <div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">CSV Columns:</div>
+                          <div style="background:rgba(0,102,204,0.1);border:1px solid #0066cc;border-radius:8px;padding:12px;overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:11px;">
                               <tr style="border-bottom:1px solid rgba(0,102,204,0.3);">
-                                <th style="text-align:left;padding:6px;color:#0066cc;">Business Name</th>
-                                <th style="text-align:left;padding:6px;color:#0066cc;">Farm Number</th>
-                                <th style="text-align:left;padding:6px;color:#0066cc;">Paddock Name</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Business</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Farm</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Paddock</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Brown Ha</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Green Ha</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Crop 1</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Start</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">End</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Crop 2</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">Start</th>
+                                <th style="text-align:left;padding:4px;color:#0066cc;white-space:nowrap;">End</th>
                               </tr>
                               <tr>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Smith Farms</td>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Farm 1</td>
-                                <td style="padding:6px;color:var(--secondary-text-color);">North Field</td>
-                              </tr>
-                              <tr>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Smith Farms</td>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Farm 1</td>
-                                <td style="padding:6px;color:var(--secondary-text-color);">South Field</td>
-                              </tr>
-                              <tr>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Jones Ag</td>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Main</td>
-                                <td style="padding:6px;color:var(--secondary-text-color);">Paddock A</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">Smith Farms</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">Main</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">North</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">50</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">45</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">Fallow</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">5</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">10</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">Rice</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">10</td>
+                                <td style="padding:4px;color:var(--secondary-text-color);">4</td>
                               </tr>
                             </table>
                           </div>
-                          <div style="font-size:12px;color:var(--secondary-text-color);margin-top:12px;">
-                            <strong>Note:</strong> Bay counts will be set to 0 and must be configured after import.
+                          <div style="font-size:11px;color:var(--secondary-text-color);margin-top:8px;">
+                            <strong>Note:</strong> Crop months are 1-12 (Jan-Dec). Leave crop columns empty if not used.
                           </div>
                         </div>
                       `;
@@ -2670,7 +2714,7 @@ views:
               - type: entities
                 entities:
                   - entity: input_text.registry_excel_filename
-                    name: Excel/CSV Filename
+                    name: CSV Filename (in /config)
                 card_mod:
                   style: |
                     ha-card {
@@ -2681,8 +2725,8 @@ views:
 
               - type: custom:button-card
                 template: template_success
-                name: Import from Excel/CSV
-                icon: mdi:file-excel
+                name: Import from CSV
+                icon: mdi:file-upload
                 tap_action:
                   action: call-service
                   service: paddisense.import_from_excel

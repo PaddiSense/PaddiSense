@@ -211,6 +211,7 @@ SERVICE_ADD_FARM = "add_farm"
 SERVICE_EDIT_FARM = "edit_farm"
 SERVICE_DELETE_FARM = "delete_farm"
 SERVICE_EXPORT_REGISTRY = "export_registry"
+SERVICE_EXPORT_REGISTRY_TEMPLATE = "export_registry_template"
 SERVICE_IMPORT_REGISTRY = "import_registry"
 SERVICE_IMPORT_FROM_EXCEL = "import_from_excel"
 

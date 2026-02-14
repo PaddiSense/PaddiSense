@@ -39,6 +39,7 @@ from .const import (
     SERVICE_EDIT_PADDOCK,
     SERVICE_EDIT_SEASON,
     SERVICE_EXPORT_REGISTRY,
+    SERVICE_EXPORT_REGISTRY_TEMPLATE,
     SERVICE_IMPORT_REGISTRY,
     SERVICE_IMPORT_FROM_EXCEL,
     SERVICE_SET_ACTIVE_SEASON,
@@ -506,6 +507,10 @@ async def _async_register_registry_services(
         result = await hass.async_add_executor_job(backend.export_registry)
         _log_service_result("export_registry", result)
 
+    async def handle_export_registry_template(call: ServiceCall) -> None:
+        result = await hass.async_add_executor_job(backend.export_registry_template)
+        _log_service_result("export_registry_template", result)
+
     async def handle_import_registry(call: ServiceCall) -> None:
         result = await hass.async_add_executor_job(
             backend.import_registry,
@@ -538,6 +543,7 @@ async def _async_register_registry_services(
     hass.services.async_register(DOMAIN, SERVICE_EDIT_FARM, handle_edit_farm, EDIT_FARM_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_DELETE_FARM, handle_delete_farm, DELETE_FARM_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_EXPORT_REGISTRY, handle_export_registry)
+    hass.services.async_register(DOMAIN, SERVICE_EXPORT_REGISTRY_TEMPLATE, handle_export_registry_template)
     hass.services.async_register(DOMAIN, SERVICE_IMPORT_REGISTRY, handle_import_registry, IMPORT_REGISTRY_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_IMPORT_FROM_EXCEL, handle_import_from_excel, IMPORT_FROM_EXCEL_SCHEMA)
 

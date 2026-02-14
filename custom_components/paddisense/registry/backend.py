@@ -661,6 +661,55 @@ class RegistryBackend:
             "message": f"Exported to {backup_path.name}",
         }
 
+    def export_registry_template(self) -> dict[str, Any]:
+        """Export a CSV template for importing farms and paddocks.
+
+        Creates a template file with headers and example data that growers
+        can fill out in Excel and re-import.
+        """
+        import csv
+        from pathlib import Path
+
+        template_path = Path("/config/paddisense_import_template.csv")
+
+        # CSV headers matching the new import structure
+        headers = [
+            "Business Name",
+            "Farm Name",
+            "Paddock Name",
+            "Brown Area (ha)",
+            "Green Area (ha)",
+            "Crop 1",
+            "Crop 1 Start Month",
+            "Crop 1 End Month",
+            "Crop 2",
+            "Crop 2 Start Month",
+            "Crop 2 End Month",
+        ]
+
+        # Example rows to guide the grower
+        example_rows = [
+            ["Smith Farms", "Main Farm", "North Paddock", "50", "45", "Fallow", "5", "10", "Rice", "10", "4"],
+            ["Smith Farms", "Main Farm", "South Paddock", "30", "28", "Fallow", "5", "10", "Rice", "10", "4"],
+            ["Smith Farms", "East Block", "Paddock A", "25", "22", "", "", "", "", "", ""],
+            ["Jones Agricultural", "Home Farm", "Field 1", "100", "95", "Wheat", "5", "11", "", "", ""],
+        ]
+
+        try:
+            with open(template_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+                for row in example_rows:
+                    writer.writerow(row)
+
+            return {
+                "success": True,
+                "file": str(template_path),
+                "message": f"Template exported to {template_path}",
+            }
+        except IOError as e:
+            return {"success": False, "error": f"Failed to export template: {e}"}
+
     def import_registry(self, filename: str) -> dict[str, Any]:
         """Import config from a backup file."""
         import json
@@ -716,8 +765,11 @@ class RegistryBackend:
     def import_from_excel(self, filename: str) -> dict[str, Any]:
         """Import farms and paddocks from an Excel/CSV file.
 
-        Expected columns: Business Name, Farm Number, Paddock Name
-        Bays will be set to 0 for later configuration by the grower.
+        Supported columns:
+        - Required: Business Name, Farm Name (or Farm Number), Paddock Name
+        - Optional: Brown Area (ha), Green Area (ha)
+        - Optional crops: Crop 1, Crop 1 Start Month, Crop 1 End Month,
+                         Crop 2, Crop 2 Start Month, Crop 2 End Month
         """
         import csv
         from pathlib import Path
@@ -771,11 +823,20 @@ class RegistryBackend:
             if not rows:
                 return {"success": False, "error": "No data rows found in file"}
 
-            # Validate required columns
-            required_cols = ['Business Name', 'Farm Number', 'Paddock Name']
+            # Validate required columns (support both old and new column names)
             first_row_keys = list(rows[0].keys())
-            missing = [col for col in required_cols if col not in first_row_keys]
-            if missing:
+            has_business = 'Business Name' in first_row_keys
+            has_farm = 'Farm Name' in first_row_keys or 'Farm Number' in first_row_keys
+            has_paddock = 'Paddock Name' in first_row_keys
+
+            if not (has_business and has_farm and has_paddock):
+                missing = []
+                if not has_business:
+                    missing.append('Business Name')
+                if not has_farm:
+                    missing.append('Farm Name')
+                if not has_paddock:
+                    missing.append('Paddock Name')
                 return {
                     "success": False,
                     "error": f"Missing required columns: {', '.join(missing)}. Found: {', '.join(first_row_keys)}"
@@ -792,44 +853,72 @@ class RegistryBackend:
                     "bays": {},
                     "seasons": {},
                     "farms": {},
+                    "businesses": {},
                     "transactions": [],
                     "created": now,
                     "modified": now,
                 }
 
+            businesses = config.setdefault("businesses", {})
             farms = config.setdefault("farms", {})
             paddocks = config.setdefault("paddocks", {})
 
             now = datetime.now().isoformat(timespec="seconds")
+            businesses_added = 0
             farms_added = 0
             paddocks_added = 0
             skipped = 0
 
-            # Track farm mapping: (business_name, farm_number) -> farm_id
-            farm_map = {}
+            # Track mappings
+            business_map = {}  # business_name -> business_id
+            farm_map = {}  # (business_name, farm_name) -> farm_id
+
+            # Helper to safely parse numbers
+            def safe_float(val, default=0.0):
+                try:
+                    return float(val) if val else default
+                except (ValueError, TypeError):
+                    return default
+
+            def safe_int(val, default=None):
+                try:
+                    return int(val) if val else default
+                except (ValueError, TypeError):
+                    return default
 
             for row in rows:
                 business_name = str(row.get('Business Name', '')).strip()
-                farm_number = str(row.get('Farm Number', '')).strip()
+                # Support both 'Farm Name' and 'Farm Number' columns
+                farm_name = str(row.get('Farm Name', '') or row.get('Farm Number', '')).strip()
                 paddock_name = str(row.get('Paddock Name', '')).strip()
 
                 if not business_name or not paddock_name:
                     skipped += 1
                     continue
 
-                # Create farm key from business name + farm number
-                farm_key = (business_name, farm_number)
+                # Create or get business
+                if business_name not in business_map:
+                    business_id = generate_id(business_name)
+                    base_id = business_id
+                    counter = 1
+                    while business_id in businesses:
+                        business_id = f"{base_id}_{counter}"
+                        counter += 1
 
+                    businesses[business_id] = {
+                        "name": business_name,
+                        "created": now,
+                        "modified": now,
+                    }
+                    business_map[business_name] = business_id
+                    businesses_added += 1
+
+                # Create or get farm
+                farm_key = (business_name, farm_name)
                 if farm_key not in farm_map:
-                    # Create farm name
-                    if farm_number:
-                        farm_name = f"{business_name} - {farm_number}"
-                    else:
-                        farm_name = business_name
+                    display_name = farm_name if farm_name else business_name
+                    farm_id = generate_id(display_name)
 
-                    farm_id = generate_id(farm_name)
-
-                    # Handle duplicate farm IDs
                     base_id = farm_id
                     counter = 1
                     while farm_id in farms:
@@ -837,9 +926,8 @@ class RegistryBackend:
                         counter += 1
 
                     farms[farm_id] = {
-                        "name": farm_name,
-                        "business_name": business_name,
-                        "farm_number": farm_number,
+                        "name": display_name,
+                        "business_id": business_map[business_name],
                         "created": now,
                         "modified": now,
                     }
@@ -847,33 +935,67 @@ class RegistryBackend:
                     farms_added += 1
 
                     self._log_transaction(
-                        config, "add", "farm", farm_id, farm_name, "Excel import"
+                        config, "add", "farm", farm_id, display_name, "CSV import"
                     )
 
                 # Create paddock
                 farm_id = farm_map[farm_key]
                 paddock_id = generate_id(paddock_name)
 
-                # Handle duplicate paddock IDs
                 base_id = paddock_id
                 counter = 1
                 while paddock_id in paddocks:
                     paddock_id = f"{base_id}_{counter}"
                     counter += 1
 
-                paddocks[paddock_id] = {
+                # Build paddock data
+                paddock_data = {
                     "farm_id": farm_id,
                     "name": paddock_name,
                     "bay_prefix": "B-",
-                    "bay_count": 0,  # To be configured later
+                    "bay_count": 0,
                     "current_season": False,
                     "created": now,
                     "modified": now,
                 }
+
+                # Add optional area fields
+                brown_area = safe_float(row.get('Brown Area (ha)'))
+                green_area = safe_float(row.get('Green Area (ha)'))
+                if brown_area > 0:
+                    paddock_data["brown_area_ha"] = brown_area
+                if green_area > 0:
+                    paddock_data["green_area_ha"] = green_area
+
+                # Add optional crop 1
+                crop1_name = str(row.get('Crop 1', '')).strip()
+                crop1_start = safe_int(row.get('Crop 1 Start Month'))
+                crop1_end = safe_int(row.get('Crop 1 End Month'))
+                if crop1_name:
+                    crop1_id = generate_id(crop1_name)
+                    paddock_data["crop_1"] = {
+                        "crop_id": crop1_id,
+                        "start_month": crop1_start or 1,
+                        "end_month": crop1_end or 12,
+                    }
+
+                # Add optional crop 2
+                crop2_name = str(row.get('Crop 2', '')).strip()
+                crop2_start = safe_int(row.get('Crop 2 Start Month'))
+                crop2_end = safe_int(row.get('Crop 2 End Month'))
+                if crop2_name:
+                    crop2_id = generate_id(crop2_name)
+                    paddock_data["crop_2"] = {
+                        "crop_id": crop2_id,
+                        "start_month": crop2_start or 1,
+                        "end_month": crop2_end or 12,
+                    }
+
+                paddocks[paddock_id] = paddock_data
                 paddocks_added += 1
 
                 self._log_transaction(
-                    config, "add", "paddock", paddock_id, paddock_name, "Excel import"
+                    config, "add", "paddock", paddock_id, paddock_name, "CSV import"
                 )
 
             config["modified"] = now
@@ -881,7 +1003,8 @@ class RegistryBackend:
 
             return {
                 "success": True,
-                "message": f"Import complete",
+                "message": "Import complete",
+                "businesses_added": businesses_added,
                 "farms_added": farms_added,
                 "paddocks_added": paddocks_added,
                 "rows_skipped": skipped,

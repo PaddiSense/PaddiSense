@@ -287,6 +287,10 @@ export_registry:
   name: Export Registry
   description: Export registry to a backup file
 
+export_registry_template:
+  name: Export Registry Template
+  description: Export a CSV template for importing farms and paddocks. Download, fill out in Excel, save as CSV, then import.
+
 import_registry:
   name: Import Registry
   description: Import registry from a backup file
@@ -299,14 +303,14 @@ import_registry:
         text:
 
 import_from_excel:
-  name: Import from Excel
-  description: Import farms and paddocks from an Excel/CSV file. Columns required - Business Name, Farm Number, Paddock Name
+  name: Import from CSV
+  description: Import businesses, farms and paddocks from a CSV file. Required columns - Business Name, Farm Name, Paddock Name. Optional - Brown Area (ha), Green Area (ha), Crop 1/2 with start/end months.
   fields:
     filename:
       name: Filename
-      description: Name of Excel (.xlsx) or CSV (.csv) file in /config directory
+      description: Name of CSV file in /config directory. Use Export Template to get the correct format.
       required: true
-      example: "growers.csv"
+      example: "paddisense_import_template.csv"
       selector:
         text:
 
