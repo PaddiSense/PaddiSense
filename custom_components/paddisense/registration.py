@@ -90,7 +90,13 @@ def update_installed_modules(modules: list[str]) -> None:
 
 
 def get_allowed_modules() -> list[str]:
-    """Get list of modules this registration allows."""
+    """Get list of modules this registration allows.
+
+    Includes:
+    - FREE_MODULES (always available when registered)
+    - DATA_SHARING_MODULES (if user has agreed)
+    - License-granted modules (PWM, WSS if valid license exists)
+    """
     reg_data = load_registration()
 
     if not reg_data.get("registered"):
@@ -104,6 +110,26 @@ def get_allowed_modules() -> list[str]:
     for module_id in DATA_SHARING_MODULES:
         if module_id in agreements:
             allowed.append(module_id)
+
+    # Check for valid license with additional modules (PWM, WSS)
+    try:
+        from .helpers import get_saved_license_key
+        from .license import validate_license, LicenseError
+
+        license_key = get_saved_license_key()
+        if license_key:
+            try:
+                license_info = validate_license(license_key)
+                # Add license-granted modules that aren't already in allowed list
+                for mod in license_info.modules:
+                    if mod not in allowed:
+                        allowed.append(mod)
+            except LicenseError:
+                # License invalid/expired - don't add any extra modules
+                pass
+    except ImportError:
+        # License module not available - skip
+        pass
 
     return allowed
 
