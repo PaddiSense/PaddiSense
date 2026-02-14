@@ -3273,6 +3273,22 @@ views:
                                   action: call-service
                                   service: script.hfm_remove_product_slot
 
+                          # Water Rate Input
+                          - type: entities
+                            entities:
+                              - entity: input_number.hfm_water_rate
+                                name: Water Rate
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  border-radius: 12px;
+                                  margin-top: 8px;
+                                  background: rgba(30, 136, 229, 0.15);
+                                }
+                                .mdc-list-item__primary-text {
+                                  font-size: 1.1rem !important;
+                                }
+
                           # Applicator Selection (dropdown first, then display card)
                           - type: entities
                             entities:
@@ -3419,7 +3435,7 @@ views:
                             cards:
                               - type: custom:button-card
                                 template: hfm_title
-                                name: "SPRAY WEATHER"
+                                name: "WEATHER"
                                 styles:
                                   card:
                                     - border-radius: 12px 0 0 0
@@ -3730,8 +3746,9 @@ views:
                               const method = states['input_select.hfm_application_method']?.state || '';
                               const productCount = parseInt(states['input_number.hfm_product_count']?.state) || 1;
 
-                              // Get applicator
+                              // Get applicator and water rate
                               const applicator = states['input_select.hfm_selected_applicator']?.state || '';
+                              const waterRate = states['input_number.hfm_water_rate']?.state || '';
 
                               // Get weather summary
                               const weatherSummary = states['sensor.hfm_weather_summary']?.state || '';
@@ -3748,17 +3765,17 @@ views:
                               const draftPaddocks = draft.data?.paddocks || [];
                               const paddockMap = draftsAttr.paddock_map || {};
 
-                              // Get paddock display
-                              let paddockDisplay = '';
+                              // Get paddock display - show ALL paddocks
+                              let paddockNames = [];
                               if (draftPaddocks.length > 0) {
-                                const paddockNames = draftPaddocks.map(pid => paddockMap[pid] || pid);
-                                paddockDisplay = paddockNames.length > 3 ?
-                                  paddockNames.slice(0, 3).join(', ') + ` +${paddockNames.length - 3} more` :
-                                  paddockNames.join(', ');
+                                paddockNames = draftPaddocks.map(pid => paddockMap[pid] || pid);
                               } else {
-                                paddockDisplay = states['input_select.hfm_selected_paddock']?.state || '';
+                                const singlePaddock = states['input_select.hfm_selected_paddock']?.state || '';
+                                if (singlePaddock && singlePaddock !== 'Select Paddock') {
+                                  paddockNames = [singlePaddock];
+                                }
                               }
-                              const paddockCount = draftPaddocks.length || (paddockDisplay && paddockDisplay !== 'Select Paddock' ? 1 : 0);
+                              const paddockCount = paddockNames.length;
 
                               // Build products array from all slots
                               const products = [];
@@ -3827,10 +3844,13 @@ views:
                               // Details section
                               html += `<div style="display:grid;gap:8px;">`;
 
-                              // Paddock row (with count if multiple)
-                              html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
-                                        <span style="font-size:14px;color:var(--secondary-text-color);">Paddock${paddockCount > 1 ? 's (' + paddockCount + ')' : ''}</span>
-                                        <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${paddockDisplay}</span>
+                              // Paddock row - bold heading, show all paddocks
+                              html += `<div style="padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                        <div style="font-size:16px;font-weight:700;color:var(--primary-text-color);margin-bottom:${paddockCount > 1 ? '8px' : '0'};">Paddock${paddockCount > 1 ? 's (' + paddockCount + ')' : ''}</div>
+                                        ${paddockCount > 1
+                                          ? paddockNames.map(name => `<div style="font-size:14px;font-weight:500;color:var(--primary-text-color);padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.05);">${name}</div>`).join('')
+                                          : `<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);display:inline;float:right;margin-top:-24px;">${paddockNames[0] || ''}</div>`
+                                        }
                                       </div>`;
 
                               // Type-specific details
@@ -3851,6 +3871,13 @@ views:
                                   html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
                                             <span style="font-size:14px;color:var(--secondary-text-color);">Method</span>
                                             <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${method}</span>
+                                          </div>`;
+                                }
+                                // Water Rate
+                                if (waterRate && parseFloat(waterRate) > 0) {
+                                  html += `<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--secondary-background-color,#f5f5f5);border-radius:8px;">
+                                            <span style="font-size:14px;color:var(--secondary-text-color);">Water Rate</span>
+                                            <span style="font-size:14px;font-weight:600;color:var(--primary-text-color);">${waterRate} L/ha</span>
                                           </div>`;
                                 }
                                 // Applicator
