@@ -570,164 +570,164 @@ views:
     sections:
       - type: grid
         cards:
-      # Header
-      - type: custom:button-card
-        show_name: false
-        show_state: false
-        show_icon: false
-        tap_action:
-          action: none
-        styles:
-          card:
-            - background: transparent
-            - box-shadow: none
-            - padding: 0 0 16px 0
-        custom_fields:
-          header: |
-            [[[
-              return `
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <ha-icon icon="mdi:cog" style="--mdc-icon-size:32px;color:#43a047;"></ha-icon>
-                  <div>
-                    <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">RTR Settings</div>
-                    <div style="font-size:13px;color:var(--secondary-text-color);">Manage Real Time Rice configuration</div>
-                  </div>
-                </div>
-              `;
-            ]]]
-
-      # Current configuration status
-      - type: custom:button-card
-        entity: sensor.paddisense_real_time_rice
-        show_name: false
-        show_state: false
-        show_icon: false
-        tap_action:
-          action: none
-        styles:
-          card:
-            - background: var(--card-background-color)
-            - border-radius: 16px 16px 0 0
-            - padding: 20px
-        custom_fields:
-          status: |
-            [[[
-              const state = entity.state;
-              const attrs = entity.attributes || {};
-              const configured = state !== 'Not configured';
-              const lastUpdated = attrs.rtr_last_updated || 'Never';
-              const paddockCount = attrs.rtr_paddock_count || 0;
-
-              const statusColor = configured ? '#43a047' : '#ff9800';
-              const statusIcon = configured ? 'mdi:check-circle' : 'mdi:alert-circle-outline';
-              const statusText = configured ? 'Configured' : 'Not Configured';
-
-              return `
-                <div>
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                    <div style="width:48px;height:48px;border-radius:50%;background:rgba(${configured ? '67,160,71' : '255,152,0'},0.15);display:flex;align-items:center;justify-content:center;">
-                      <ha-icon icon="${statusIcon}" style="--mdc-icon-size:26px;color:${statusColor};"></ha-icon>
-                    </div>
-                    <div>
-                      <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);">Status: ${statusText}</div>
-                      <div style="font-size:13px;color:var(--secondary-text-color);">${configured ? paddockCount + ' paddocks loaded' : 'Enter your RTR URL to get started'}</div>
-                    </div>
-                  </div>
-
-                  ${configured ? `
-                    <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:16px;">
-                      <div style="display:grid;gap:12px;">
-                        <div>
-                          <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Last Updated</div>
-                          <div style="font-size:14px;color:var(--primary-text-color);">${lastUpdated}</div>
-                        </div>
-                        <div>
-                          <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Paddocks</div>
-                          <div style="font-size:14px;color:var(--primary-text-color);">${paddockCount}</div>
-                        </div>
+          # Header
+          - type: custom:button-card
+            show_name: false
+            show_state: false
+            show_icon: false
+            tap_action:
+              action: none
+            styles:
+              card:
+                - background: transparent
+                - box-shadow: none
+                - padding: 0 0 16px 0
+            custom_fields:
+              header: |
+                [[[
+                  return `
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <ha-icon icon="mdi:cog" style="--mdc-icon-size:32px;color:#43a047;"></ha-icon>
+                      <div>
+                        <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">RTR Settings</div>
+                        <div style="font-size:13px;color:var(--secondary-text-color);">Manage Real Time Rice configuration</div>
                       </div>
                     </div>
-                  ` : ''}
-                </div>
-              `;
-            ]]]
+                  `;
+                ]]]
 
-      # URL Input Field
-      - type: entities
-        entities:
-          - entity: input_text.rtr_url_input
-            name: RTR URL (paste to update)
-        card_mod:
-          style: |
-            ha-card {
-              border-radius: 0;
-              box-shadow: none;
-            }
+          # Current configuration status
+          - type: custom:button-card
+            entity: sensor.paddisense_real_time_rice
+            show_name: false
+            show_state: false
+            show_icon: false
+            tap_action:
+              action: none
+            styles:
+              card:
+                - background: var(--card-background-color)
+                - border-radius: 16px 16px 0 0
+                - padding: 20px
+            custom_fields:
+              status: |
+                [[[
+                  const state = entity.state;
+                  const attrs = entity.attributes || {};
+                  const configured = state !== 'Not configured';
+                  const lastUpdated = attrs.rtr_last_updated || 'Never';
+                  const paddockCount = attrs.rtr_paddock_count || 0;
 
-      # Action Buttons - stacked for mobile
-      - type: custom:button-card
-        entity: script.rtr_set_url
-        name: Save URL
-        icon: mdi:content-save
-        show_state: false
-        tap_action:
-          action: call-service
-          service: script.rtr_set_url
-        styles:
-          card:
-            - background: "#43a047"
-            - border-radius: 0
-            - height: 70px
-          icon:
-            - color: white
-            - width: 24px
-            - height: 24px
-          name:
-            - color: white
-            - font-size: 16px
-            - font-weight: 700
+                  const statusColor = configured ? '#43a047' : '#ff9800';
+                  const statusIcon = configured ? 'mdi:check-circle' : 'mdi:alert-circle-outline';
+                  const statusText = configured ? 'Configured' : 'Not Configured';
 
-      - type: custom:button-card
-        entity: script.rtr_refresh_data
-        name: Refresh Data
-        icon: mdi:refresh
-        show_state: false
-        tap_action:
-          action: call-service
-          service: script.rtr_refresh_data
-        styles:
-          card:
-            - background: "#0066cc"
-            - border-radius: 0 0 16px 16px
-            - height: 70px
-          icon:
-            - color: white
-            - width: 24px
-            - height: 24px
-          name:
-            - color: white
-            - font-size: 16px
-            - font-weight: 700
+                  return `
+                    <div>
+                      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                        <div style="width:48px;height:48px;border-radius:50%;background:rgba(${configured ? '67,160,71' : '255,152,0'},0.15);display:flex;align-items:center;justify-content:center;">
+                          <ha-icon icon="${statusIcon}" style="--mdc-icon-size:26px;color:${statusColor};"></ha-icon>
+                        </div>
+                        <div>
+                          <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);">Status: ${statusText}</div>
+                          <div style="font-size:13px;color:var(--secondary-text-color);">${configured ? paddockCount + ' paddocks loaded' : 'Enter your RTR URL to get started'}</div>
+                        </div>
+                      </div>
 
-      # Help section
-      - type: markdown
-        content: |
-          ### Getting Your RTR URL
+                      ${configured ? `
+                        <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:16px;">
+                          <div style="display:grid;gap:12px;">
+                            <div>
+                              <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Last Updated</div>
+                              <div style="font-size:14px;color:var(--primary-text-color);">${lastUpdated}</div>
+                            </div>
+                            <div>
+                              <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Paddocks</div>
+                              <div style="font-size:14px;color:var(--primary-text-color);">${paddockCount}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ` : ''}
+                    </div>
+                  `;
+                ]]]
 
-          1. Open the email you received from **Real Time Rice**
-          2. Find the link to your paddock dashboard (usually ends in `.html`)
-          3. Copy the full URL
-          4. Paste it above using the **Enter URL** or **Update URL** button
+          # URL Input Field
+          - type: entities
+            entities:
+              - entity: input_text.rtr_url_input
+                name: RTR URL (paste to update)
+            card_mod:
+              style: |
+                ha-card {
+                  border-radius: 0;
+                  box-shadow: none;
+                }
 
-          **Tip:** The URL looks like:
-          `https://storage.googleapis.com/realtimerice/.../rtr_dashboard_xxx.html`
+          # Action Buttons - stacked for mobile
+          - type: custom:button-card
+            entity: script.rtr_set_url
+            name: Save URL
+            icon: mdi:content-save
+            show_state: false
+            tap_action:
+              action: call-service
+              service: script.rtr_set_url
+            styles:
+              card:
+                - background: "#43a047"
+                - border-radius: 0
+                - height: 70px
+              icon:
+                - color: white
+                - width: 24px
+                - height: 24px
+              name:
+                - color: white
+                - font-size: 16px
+                - font-weight: 700
 
-          ---
+          - type: custom:button-card
+            entity: script.rtr_refresh_data
+            name: Refresh Data
+            icon: mdi:refresh
+            show_state: false
+            tap_action:
+              action: call-service
+              service: script.rtr_refresh_data
+            styles:
+              card:
+                - background: "#0066cc"
+                - border-radius: 0 0 16px 16px
+                - height: 70px
+              icon:
+                - color: white
+                - width: 24px
+                - height: 24px
+              name:
+                - color: white
+                - font-size: 16px
+                - font-weight: 700
 
-          **Data Refresh:** RTR data automatically updates daily at 6am. Use the Refresh button to manually fetch the latest predictions.
-        card_mod:
-          style: |
-            ha-card {
-              background: rgba(0,0,0,0.02);
-              border-radius: 12px;
-            }
+          # Help section
+          - type: markdown
+            content: |
+              ### Getting Your RTR URL
+
+              1. Open the email you received from **Real Time Rice**
+              2. Find the link to your paddock dashboard (usually ends in `.html`)
+              3. Copy the full URL
+              4. Paste it above using the **Enter URL** or **Update URL** button
+
+              **Tip:** The URL looks like:
+              `https://storage.googleapis.com/realtimerice/.../rtr_dashboard_xxx.html`
+
+              ---
+
+              **Data Refresh:** RTR data automatically updates daily at 6am. Use the Refresh button to manually fetch the latest predictions.
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(0,0,0,0.02);
+                  border-radius: 12px;
+                }
