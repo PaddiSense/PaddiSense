@@ -96,6 +96,13 @@ shell_command:
     python3 /config/PaddiSense/hfm/python/hfm_backend.py cleanup_drafts
     --max-age-hours {{ max_age_hours | default(24) }}
 
+  hfm_capture_historical_weather: >-
+    python3 /config/PaddiSense/hfm/python/hfm_backend.py capture_historical_weather
+    --device-id "{{ device_id }}"
+    --phase "{{ phase }}"
+    --date "{{ date }}"
+    --time "{{ time }}"
+
   # --- Applicator Commands ---
   hfm_add_applicator: >-
     python3 /config/PaddiSense/hfm/python/hfm_backend.py add_applicator
@@ -1273,29 +1280,48 @@ automation:
           start_passed: "{{ start_dt < now() }}"
           middle_passed: "{{ middle_dt < now() }}"
           end_passed: "{{ end_dt < now() }}"
-      # For past events, immediately capture all phases with current weather
+          # Time strings for each phase
+          start_time_str: "{{ start_dt.strftime('%H:%M') }}"
+          mid_time_str: "{{ middle_dt.strftime('%H:%M') }}"
+          end_time_str: "{{ end_dt.strftime('%H:%M') }}"
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+      # For past events, capture historical weather from HA database
       - choose:
           - conditions:
               - condition: template
                 value_template: "{{ is_past_event }}"
             sequence:
-              - service: script.hfm_capture_weather_phase
+              - service: shell_command.hfm_capture_historical_weather
                 data:
+                  device_id: "{{ device_id }}"
                   phase: start
+                  date: "{{ event_date }}"
+                  time: "{{ start_time_str }}"
               - delay:
-                  milliseconds: 300
-              - service: script.hfm_capture_weather_phase
+                  milliseconds: 500
+              - service: shell_command.hfm_capture_historical_weather
                 data:
+                  device_id: "{{ device_id }}"
                   phase: mid
+                  date: "{{ event_date }}"
+                  time: "{{ mid_time_str }}"
               - delay:
-                  milliseconds: 300
-              - service: script.hfm_capture_weather_phase
+                  milliseconds: 500
+              - service: shell_command.hfm_capture_historical_weather
                 data:
+                  device_id: "{{ device_id }}"
                   phase: end
+                  date: "{{ event_date }}"
+                  time: "{{ end_time_str }}"
+              - delay:
+                  milliseconds: 500
+              - service: homeassistant.update_entity
+                target:
+                  entity_id: sensor.hfm_drafts
               - service: persistent_notification.create
                 data:
-                  title: "Weather Captured (Past Event)"
-                  message: "All 3 weather records captured with current conditions for past event"
+                  title: "Historical Weather Captured"
+                  message: "Weather data retrieved from HA history for {{ event_date }}"
                   notification_id: hfm_weather_complete
         default:
           # For future/current events, schedule the captures

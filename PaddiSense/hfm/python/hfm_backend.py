@@ -27,11 +27,15 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+import sqlite3
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 import secrets
 import string
+
+# Home Assistant database path
+HA_DB_PATH = Path("/config/home-assistant_v2.db")
 
 # Paths
 DATA_DIR = Path("/config/local_data/hfm")
@@ -97,6 +101,126 @@ def save_json(path: Path, data: Any) -> bool:
     except IOError as e:
         print(f"ERROR: Failed to save {path}: {e}", file=sys.stderr)
         return False
+
+
+def get_historical_state(entity_id: str, target_time: datetime) -> Optional[str]:
+    """Get the state of an entity at a specific time from HA history.
+
+    Returns the most recent state before target_time, or None if not found.
+    """
+    if not HA_DB_PATH.exists():
+        return None
+
+    try:
+        conn = sqlite3.connect(str(HA_DB_PATH))
+        cursor = conn.cursor()
+
+        # Get metadata_id for the entity
+        cursor.execute('SELECT metadata_id FROM states_meta WHERE entity_id = ?', (entity_id,))
+        result = cursor.fetchone()
+        if not result:
+            conn.close()
+            return None
+
+        metadata_id = result[0]
+        target_ts = target_time.timestamp()
+
+        # Find the most recent state before target time
+        cursor.execute('''
+            SELECT state FROM states
+            WHERE metadata_id = ? AND last_changed_ts <= ?
+            ORDER BY last_changed_ts DESC
+            LIMIT 1
+        ''', (metadata_id, target_ts))
+
+        row = cursor.fetchone()
+        conn.close()
+
+        if row and row[0] not in ('unknown', 'unavailable', ''):
+            return row[0]
+        return None
+    except Exception as e:
+        print(f"DEBUG: Error querying history: {e}", file=sys.stderr)
+        return None
+
+
+def get_historical_weather(event_date: str, event_time: str) -> dict:
+    """Get historical weather data from HA history for a specific date/time.
+
+    Args:
+        event_date: Date in YYYY-MM-DD format
+        event_time: Time in HH:MM format
+
+    Returns:
+        Dictionary with weather data or empty dict if not available
+    """
+    try:
+        target_dt = datetime.strptime(f"{event_date} {event_time}", "%Y-%m-%d %H:%M")
+    except ValueError:
+        return {}
+
+    # Sensor mappings - local station first, then BOM fallback
+    sensor_mappings = {
+        'wind_speed': [
+            'sensor.weather_api_station_1_wind_speed',
+            'sensor.bom_wind_speed_kilometre',
+            'sensor.home_observations_wind_speed_kilometre'
+        ],
+        'wind_direction': [
+            'sensor.weather_api_station_1_wind_direction',
+            'sensor.bom_wind_direction',
+            'sensor.home_observations_wind_direction'
+        ],
+        'wind_gust': [
+            'sensor.weather_api_station_1_wind_gust',
+            'sensor.bom_gust_speed_kilometre'
+        ],
+        'temperature': [
+            'sensor.weather_api_station_1_temperature',
+            'sensor.bom_temp',
+            'sensor.home_observations_temp'
+        ],
+        'humidity': [
+            'sensor.weather_api_station_1_humidity',
+            'sensor.bom_humidity',
+            'sensor.home_observations_humidity'
+        ],
+        'delta_t': [
+            'sensor.weather_api_station_1_delta_t',
+            'sensor.bom_observations_delta_t'
+        ]
+    }
+
+    weather = {
+        'captured_at': target_dt.isoformat(),
+        'time': event_time,
+        'source': 'Historical'
+    }
+
+    for field, sensors in sensor_mappings.items():
+        value = None
+        for sensor in sensors:
+            state = get_historical_state(sensor, target_dt)
+            if state:
+                try:
+                    if field == 'wind_direction':
+                        # Convert degrees to compass direction if numeric
+                        deg = float(state)
+                        dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+                                'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+                        value = dirs[int((deg + 11.25) % 360 / 22.5)]
+                    else:
+                        value = round(float(state), 1)
+                except ValueError:
+                    value = state  # Keep as string if not numeric
+                break
+
+        weather[field] = value if value is not None else 0
+
+    # Rain chance - usually from forecast, may not have historical
+    weather['rain_chance_pct'] = 0
+
+    return weather
 
 
 def load_config() -> dict:
@@ -1198,6 +1322,58 @@ def cmd_list_applicators(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_get_historical_weather(args: argparse.Namespace) -> int:
+    """Get historical weather data from HA database."""
+    weather = get_historical_weather(args.date, args.time)
+
+    if weather:
+        print(json.dumps(weather, ensure_ascii=False))
+        return 0
+    else:
+        print(json.dumps({"error": "No historical data found"}, ensure_ascii=False))
+        return 1
+
+
+def cmd_capture_historical_weather(args: argparse.Namespace) -> int:
+    """Capture historical weather for a spray phase and store in draft."""
+    device_id = args.device_id
+    phase = args.phase
+    event_date = args.date
+    event_time = args.time
+
+    if phase not in ['start', 'mid', 'end']:
+        print(json.dumps({"error": f"Invalid phase: {phase}"}))
+        return 1
+
+    # Get historical weather
+    weather = get_historical_weather(event_date, event_time)
+
+    if not weather or all(v == 0 for k, v in weather.items() if k not in ['captured_at', 'time', 'source']):
+        # No historical data - return without updating
+        print(json.dumps({"status": "no_data", "message": f"No historical data available for {event_date} {event_time}"}))
+        return 0
+
+    # Load and update draft
+    draft_file = DRAFTS_DIR / f"{device_id}.json"
+    draft = load_json(draft_file, {
+        "device_id": device_id,
+        "created_at": now_iso(),
+        "modified_at": now_iso(),
+        "data": {}
+    })
+
+    # Update weather data for this phase
+    draft["data"][f"weather_{phase}"] = weather
+    draft["modified_at"] = now_iso()
+
+    if save_json(draft_file, draft):
+        print(json.dumps({"status": "ok", "phase": phase, "weather": weather}))
+        return 0
+    else:
+        print(json.dumps({"error": "Failed to save draft"}))
+        return 1
+
+
 def main():
     parser = argparse.ArgumentParser(description="HFM Backend")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -1310,6 +1486,18 @@ def main():
     list_app_p.add_argument("--active-only", action="store_true", help="Only show active applicators")
     list_app_p.add_argument("--type", help="Filter by type")
 
+    # get_historical_weather
+    hist_weather_p = subparsers.add_parser("get_historical_weather", help="Get historical weather from HA database")
+    hist_weather_p.add_argument("--date", required=True, help="Event date (YYYY-MM-DD)")
+    hist_weather_p.add_argument("--time", required=True, help="Event time (HH:MM)")
+
+    # capture_historical_weather
+    cap_hist_p = subparsers.add_parser("capture_historical_weather", help="Capture historical weather to draft")
+    cap_hist_p.add_argument("--device-id", required=True, help="Device ID")
+    cap_hist_p.add_argument("--phase", required=True, help="Phase (start, mid, end)")
+    cap_hist_p.add_argument("--date", required=True, help="Event date (YYYY-MM-DD)")
+    cap_hist_p.add_argument("--time", required=True, help="Event time (HH:MM)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -1336,6 +1524,8 @@ def main():
         "edit_applicator": cmd_edit_applicator,
         "delete_applicator": cmd_delete_applicator,
         "list_applicators": cmd_list_applicators,
+        "get_historical_weather": cmd_get_historical_weather,
+        "capture_historical_weather": cmd_capture_historical_weather,
     }
 
     return commands[args.command](args)
