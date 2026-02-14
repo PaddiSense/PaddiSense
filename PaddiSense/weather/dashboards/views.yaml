@@ -1184,10 +1184,13 @@ views:
             card:
               type: vertical-stack
               cards:
-                # Header - uses configured station name
+                # Header - uses configured station name with triggers_update
                 - type: custom:button-card
                   template: station_header
                   entity: binary_sensor.weather_local_station_1_enabled
+                  triggers_update:
+                    - binary_sensor.weather_local_station_1_enabled
+                    - sensor.weather_local_config
                   icon: mdi:home-thermometer
                   name: >
                     [[[
@@ -1198,7 +1201,7 @@ views:
                     card:
                       - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
 
-                # Current Conditions (2 columns)
+                # Current Conditions (2 columns) - matches remote station layout
                 - type: grid
                   columns: 2
                   square: false
@@ -1225,6 +1228,36 @@ views:
                         icon: mdi:water-percent
                     - type: conditional
                       conditions:
+                        - entity: sensor.weather_station_1_delta_t
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_delta_t
+                        name: Delta T
+                        icon: mdi:delta
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_feels_like
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_feels_like
+                        name: Feels
+                        icon: mdi:thermometer-check
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_dew_point
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_dew_point
+                        name: Dew
+                        icon: mdi:water-thermometer
+                    - type: conditional
+                      conditions:
                         - entity: sensor.ecowittgateway_1_wind_speed
                           state_not: unavailable
                       card:
@@ -1235,6 +1268,26 @@ views:
                         icon: mdi:weather-windy
                     - type: conditional
                       conditions:
+                        - entity: sensor.ecowittgateway_1_wind_gust
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_wind_gust
+                        name: Gust
+                        icon: mdi:weather-windy-variant
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_daily_rain
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_daily_rain
+                        name: Rain
+                        icon: mdi:weather-rainy
+                    - type: conditional
+                      conditions:
                         - entity: sensor.ecowittgateway_1_solar_radiation
                           state_not: unavailable
                       card:
@@ -1243,6 +1296,175 @@ views:
                         entity: sensor.ecowittgateway_1_solar_radiation
                         name: Solar
                         icon: mdi:white-balance-sunny
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_uv_index
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_uv_index
+                        name: UV
+                        icon: mdi:sun-wireless
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.ecowittgateway_1_relative_pressure
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.ecowittgateway_1_relative_pressure
+                        name: Press
+                        icon: mdi:gauge
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_1_degree_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_1_degree_day
+                        name: Degrees
+                        icon: mdi:thermometer-lines
+
+                # Wind Data Section
+                - type: custom:mushroom-title-card
+                  title: Wind Data
+
+                - type: conditional
+                  conditions:
+                    - entity: sensor.ecowittgateway_1_wind_direction
+                      state_not: unavailable
+                  card:
+                    type: grid
+                    cards:
+                      - type: custom:windrose-card
+                        grid_options:
+                          rows: auto
+                        wind_direction_entity:
+                          entity: sensor.ecowittgateway_1_wind_direction
+                          use_statistics: false
+                        windspeed_entities:
+                          - entity: sensor.ecowittgateway_1_wind_speed
+                            name: Speed
+                            speed_unit: kph
+                            output_speed_unit: kph
+                            use_statistics: false
+                            speed_range_beaufort: false
+                            current_speed_arrow: true
+                            speed_ranges:
+                              - from_value: 0
+                                color: blue
+                              - from_value: 3
+                                color: green
+                              - from_value: 15
+                                color: orange
+                              - from_value: 20
+                                color: red
+                          - entity: sensor.ecowittgateway_1_wind_gust
+                            name: Gusts
+                            speed_unit: kph
+                            output_speed_unit: kph
+                            use_statistics: false
+                            speed_range_beaufort: false
+                            current_speed_arrow: true
+                            speed_ranges:
+                              - from_value: 0
+                                color: blue
+                              - from_value: 3
+                                color: green
+                              - from_value: 15
+                                color: orange
+                              - from_value: 20
+                                color: red
+                        data_period:
+                          period_selector:
+                            location: top
+                            active_color: white
+                            active_bg_color: "var(--primary-color)"
+                            color: grey
+                            buttons:
+                              - hours: 1
+                                title: 1 hour
+                              - hours: 6
+                                title: 6 hours
+                              - hours: 12
+                                title: 12 hours
+                              - hours: 24
+                                title: 1 day
+                        center_calm_percentage: false
+                        windspeed_bar_location: right
+                        direction_labels:
+                          show_intercardinal_directions: true
+                          intercardinal_directions_text_size: 30
+                        current_direction:
+                          show_arrow: true
+                          arrow_size: 50
+                          centre_circle_size: 10
+                        corner_info:
+                          top_left:
+                            label: "Current Wind Speed"
+                            entity: sensor.ecowittgateway_1_wind_speed
+                            value_text_size: 100
+                          top_right:
+                            label: Current Gusts
+                            entity: sensor.ecowittgateway_1_wind_gust
+                            value_text_size: 100
+                          bottom_left:
+                            label: Current Direction
+                            entity: sensor.ecowittgateway_1_wind_direction
+                            input_unit: degrees
+                            output_unit: letters
+                            direction_letters: NESWx
+                            value_text_size: 80
+                        colors:
+                          rose_current_direction_arrow: "#dd3322"
+                      - type: custom:apexcharts-card
+                        grid_options:
+                          rows: auto
+                        cache: false
+                        section_mode: true
+                        header:
+                          show: true
+                          show_states: true
+                        experimental:
+                          color_threshold: true
+                        graph_span: 3h
+                        series:
+                          - entity: sensor.ecowittgateway_1_wind_speed
+                            name: Current Windspeed
+                            group_by:
+                              func: max
+                              duration: 15min
+                            show:
+                              in_chart: true
+                              in_header: false
+                            color_threshold:
+                              - value: 0
+                                color: "#ff0000"
+                              - value: 3
+                                color: "#ffa500"
+                              - value: 5
+                                color: "#008000"
+                              - value: 15
+                                color: "#ffa500"
+                              - value: 40
+                                color: "#ff0000"
+                          - entity: sensor.ecowittgateway_1_wind_gust
+                            name: Current Gust
+                            type: line
+                            color: lightskyblue
+                            group_by:
+                              func: max
+                              duration: 15min
+                            show:
+                              in_chart: true
+                              in_header: false
+                        apex_config:
+                          legend:
+                            show: false
+                          chart:
+                            height: 180
 
                 # Calculated Sensors
                 - type: custom:mushroom-title-card
@@ -1254,16 +1476,6 @@ views:
                   cards:
                     - type: conditional
                       conditions:
-                        - entity: sensor.weather_station_1_delta_t
-                          state_not: unavailable
-                      card:
-                        type: custom:button-card
-                        template: small_stat
-                        entity: sensor.weather_station_1_delta_t
-                        name: Delta T
-                        icon: mdi:delta
-                    - type: conditional
-                      conditions:
                         - entity: sensor.weather_station_1_evapotranspiration
                           state_not: unavailable
                       card:
@@ -1272,16 +1484,6 @@ views:
                         entity: sensor.weather_station_1_evapotranspiration
                         name: ETo
                         icon: mdi:water-outline
-                    - type: conditional
-                      conditions:
-                        - entity: sensor.weather_station_1_degree_day
-                          state_not: unavailable
-                      card:
-                        type: custom:button-card
-                        template: small_stat
-                        entity: sensor.weather_station_1_degree_day
-                        name: Degree Day
-                        icon: mdi:thermometer-lines
                     - type: conditional
                       conditions:
                         - entity: input_number.weather_station_1_cdd
