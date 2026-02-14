@@ -234,6 +234,15 @@ Review each module for:
 
 **Note:** 50px title bars, weather forecast tiles (56px), and form section headers (36-40px) are intentionally smaller (not action buttons).
 
+#### Crop Rotation UI Simplification - DONE
+- [x] Season-locked crop rotation model implemented
+- [x] Crop 1 start month: Auto-derived from season start (hidden from UI)
+- [x] Crop 1 end month: User selects (visible)
+- [x] Crop 2 start month: Auto-derived as Crop 1 end + 1 (hidden from UI)
+- [x] Crop 2 end month: Auto-derived from season end (hidden from UI)
+- [x] Updated labels: "CROP 1 (From Season Start)" and "CROP 2 (To Season End)"
+- [x] Files modified: manager.yaml (UI), package.yaml (save scripts)
+
 ### Git/Repo Status
 - [x] main and dev branches synced (same commit 4cd5c73)
 - [x] All VERSION files consistent (1.0.0-pr.1)

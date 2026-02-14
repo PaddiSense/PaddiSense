@@ -1891,6 +1891,7 @@ script:
           entity_id: sensor.farm_registry_data
 
   # Save paddock crops from form (reads input entities - for dashboard buttons)
+  # Season-locked crop rotation: Crop 1 starts at season start, Crop 2 ends at season end
   registry_save_paddock_crops_from_form:
     alias: "Registry - Save Paddock Crops from Form"
     icon: mdi:sprout
@@ -1899,11 +1900,19 @@ script:
           paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
           crop_1_name: "{{ states('input_select.registry_paddock_crop_1') }}"
           crop_2_name: "{{ states('input_select.registry_paddock_crop_2') }}"
-          crop_1_start_name: "{{ states('input_select.registry_crop_1_start_month') }}"
           crop_1_end_name: "{{ states('input_select.registry_crop_1_end_month') }}"
-          crop_2_start_name: "{{ states('input_select.registry_crop_2_start_month') }}"
-          crop_2_end_name: "{{ states('input_select.registry_crop_2_end_month') }}"
           crops: "{{ state_attr('sensor.farm_registry_data', 'crops') or {} }}"
+          seasons: "{{ state_attr('sensor.farm_registry_data', 'seasons') or {} }}"
+          active_season_id: "{{ state_attr('sensor.farm_registry_data', 'active_season') }}"
+      # Get active season dates and derive locked months
+      - variables:
+          active_season: "{{ seasons[active_season_id] if active_season_id else {} }}"
+          season_start_date: "{{ active_season.start_date | default('2025-01-01') }}"
+          season_end_date: "{{ active_season.end_date | default('2025-12-31') }}"
+          season_start_month: "{{ (season_start_date.split('-')[1] | int) if season_start_date else 1 }}"
+          season_end_month: "{{ (season_end_date.split('-')[1] | int) if season_end_date else 12 }}"
+          month_map: "{{ {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12} }}"
+          crop_1_end_user: "{{ month_map[crop_1_end_name] | default(12) }}"
       - variables:
           # Convert crop names to IDs
           crop_1_id: >-
@@ -1914,13 +1923,11 @@ script:
             {% if crop_2_name == 'None' %}{% else %}
             {% for cid, c in crops.items() if c.name == crop_2_name %}{{ cid }}{% endfor %}
             {% endif %}
-          # Convert month names to numbers
-          month_map: "{{ {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12} }}"
-      - variables:
-          crop_1_start: "{{ month_map[crop_1_start_name] | default(1) }}"
-          crop_1_end: "{{ month_map[crop_1_end_name] | default(12) }}"
-          crop_2_start: "{{ month_map[crop_2_start_name] | default(1) }}"
-          crop_2_end: "{{ month_map[crop_2_end_name] | default(12) }}"
+          # Season-locked months
+          crop_1_start: "{{ season_start_month }}"
+          crop_1_end: "{{ crop_1_end_user }}"
+          crop_2_start: "{{ (crop_1_end_user % 12) + 1 }}"
+          crop_2_end: "{{ season_end_month }}"
       # Validate paddock is selected
       - condition: template
         value_template: "{{ paddock_id | length > 0 }}"
@@ -1940,11 +1947,12 @@ script:
           entity_id: sensor.farm_registry_data
 
   # Save all paddock changes (details + crops) from form
+  # Season-locked crop rotation: Crop 1 starts at season start, Crop 2 ends at season end
   registry_save_paddock_all:
     alias: "Registry - Save All Paddock Changes"
     icon: mdi:content-save-all
     sequence:
-      # Capture paddock ID first (before any script clears it)
+      # Capture paddock ID and form values
       - variables:
           paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
           new_name: "{{ states('input_text.registry_edit_paddock_name') }}"
@@ -1953,15 +1961,25 @@ script:
           green_area: "{{ states('input_number.registry_edit_paddock_green_area') | float(0) }}"
           crop_1_name: "{{ states('input_select.registry_paddock_crop_1') }}"
           crop_2_name: "{{ states('input_select.registry_paddock_crop_2') }}"
-          crop_1_start_name: "{{ states('input_select.registry_crop_1_start_month') }}"
           crop_1_end_name: "{{ states('input_select.registry_crop_1_end_month') }}"
-          crop_2_start_name: "{{ states('input_select.registry_crop_2_start_month') }}"
-          crop_2_end_name: "{{ states('input_select.registry_crop_2_end_month') }}"
           crops: "{{ state_attr('sensor.farm_registry_data', 'crops') or {} }}"
+          seasons: "{{ state_attr('sensor.farm_registry_data', 'seasons') or {} }}"
+          active_season_id: "{{ state_attr('sensor.farm_registry_data', 'active_season') }}"
       # Validate paddock is selected
       - condition: template
         value_template: "{{ paddock_id | length > 0 }}"
-      # Convert crop names to IDs and month names to numbers
+      # Get active season dates and derive locked months
+      - variables:
+          active_season: "{{ seasons[active_season_id] if active_season_id else {} }}"
+          season_start_date: "{{ active_season.start_date | default('2025-01-01') }}"
+          season_end_date: "{{ active_season.end_date | default('2025-12-31') }}"
+          # Extract months from season dates (YYYY-MM-DD format)
+          season_start_month: "{{ (season_start_date.split('-')[1] | int) if season_start_date else 1 }}"
+          season_end_month: "{{ (season_end_date.split('-')[1] | int) if season_end_date else 12 }}"
+          month_map: "{{ {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12} }}"
+          # User-selected crop 1 end month
+          crop_1_end_user: "{{ month_map[crop_1_end_name] | default(12) }}"
+      # Convert crop names to IDs and derive all months
       - variables:
           crop_1_id: >-
             {% if crop_1_name == 'None' %}{% else %}
@@ -1971,12 +1989,13 @@ script:
             {% if crop_2_name == 'None' %}{% else %}
             {% for cid, c in crops.items() if c.name == crop_2_name %}{{ cid }}{% endfor %}
             {% endif %}
-          month_map: "{{ {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12} }}"
-      - variables:
-          crop_1_start: "{{ month_map[crop_1_start_name] | default(1) }}"
-          crop_1_end: "{{ month_map[crop_1_end_name] | default(12) }}"
-          crop_2_start: "{{ month_map[crop_2_start_name] | default(1) }}"
-          crop_2_end: "{{ month_map[crop_2_end_name] | default(12) }}"
+          # Season-locked: Crop 1 starts at season start
+          crop_1_start: "{{ season_start_month }}"
+          crop_1_end: "{{ crop_1_end_user }}"
+          # Season-locked: Crop 2 starts month after Crop 1 ends (with Dec→Jan wrap)
+          crop_2_start: "{{ (crop_1_end_user % 12) + 1 }}"
+          # Season-locked: Crop 2 ends at season end
+          crop_2_end: "{{ season_end_month }}"
       # Save paddock details (name, current_season, areas)
       - service: shell_command.registry_edit_paddock
         data:

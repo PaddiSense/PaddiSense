@@ -1144,22 +1144,27 @@ views:
                     - type: custom:button-card
                       template: template_titleblock
                       variables:
-                        var_name: CROP ROTATION
+                        var_name: "CROP 1 (From Season Start)"
 
                     - type: entities
                       entities:
                         - entity: input_select.registry_paddock_crop_1
-                          name: "Crop 1 (Early Season)"
-                        - entity: input_select.registry_crop_1_start_month
-                          name: "  Start Month"
+                          name: "Crop Type"
                         - entity: input_select.registry_crop_1_end_month
-                          name: "  End Month"
+                          name: "Ends In"
+                      card_mod:
+                        style: |
+                          ha-card { border-radius: 12px; }
+
+                    - type: custom:button-card
+                      template: template_titleblock
+                      variables:
+                        var_name: "CROP 2 (To Season End)"
+
+                    - type: entities
+                      entities:
                         - entity: input_select.registry_paddock_crop_2
-                          name: "Crop 2 (Late Season)"
-                        - entity: input_select.registry_crop_2_start_month
-                          name: "  Start Month"
-                        - entity: input_select.registry_crop_2_end_month
-                          name: "  End Month"
+                          name: "Crop Type"
                       card_mod:
                         style: |
                           ha-card { border-radius: 12px; }
