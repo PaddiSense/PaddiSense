@@ -607,8 +607,8 @@ views:
               const state = entity.state;
               const attrs = entity.attributes || {};
               const configured = state !== 'Not configured';
-              const lastUpdated = attrs.last_updated || 'Never';
-              const paddockCount = attrs.paddock_count || 0;
+              const lastUpdated = attrs.rtr_last_updated || 'Never';
+              const paddockCount = attrs.rtr_paddock_count || 0;
 
               const statusColor = configured ? '#43a047' : '#ff9800';
               const statusIcon = configured ? 'mdi:check-circle' : 'mdi:alert-circle-outline';
