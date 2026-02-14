@@ -64,6 +64,12 @@ shell_command:
   hfm_export: >-
     python3 /config/PaddiSense/hfm/python/hfm_backend.py export
 
+  hfm_export_filtered: >-
+    python3 /config/PaddiSense/hfm/python/hfm_backend.py export_filtered
+    --filter-type "{{ filter_type }}"
+    --filter-paddock "{{ filter_paddock }}"
+    --filter-season "{{ filter_season }}"
+
   # --- Draft Commands (Multi-user support) ---
   hfm_load_draft: >-
     python3 /config/PaddiSense/hfm/python/hfm_backend.py load_draft
@@ -1019,9 +1025,18 @@ automation:
               {% endif %}
               {% if not dominated %}
                 {% set date = e.event_date | default('?') %}
-                {% set etype = type_labels.get(e.event_type, e.event_type[:4]) if e.event_type else '?' %}
                 {% set pname = e.paddock.name if e.paddock else '?' %}
-                {% set label = date ~ ' | ' ~ etype ~ ' | ' ~ pname %}
+                {# Get product/detail based on event type #}
+                {% if e.event_type in ['nutrient', 'chemical'] and e.products %}
+                  {% set detail = e.products[0].product_name | default('?') %}
+                {% elif e.event_type == 'irrigation' %}
+                  {% set detail = e.irrigation_type | default('Irrigation') %}
+                {% elif e.event_type == 'crop_stage' %}
+                  {% set detail = e.crop_stage | default('Stage') %}
+                {% else %}
+                  {% set detail = e.event_type | default('?') %}
+                {% endif %}
+                {% set label = date ~ ' x ' ~ detail ~ ' (' ~ pname ~ ')' %}
                 {% set ns.opts = ns.opts + [label] %}
               {% endif %}
             {% endfor %}
@@ -2388,38 +2403,136 @@ script:
   hfm_load_event_for_edit:
     alias: "HFM Load Event for Editing"
     icon: mdi:pencil
+    description: "Load event data into device draft for editing (does NOT navigate - caller handles navigation)"
+    fields:
+      device_id:
+        description: "Device ID for draft storage"
+        example: "browser_abc123"
     sequence:
       - variables:
           selected: "{{ states('input_select.hfm_edit_event') }}"
-          parts: "{{ selected.split(' | ') }}"
-          sel_date: "{{ parts[0] if parts | length > 0 else '' }}"
-          sel_type_short: "{{ parts[1] if parts | length > 1 else '' }}"
-          sel_paddock: "{{ parts[2] if parts | length > 2 else '' }}"
-          # Map short labels back to full event types
-          type_map:
-            Chem: "chemical"
-            Nutr: "nutrient"
-            Irri: "irrigation"
-            Crop: "crop_stage"
-          sel_type: "{{ type_map.get(sel_type_short, sel_type_short | lower) }}"
+          effective_device_id: >
+            {% if device_id is defined and device_id != '' %}
+              {{ device_id }}
+            {% elif states('input_text.hfm_current_device') != '' %}
+              {{ states('input_text.hfm_current_device') }}
+            {% else %}
+              device_{{ now().strftime('%Y%m%d%H%M%S') }}
+            {% endif %}
+          # New format: DATE x PRODUCT (PADDOCK)
+          # Parse date (before ' x ')
+          sel_date: >
+            {% set parts = selected.split(' x ') %}
+            {{ parts[0] | trim if parts | length > 0 else '' }}
+          # Parse paddock from parentheses at end
+          sel_paddock: >
+            {% if '(' in selected and ')' in selected %}
+              {{ selected.split('(')[-1].replace(')', '').strip() }}
+            {% else %}
+              {{ '' }}
+            {% endif %}
+          # Parse product/detail (between ' x ' and ' (')
+          sel_detail: >
+            {% set after_x = selected.split(' x ')[1] if ' x ' in selected else '' %}
+            {% if '(' in after_x %}
+              {{ after_x.split('(')[0].strip() }}
+            {% else %}
+              {{ after_x | trim }}
+            {% endif %}
       - condition: template
-        value_template: "{{ sel_date != '' and sel_type != '' }}"
+        value_template: "{{ sel_date != '' and sel_paddock != '' }}"
       - variables:
           events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
+          pmap: "{{ state_attr('sensor.hfm_events', 'paddock_map') or {} }}"
+          # Find event by date + paddock + detail match
           event: >
             {% for e in events %}
               {% set pname = e.paddock.name if e.paddock else 'Unknown' %}
-              {% if e.event_date == sel_date and e.event_type == sel_type and pname == sel_paddock %}
-                {{ e | tojson }}
+              {% if e.event_date == sel_date and pname == sel_paddock %}
+                {# Verify detail matches #}
+                {% if e.event_type in ['nutrient', 'chemical'] and e.products %}
+                  {% set detail = e.products[0].product_name | default('') %}
+                {% elif e.event_type == 'irrigation' %}
+                  {% set detail = e.irrigation_type | default('') %}
+                {% elif e.event_type == 'crop_stage' %}
+                  {% set detail = e.crop_stage | default('') %}
+                {% else %}
+                  {% set detail = e.event_type | default('') %}
+                {% endif %}
+                {% if detail == sel_detail %}
+                  {{ e | tojson }}
+                {% endif %}
               {% endif %}
             {% endfor %}
       - condition: template
         value_template: "{{ event != '' }}"
       - variables:
           event_data: "{{ event | from_json }}"
-          pmap: "{{ state_attr('sensor.hfm_events', 'paddock_map') or {} }}"
-          first_paddock_id: "{{ event_data.paddocks[0] if event_data.paddocks else '' }}"
-          paddock_name: "{{ pmap.get(first_paddock_id, '') if first_paddock_id else '' }}"
+          # Get paddock ID from paddock object or paddocks array
+          paddock_id: >
+            {% if event_data.paddock and event_data.paddock.id %}
+              {{ event_data.paddock.id }}
+            {% elif event_data.paddocks and event_data.paddocks | length > 0 %}
+              {{ event_data.paddocks[0] }}
+            {% else %}
+              {{ '' }}
+            {% endif %}
+          # Get farm_id from event or paddock lookup
+          farm_id: >
+            {% if event_data.farm and event_data.farm.id %}
+              {{ event_data.farm.id }}
+            {% else %}
+              {{ '' }}
+            {% endif %}
+          # Build products array for draft
+          products_json: >
+            {% set prods = event_data.products or [] %}
+            {{ prods | tojson }}
+      # Set current device ID
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_current_device
+        data:
+          value: "{{ effective_device_id }}"
+      # Store event ID for editing
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hfm_edit_event_id
+        data:
+          value: "{{ event_data.id }}"
+      # Set edit mode on (this is device-aware via draft, but keep flag for UI)
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.hfm_edit_mode
+      # Store ALL event data in device-specific draft
+      - service: shell_command.hfm_update_draft
+        data:
+          device_id: "{{ effective_device_id }}"
+          data: >
+            {
+              "wizard_step": 1,
+              "data": {
+                "event_type": "{{ event_data.event_type }}",
+                "edit_event_id": "{{ event_data.id }}",
+                "date": "{{ event_data.event_date }}",
+                "start_time": "{{ event_data.application_timing.start_time | default('') if event_data.application_timing else '' }}",
+                "duration_minutes": {{ event_data.application_timing.duration_minutes | default('null') if event_data.application_timing else 'null' }},
+                "farm_id": "{{ farm_id }}",
+                "paddocks": ["{{ paddock_id }}"],
+                "products": {{ products_json }},
+                "applicator_id": "{{ event_data.applicator.id | default('') if event_data.applicator else '' }}",
+                "application_method": "{{ event_data.application_method | default('') }}",
+                "crop_stage": "{{ event_data.crop_stage | default('') }}",
+                "irrigation_type": "{{ event_data.irrigation_type | default('') }}",
+                "notes": "{{ event_data.notes | default('') | replace('"', '\\"') }}",
+                "weather_start": {{ (event_data.weather.start | tojson) if event_data.weather and event_data.weather.start else 'null' }},
+                "weather_mid": {{ (event_data.weather.middle | tojson) if event_data.weather and event_data.weather.middle else 'null' }},
+                "weather_end": {{ (event_data.weather.end | tojson) if event_data.weather and event_data.weather.end else 'null' }}
+              }
+            }
+      # Also populate UI helpers for backward compatibility
+      - variables:
+          # Event type display name
           event_type_display: >
             {% set t = event_data.event_type %}
             {% if t == 'nutrient' %}Nutrient Application
@@ -2427,6 +2540,8 @@ script:
             {% elif t == 'irrigation' %}Irrigation
             {% elif t == 'crop_stage' %}Crop Stage
             {% else %}Select Type{% endif %}
+          # Paddock name from map
+          paddock_name: "{{ pmap.get(paddock_id, 'Select Paddock') if paddock_id else 'Select Paddock' }}"
           # Look up display names from IDs
           methods: "{{ state_attr('sensor.hfm_events', 'application_methods') or [] }}"
           method_id: "{{ event_data.application_method | default('') }}"
@@ -2440,16 +2555,12 @@ script:
           stage_id: "{{ event_data.crop_stage | default('') }}"
           stage_name: >
             {% for s in crop_stages if s.id == stage_id %}{{ s.name }}{% endfor %}
-      # Store the event ID for editing
-      - service: input_text.set_value
+      # Set wizard step
+      - service: input_number.set_value
         target:
-          entity_id: input_text.hfm_edit_event_id
+          entity_id: input_number.hfm_wizard_step
         data:
-          value: "{{ event_data.id }}"
-      # Set edit mode on
-      - service: input_boolean.turn_on
-        target:
-          entity_id: input_boolean.hfm_edit_mode
+          value: 1
       # Set event type
       - service: input_select.select_option
         target:
@@ -2467,35 +2578,28 @@ script:
           entity_id: input_text.hfm_specific_date
         data:
           value: "{{ event_data.event_date }}"
-      # Set paddock (wait for options to update)
-      - delay: 1
-      - service: input_select.select_option
+      # Set notes
+      - service: input_text.set_value
         target:
-          entity_id: input_select.hfm_selected_paddock
+          entity_id: input_text.hfm_notes
         data:
-          option: "{{ paddock_name if paddock_name else 'Select Paddock' }}"
-      # Set product details for nutrient/chemical
+          value: "{{ event_data.notes | default('') }}"
+      # Set type-specific fields
       - choose:
           - conditions:
               - condition: template
                 value_template: "{{ event_data.event_type in ['nutrient', 'chemical'] }}"
             sequence:
-              - delay: 1
-              # Set product count based on number of products
               - service: input_number.set_value
                 target:
                   entity_id: input_number.hfm_product_count
                 data:
                   value: "{{ [1, event_data.products | length] | max }}"
-              # Load product 1
               - service: input_select.select_option
                 target:
                   entity_id: input_select.hfm_selected_product
                 data:
-                  option: >
-                    {% if event_data.products and event_data.products | length > 0 %}
-                    {{ event_data.products[0].product_name | default('Select Product') }}
-                    {% else %}Select Product{% endif %}
+                  option: "{{ event_data.products[0].product_name | default('Select Product') if event_data.products | length > 0 else 'Select Product' }}"
               - service: input_text.set_value
                 target:
                   entity_id: input_text.hfm_product_rate
@@ -2506,87 +2610,6 @@ script:
                   entity_id: input_text.hfm_rate_unit
                 data:
                   value: "{{ event_data.products[0].rate_unit | default('kg/ha') if event_data.products | length > 0 else 'kg/ha' }}"
-              # Load product 2
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.hfm_selected_product_2
-                data:
-                  option: "{{ event_data.products[1].product_name | default('Select Product') if event_data.products | length > 1 else 'Select Product' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_product_rate_2
-                data:
-                  value: "{{ event_data.products[1].rate | default('') if event_data.products | length > 1 else '' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_rate_unit_2
-                data:
-                  value: "{{ event_data.products[1].rate_unit | default('kg/ha') if event_data.products | length > 1 else 'kg/ha' }}"
-              # Load product 3
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.hfm_selected_product_3
-                data:
-                  option: "{{ event_data.products[2].product_name | default('Select Product') if event_data.products | length > 2 else 'Select Product' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_product_rate_3
-                data:
-                  value: "{{ event_data.products[2].rate | default('') if event_data.products | length > 2 else '' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_rate_unit_3
-                data:
-                  value: "{{ event_data.products[2].rate_unit | default('kg/ha') if event_data.products | length > 2 else 'kg/ha' }}"
-              # Load product 4
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.hfm_selected_product_4
-                data:
-                  option: "{{ event_data.products[3].product_name | default('Select Product') if event_data.products | length > 3 else 'Select Product' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_product_rate_4
-                data:
-                  value: "{{ event_data.products[3].rate | default('') if event_data.products | length > 3 else '' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_rate_unit_4
-                data:
-                  value: "{{ event_data.products[3].rate_unit | default('kg/ha') if event_data.products | length > 3 else 'kg/ha' }}"
-              # Load product 5
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.hfm_selected_product_5
-                data:
-                  option: "{{ event_data.products[4].product_name | default('Select Product') if event_data.products | length > 4 else 'Select Product' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_product_rate_5
-                data:
-                  value: "{{ event_data.products[4].rate | default('') if event_data.products | length > 4 else '' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_rate_unit_5
-                data:
-                  value: "{{ event_data.products[4].rate_unit | default('kg/ha') if event_data.products | length > 4 else 'kg/ha' }}"
-              # Load product 6
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.hfm_selected_product_6
-                data:
-                  option: "{{ event_data.products[5].product_name | default('Select Product') if event_data.products | length > 5 else 'Select Product' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_product_rate_6
-                data:
-                  value: "{{ event_data.products[5].rate | default('') if event_data.products | length > 5 else '' }}"
-              - service: input_text.set_value
-                target:
-                  entity_id: input_text.hfm_rate_unit_6
-                data:
-                  value: "{{ event_data.products[5].rate_unit | default('kg/ha') if event_data.products | length > 5 else 'kg/ha' }}"
-              - delay: 1
               - service: input_select.select_option
                 target:
                   entity_id: input_select.hfm_application_method
@@ -2596,7 +2619,6 @@ script:
               - condition: template
                 value_template: "{{ event_data.event_type == 'irrigation' }}"
             sequence:
-              - delay: 1
               - service: input_select.select_option
                 target:
                   entity_id: input_select.hfm_irrigation_type
@@ -2606,24 +2628,19 @@ script:
               - condition: template
                 value_template: "{{ event_data.event_type == 'crop_stage' }}"
             sequence:
-              - delay: 1
               - service: input_select.select_option
                 target:
                   entity_id: input_select.hfm_crop_stage
                 data:
                   option: "{{ stage_name if stage_name else 'Select Stage' }}"
-      # Set notes
-      - service: input_text.set_value
+      # Update draft sensor
+      - delay:
+          milliseconds: 500
+      - service: homeassistant.update_entity
         target:
-          entity_id: input_text.hfm_notes
-        data:
-          value: "{{ event_data.notes | default('') }}"
-      # Go to step 6 (review)
-      - service: input_number.set_value
-        target:
-          entity_id: input_number.hfm_wizard_step
-        data:
-          value: 6
+          entity_id: sensor.hfm_drafts
+      # NOTE: Navigation removed - the calling button handles navigation client-side
+      # This prevents all browsers from being redirected when one user edits
 
   hfm_export:
     alias: "HFM Export Events"
@@ -2638,6 +2655,54 @@ script:
         data:
           title: "HFM Export Complete"
           message: "Events exported to /config/local_data/hfm/backups/"
+          notification_id: hfm_export
+
+  hfm_export_selection:
+    alias: "HFM Export Selection"
+    icon: mdi:export
+    description: "Export events matching current filter selection"
+    sequence:
+      - variables:
+          filter_type: "{{ states('input_select.hfm_filter_event_type') }}"
+          filter_paddock: "{{ states('input_select.hfm_filter_paddock') }}"
+          filter_season: "{{ states('input_select.hfm_filter_season') }}"
+      - service: shell_command.hfm_export_filtered
+        data:
+          filter_type: "{{ filter_type }}"
+          filter_paddock: "{{ filter_paddock }}"
+          filter_season: "{{ filter_season }}"
+      - delay: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_events
+      - service: persistent_notification.create
+        data:
+          title: "HFM Export Complete"
+          message: "Filtered events exported to /config/local_data/hfm/backups/"
+          notification_id: hfm_export
+
+  hfm_export_season:
+    alias: "HFM Export Season"
+    icon: mdi:calendar-export
+    description: "Export all events for selected season"
+    sequence:
+      - variables:
+          filter_season: "{{ states('input_select.hfm_filter_season') }}"
+      - condition: template
+        value_template: "{{ filter_season != 'All Seasons' }}"
+      - service: shell_command.hfm_export_filtered
+        data:
+          filter_type: "All Events"
+          filter_paddock: "All Paddocks"
+          filter_season: "{{ filter_season }}"
+      - delay: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_events
+      - service: persistent_notification.create
+        data:
+          title: "HFM Season Export Complete"
+          message: "Events for {{ filter_season }} exported to /config/local_data/hfm/backups/"
           notification_id: hfm_export
 
   hfm_add_crop_stage:

@@ -514,7 +514,9 @@ views:
                     }
 
               #----------------------------------------------------------------
-              # EDIT/CONFIRM BUTTONS
+              # EDIT/DELETE BUTTONS
+              # Edit uses browser_mod.sequence to load data then navigate
+              # (only affects the clicking browser, not all browsers)
               #----------------------------------------------------------------
               - type: horizontal-stack
                 cards:
@@ -523,19 +525,15 @@ views:
                     name: Edit
                     icon: mdi:pencil
                     tap_action:
-                      action: call-service
-                      service: script.hfm_load_event_for_edit
-                    hold_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-new
-
-                  - type: custom:button-card
-                    template: hfm_success
-                    name: Confirm
-                    icon: mdi:check-circle
-                    tap_action:
-                      action: call-service
-                      service: script.hfm_confirm_event
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: script.hfm_load_event_for_edit
+                            - service: browser_mod.navigate
+                              data:
+                                path: /hfm-heyfarm/hfm-new
 
                   - type: custom:button-card
                     template: hfm_danger
@@ -546,6 +544,31 @@ views:
                       service: script.hfm_delete_event
                       confirmation:
                         text: "Delete this event?"
+
+              #----------------------------------------------------------------
+              # EXPORT BUTTONS
+              #----------------------------------------------------------------
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: hfm_secondary
+                    name: Export Selection
+                    icon: mdi:export
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_export_selection
+                      confirmation:
+                        text: "Export filtered events?"
+
+                  - type: custom:button-card
+                    template: hfm_secondary
+                    name: Export Season
+                    icon: mdi:calendar-export
+                    tap_action:
+                      action: call-service
+                      service: script.hfm_export_season
+                      confirmation:
+                        text: "Export all events for selected season?"
 
               #----------------------------------------------------------------
               # EVENTS LIST (filtered)
