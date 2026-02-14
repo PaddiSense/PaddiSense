@@ -124,19 +124,16 @@ views:
                 }
 
                 // Get active season from registry to determine RTR year filter
-                // RTR Year = harvest year (calendar year when crop is harvested)
-                // CY25 = crops sown late 2025, harvested 2026 → RTR Year 2026
-                // CY26 = crops sown late 2026, harvested 2027 → RTR Year 2027
+                // RTR Year = harvest year = the year in the season name
+                // CY26 = crops harvested in 2026 → RTR Year 2026
                 const activeSeason = registryEntity.attributes.active_season_name || '';
                 let targetYear = null;
 
-                // Extract year from season name and add 1 for RTR harvest year
-                // e.g., CY25 -> 2025 + 1 = 2026, CY26 -> 2026 + 1 = 2027
+                // Extract year from season name (CY26 -> 2026)
                 const yearMatch = activeSeason.match(/(\d{2,4})/);
                 if (yearMatch) {
                   let yr = parseInt(yearMatch[1]);
-                  if (yr < 100) yr += 2000;  // CY25 -> 2025
-                  yr += 1;  // Add 1: CY25 -> RTR Year 2026
+                  if (yr < 100) yr += 2000;  // CY26 -> 2026
                   targetYear = yr.toString();
                 }
 
