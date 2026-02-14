@@ -315,6 +315,12 @@ input_select:
     options:
       - All Paddocks
 
+  hfm_filter_season:
+    name: HFM Filter Season
+    icon: mdi:calendar-range
+    options:
+      - All Seasons
+
   # Applicator Management
   hfm_applicator_type:
     name: HFM Applicator Type
@@ -924,17 +930,66 @@ automation:
         data:
           options: "{{ paddock_names }}"
 
-  - id: hfm_update_edit_event_options
-    alias: "HFM Update Edit Event Options"
+  - id: hfm_update_filter_season_options
+    alias: "HFM Update Filter Season Options"
     trigger:
       - platform: state
         entity_id: sensor.hfm_events
       - platform: homeassistant
         event: start
     action:
-      - delay: 4
+      - delay: 3
       - variables:
           events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
+          seasons: >
+            {% set ns = namespace(seasons=[]) %}
+            {% for e in events %}
+              {% if e.event_date %}
+                {% set month = e.event_date.split('-')[1] | int %}
+                {% set year = e.event_date.split('-')[0] | int %}
+                {% if month >= 7 %}
+                  {% set season = year ~ '/' ~ (year + 1) %}
+                {% else %}
+                  {% set season = (year - 1) ~ '/' ~ year %}
+                {% endif %}
+                {% if season not in ns.seasons %}
+                  {% set ns.seasons = ns.seasons + [season] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ['All Seasons'] + (ns.seasons | sort | reverse | list) }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.hfm_filter_season
+        data:
+          options: "{{ seasons }}"
+
+  - id: hfm_update_edit_event_options
+    alias: "HFM Update Edit Event Options"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_events
+      - platform: state
+        entity_id: input_select.hfm_filter_event_type
+      - platform: state
+        entity_id: input_select.hfm_filter_paddock
+      - platform: state
+        entity_id: input_select.hfm_filter_season
+      - platform: homeassistant
+        event: start
+    action:
+      - delay:
+          milliseconds: 500
+      - variables:
+          all_events: "{{ state_attr('sensor.hfm_events', 'all_events') or [] }}"
+          filter_type: "{{ states('input_select.hfm_filter_event_type') }}"
+          filter_paddock: "{{ states('input_select.hfm_filter_paddock') }}"
+          filter_season: "{{ states('input_select.hfm_filter_season') }}"
+          type_map:
+            Chemical: "chemical"
+            Nutrient: "nutrient"
+            Irrigation: "irrigation"
+            Crop Stage: "crop_stage"
           type_labels:
             chemical: "Chem"
             nutrient: "Nutr"
@@ -942,12 +997,33 @@ automation:
             crop_stage: "Crop"
           event_options: >
             {% set ns = namespace(opts=['Select Event']) %}
-            {% for e in events[:50] %}
-              {% set date = e.event_date | default('?') %}
-              {% set etype = type_labels.get(e.event_type, e.event_type[:4]) if e.event_type else '?' %}
-              {% set pname = e.paddock.name if e.paddock else '?' %}
-              {% set label = date ~ ' | ' ~ etype ~ ' | ' ~ pname %}
-              {% set ns.opts = ns.opts + [label] %}
+            {% for e in all_events[:100] %}
+              {% set dominated = false %}
+              {% if filter_type != 'All Events' and e.event_type != type_map.get(filter_type, '') %}
+                {% set dominated = true %}
+              {% endif %}
+              {% if filter_paddock != 'All Paddocks' and (e.paddock.name if e.paddock else '') != filter_paddock %}
+                {% set dominated = true %}
+              {% endif %}
+              {% if filter_season != 'All Seasons' and e.event_date %}
+                {% set month = e.event_date.split('-')[1] | int %}
+                {% set year = e.event_date.split('-')[0] | int %}
+                {% if month >= 7 %}
+                  {% set event_season = year ~ '/' ~ (year + 1) %}
+                {% else %}
+                  {% set event_season = (year - 1) ~ '/' ~ year %}
+                {% endif %}
+                {% if event_season != filter_season %}
+                  {% set dominated = true %}
+                {% endif %}
+              {% endif %}
+              {% if not dominated %}
+                {% set date = e.event_date | default('?') %}
+                {% set etype = type_labels.get(e.event_type, e.event_type[:4]) if e.event_type else '?' %}
+                {% set pname = e.paddock.name if e.paddock else '?' %}
+                {% set label = date ~ ' | ' ~ etype ~ ' | ' ~ pname %}
+                {% set ns.opts = ns.opts + [label] %}
+              {% endif %}
             {% endfor %}
             {{ ns.opts }}
       - service: input_select.set_options

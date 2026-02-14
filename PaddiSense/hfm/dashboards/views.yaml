@@ -460,28 +460,15 @@ views:
                         option: Crop Stage
 
               #----------------------------------------------------------------
-              # QUICK ACTIONS - New Event + Find Event
+              # NEW EVENT BUTTON (full width)
               #----------------------------------------------------------------
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: hfm_action
-                    name: New Event
-                    icon: mdi:plus
-                    tap_action:
-                      action: navigate
-                      navigation_path: /hfm-heyfarm/hfm-new
-
-                  - type: custom:button-card
-                    template: hfm_secondary
-                    name: Find Event
-                    icon: mdi:magnify
-                    tap_action:
-                      action: call-service
-                      service: input_select.select_option
-                      service_data:
-                        entity_id: input_select.hfm_filter_event_type
-                        option: All Events
+              - type: custom:button-card
+                template: hfm_action
+                name: New Event
+                icon: mdi:plus
+                tap_action:
+                  action: navigate
+                  navigation_path: /hfm-heyfarm/hfm-new
 
               #----------------------------------------------------------------
               # EVENT HISTORY SECTION
@@ -495,10 +482,12 @@ views:
               #----------------------------------------------------------------
               - type: entities
                 entities:
+                  - entity: input_select.hfm_filter_season
+                    name: Season
                   - entity: input_select.hfm_filter_event_type
-                    name: Filter by Type
+                    name: Type
                   - entity: input_select.hfm_filter_paddock
-                    name: Filter by Paddock
+                    name: Paddock
                 card_mod:
                   style: |
                     ha-card {
@@ -567,6 +556,7 @@ views:
                   - sensor.hfm_events
                   - input_select.hfm_filter_event_type
                   - input_select.hfm_filter_paddock
+                  - input_select.hfm_filter_season
                 show_icon: false
                 show_name: false
                 show_state: false
@@ -599,11 +589,21 @@ views:
                         // Get filter selections
                         const filterType = states['input_select.hfm_filter_event_type']?.state || 'All Events';
                         const filterPaddock = states['input_select.hfm_filter_paddock']?.state || 'All Paddocks';
+                        const filterSeason = states['input_select.hfm_filter_season']?.state || 'All Seasons';
                         const filterMap = {
                           'Chemical': 'chemical',
                           'Nutrient': 'nutrient',
                           'Irrigation': 'irrigation',
                           'Crop Stage': 'crop_stage'
+                        };
+
+                        // Helper to get season from date (July-June year)
+                        const getSeason = (dateStr) => {
+                          if (!dateStr) return '';
+                          const parts = dateStr.split('-');
+                          const year = parseInt(parts[0]);
+                          const month = parseInt(parts[1]);
+                          return month >= 7 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
                         };
 
                         // Apply filters
@@ -613,6 +613,9 @@ views:
                         }
                         if (filterPaddock !== 'All Paddocks') {
                           events = events.filter(e => e.paddock?.name === filterPaddock);
+                        }
+                        if (filterSeason !== 'All Seasons') {
+                          events = events.filter(e => getSeason(e.event_date) === filterSeason);
                         }
 
                         if (allEvents.length === 0) {
@@ -626,6 +629,7 @@ views:
 
                         if (events.length === 0) {
                           let filterDesc = [];
+                          if (filterSeason !== 'All Seasons') filterDesc.push(filterSeason);
                           if (filterType !== 'All Events') filterDesc.push(filterType);
                           if (filterPaddock !== 'All Paddocks') filterDesc.push(filterPaddock);
                           const filterText = filterDesc.length > 0 ? filterDesc.join(' + ') : 'matching';
@@ -4286,47 +4290,7 @@ views:
                     text: "Discard this event?"
 
   #============================================================================
-  # VIEW 3: EVENT HISTORY (Redirect to main view)
-  # Kept for backward compatibility with existing links
-  #============================================================================
-  - title: History
-    path: hfm-history
-    icon: mdi:history
-    type: sections
-    max_columns: 1
-    sections:
-      - type: grid
-        cards:
-          - type: vertical-stack
-            cards:
-              - type: custom:button-card
-                template: hfm_title
-                name: EVENT HISTORY
-
-              - type: custom:button-card
-                template: hfm_action
-                name: Go to Hey Farmer
-                icon: mdi:arrow-left
-                styles:
-                  card:
-                    - height: 100px
-                tap_action:
-                  action: navigate
-                  navigation_path: /hfm-heyfarm/hfm
-
-              - type: markdown
-                content: |
-                  Event history has been moved to the main **Hey Farmer** view.
-                  Tap the button above to access filtering, editing, and event management.
-                card_mod:
-                  style: |
-                    ha-card {
-                      text-align: center;
-                      border-radius: 12px;
-                    }
-
-  #============================================================================
-  # VIEW 4: SETTINGS
+  # VIEW 3: SETTINGS
   #============================================================================
   - title: Settings
     path: hfm-settings
