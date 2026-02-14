@@ -1218,7 +1218,7 @@ views:
                         const seasons = entity?.attributes?.seasons || {};
                         const activeSeason = entity?.attributes?.active_season_name || 'None';
                         const paddock = paddocks[paddockId] || {};
-                        const currentCrop = currentCrops[paddockId];
+                        const currentCrop = currentCrops[paddockId] || null;
 
                         const name = paddock.name || paddockId;
                         const farmId = paddock.farm_id || '';
@@ -1231,13 +1231,15 @@ views:
                         const brownDisplay = brownArea ? brownArea.toFixed(1) : '--';
                         const greenDisplay = greenArea ? greenArea.toFixed(1) : '--';
 
-                        // Crop info
-                        const cropName = currentCrop?.crop_name || '';
-                        const cropColor = currentCrop?.crop_color || currentCrop?.color || '#9e9e9e';
+                        // Crop info - default green (#43a047) when no crop assigned
+                        const cropName = (currentCrop && currentCrop.crop_name) ? currentCrop.crop_name : '';
+                        const cropColor = (currentCrop && currentCrop.crop_color) ? currentCrop.crop_color : '#43a047';
                         const crop1 = paddock.crop_1 || {};
                         const crop2 = paddock.crop_2 || {};
-                        const crop1Name = crop1.crop_id ? (crops[crop1.crop_id]?.name || '') : '';
-                        const crop2Name = crop2.crop_id ? (crops[crop2.crop_id]?.name || '') : '';
+                        const crop1Data = (crop1.crop_id && crops[crop1.crop_id]) ? crops[crop1.crop_id] : null;
+                        const crop2Data = (crop2.crop_id && crops[crop2.crop_id]) ? crops[crop2.crop_id] : null;
+                        const crop1Name = crop1Data ? (crop1Data.name || '') : '';
+                        const crop2Name = crop2Data ? (crop2Data.name || '') : '';
                         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
                         const statusColor = isActive ? '#4caf50' : '#9e9e9e';
@@ -1292,9 +1294,8 @@ views:
                         `;
 
                         if (crop1Name || crop2Name) {
-                          if (crop1Name) {
-                            const c1 = crops[crop1.crop_id] || {};
-                            const c1Color = c1.color || '#9e9e9e';
+                          if (crop1Name && crop1Data) {
+                            const c1Color = crop1Data.color || '#43a047';
                             html += `
                               <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--secondary-background-color);border-radius:10px;margin-bottom:8px;">
                                 <div style="width:12px;height:12px;border-radius:3px;background:${c1Color};"></div>
@@ -1302,9 +1303,8 @@ views:
                                 <div style="font-size:13px;color:var(--secondary-text-color);">${months[(crop1.start_month||1)-1]} – ${months[(crop1.end_month||12)-1]}</div>
                               </div>`;
                           }
-                          if (crop2Name) {
-                            const c2 = crops[crop2.crop_id] || {};
-                            const c2Color = c2.color || '#9e9e9e';
+                          if (crop2Name && crop2Data) {
+                            const c2Color = crop2Data.color || '#43a047';
                             html += `
                               <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--secondary-background-color);border-radius:10px;">
                                 <div style="width:12px;height:12px;border-radius:3px;background:${c2Color};"></div>
@@ -1524,6 +1524,29 @@ views:
                         const activeSeason = entity.attributes.active_season_name || '';
                         const paddockList = Object.entries(paddocks);
 
+                        // Default color when no crop assigned
+                        const DEFAULT_COLOR = '#43a047';
+
+                        // Helper to convert hex to rgba
+                        const hexToRgba = (hex, alpha) => {
+                          const fallback = `rgba(67, 160, 71, ${alpha})`;
+                          if (!hex || typeof hex !== 'string') return fallback;
+                          const cleanHex = hex.replace('#', '');
+                          if (cleanHex.length !== 6) return fallback;
+                          const r = parseInt(cleanHex.substring(0, 2), 16);
+                          const g = parseInt(cleanHex.substring(2, 4), 16);
+                          const b = parseInt(cleanHex.substring(4, 6), 16);
+                          if (isNaN(r) || isNaN(g) || isNaN(b)) return fallback;
+                          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                        };
+
+                        // Helper to ensure valid hex color
+                        const safeColor = (color) => {
+                          if (!color || typeof color !== 'string') return DEFAULT_COLOR;
+                          if (!color.startsWith('#') || color.length !== 7) return DEFAULT_COLOR;
+                          return color;
+                        };
+
                         if (paddockList.length === 0) {
                           return `<div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
                                     <ha-icon icon="mdi:view-grid" style="--mdc-icon-size:48px;margin-bottom:12px;opacity:0.5;"></ha-icon>
@@ -1546,18 +1569,20 @@ views:
                           const brownDisplay = brownArea ? brownArea.toFixed(1) : '--';
                           const greenDisplay = greenArea ? greenArea.toFixed(1) : '--';
 
-                          // Current crop
-                          const currentCrop = currentCrops[pid];
-                          const cropName = currentCrop?.crop_name || '';
-                          const cropColor = currentCrop?.crop_color || currentCrop?.color || '#43a047';
+                          // Current crop - default green when no crop assigned
+                          const currentCrop = currentCrops ? currentCrops[pid] : null;
+                          const cropName = (currentCrop && currentCrop.crop_name) ? currentCrop.crop_name : '';
+                          const cropColor = safeColor((currentCrop && currentCrop.crop_color) ? currentCrop.crop_color : DEFAULT_COLOR);
 
                           // Crop rotation
                           const crop1 = paddock.crop_1 || {};
                           const crop2 = paddock.crop_2 || {};
-                          const crop1Name = crop1.crop_id ? (crops[crop1.crop_id]?.name || '') : '';
-                          const crop2Name = crop2.crop_id ? (crops[crop2.crop_id]?.name || '') : '';
-                          const crop1Color = crop1.crop_id ? (crops[crop1.crop_id]?.color || '#9e9e9e') : '#9e9e9e';
-                          const crop2Color = crop2.crop_id ? (crops[crop2.crop_id]?.color || '#9e9e9e') : '#9e9e9e';
+                          const crop1Data = (crop1.crop_id && crops && crops[crop1.crop_id]) ? crops[crop1.crop_id] : null;
+                          const crop2Data = (crop2.crop_id && crops && crops[crop2.crop_id]) ? crops[crop2.crop_id] : null;
+                          const crop1Name = crop1Data ? (crop1Data.name || '') : '';
+                          const crop2Name = crop2Data ? (crop2Data.name || '') : '';
+                          const crop1Color = safeColor(crop1Data ? crop1Data.color : null);
+                          const crop2Color = safeColor(crop2Data ? crop2Data.color : null);
                           const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
                           const statusColor = isActive ? '#4caf50' : '#9e9e9e';
@@ -1590,16 +1615,16 @@ views:
                           html += `
                             <div style="background:var(--card-background-color);border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-left:5px solid ${cropColor};overflow:hidden;">
                               <!-- Header -->
-                              <div style="padding:16px 16px 12px;background:linear-gradient(135deg,${cropColor}15 0%,transparent 100%);">
+                              <div style="padding:16px 16px 12px;background:${hexToRgba(cropColor, 0.08)};">
                                 <div style="display:flex;align-items:flex-start;gap:14px;">
-                                  <div style="width:56px;height:56px;border-radius:14px;background:${cropColor}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                  <div style="width:56px;height:56px;border-radius:14px;background:${hexToRgba(cropColor, 0.15)};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                     <ha-icon icon="${cropName ? 'mdi:sprout' : 'mdi:view-grid'}" style="--mdc-icon-size:30px;color:${cropColor};"></ha-icon>
                                   </div>
                                   <div style="flex:1;min-width:0;">
                                     <div style="font-size:20px;font-weight:700;color:var(--primary-text-color);margin-bottom:2px;">${name}</div>
                                     <div style="font-size:13px;color:var(--secondary-text-color);margin-bottom:6px;">${farmName}</div>
                                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                      ${cropName ? `<div style="padding:3px 10px;border-radius:10px;background:${cropColor}22;color:${cropColor};font-size:11px;font-weight:700;">${cropName}</div>` : ''}
+                                      ${cropName ? `<div style="padding:3px 10px;border-radius:10px;background:${hexToRgba(cropColor, 0.15)};color:${cropColor};font-size:11px;font-weight:700;">${cropName}</div>` : ''}
                                       <div style="padding:3px 10px;border-radius:10px;background:${statusBg};color:${statusColor};font-size:11px;font-weight:700;">${statusText}</div>
                                     </div>
                                   </div>

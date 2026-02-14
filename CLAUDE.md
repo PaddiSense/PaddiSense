@@ -156,3 +156,65 @@ def is_in_month_range(current_month, start_month, end_month):
 - HFM paddock selection: Show crop badge on each paddock button
 - HFM crop stage dropdown: Filter stages by paddock's current crop
 - Bulk paddock crop assignment ("Quick assign" for common patterns)
+
+## Business Entity System (Implemented 2026-02-14)
+
+### Overview
+Business is a parent entity to Farms, creating a hierarchy: **Business → Farm → Paddock**
+- Businesses group farms under a single organization
+- Farms can be filtered by business in the UI
+- Farm cards display their assigned business
+
+### Data Model
+- **Businesses:** Stored in `businesses: {}` dict in `/config/local_data/registry/config.json`
+- **Farm assignment:** `business_id` field on each farm record
+- Each business has: `name`, `created`, `modified`
+
+### Key Files Modified
+| File | Changes |
+|------|---------|
+| `registry/python/registry_backend.py` | Added business CRUD commands, extended add_farm/edit_farm with --business |
+| `registry/python/registry_sensor.py` | Added businesses, business_names to output |
+| `registry/package.yaml` | Shell commands, input helpers, scripts, automations for businesses |
+| `registry/dashboards/manager.yaml` | Business management section in Farms view, filter, farm card display |
+
+### Backend Commands
+```bash
+# Business management
+registry_backend.py add_business --name "Smith Farms Pty Ltd"
+registry_backend.py edit_business --id smith_farms_pty_ltd --name "Smith Agricultural"
+registry_backend.py delete_business --id smith_farms_pty_ltd  # blocked if farms assigned
+
+# Farm with business assignment
+registry_backend.py add_farm --name "North Block" --business smith_farms_pty_ltd
+registry_backend.py edit_farm --id north_block --business smith_farms_pty_ltd
+registry_backend.py edit_farm --id north_block --business ""  # clear assignment
+```
+
+### Sensor Attributes
+- `sensor.farm_registry_data`:
+  - `businesses` - All business definitions
+  - `business_names` - Sorted list for dropdowns
+  - `total_businesses` - Count
+
+### Input Helpers
+| Entity | Purpose |
+|--------|---------|
+| `input_select.registry_business_editor_mode` | Add/Edit mode toggle |
+| `input_select.registry_business` | Select business for editing |
+| `input_select.registry_farm_business_filter` | Filter farms by business |
+| `input_select.registry_new_farm_business` | Assign farm to business (Add/Edit) |
+| `input_text.registry_new_business_name` | New business name input |
+| `input_text.registry_edit_business_name` | Edit business name input |
+| `input_text.registry_edit_business_pointer` | Tracks selected business ID |
+
+### UI Locations
+- **PSM → Farms view**: Business Management section at top (Add/Edit toggle)
+- **PSM → Farms view**: Business filter dropdown filters farm selector
+- **PSM → Farms → Add/Edit**: Business assignment dropdown
+- **Farm cards**: Show business name under farm name with mdi:domain icon
+
+### Automations
+- `registry_update_business_dropdowns` - Updates dropdowns when sensor changes
+- `registry_load_business_on_select` - Loads form when business selected
+- `registry_filter_farms_by_business` - Filters farm dropdown when business filter changes

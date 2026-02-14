@@ -235,6 +235,7 @@ def main() -> int:
 
     # Extract data
     grower = extract_grower(server)
+    businesses = config.get("businesses", {})
     registry_farms = config.get("farms", {})  # Farms stored in config.json (editable)
     farms = extract_farms(server, registry_farms)  # Merge with server.yaml farms
     paddocks = config.get("paddocks", {})
@@ -250,6 +251,7 @@ def main() -> int:
     active_season = get_active_season(seasons)
 
     # Build lists for dropdowns
+    business_names = sorted([b.get("name", bid) for bid, b in businesses.items()])
     farm_names = sorted([f.get("name", fid) for fid, f in farms.items()])
     paddock_names = sorted([p.get("name", pid) for pid, p in paddocks.items()])
     season_names = sorted([s.get("name", sid) for sid, s in seasons.items()])
@@ -285,6 +287,7 @@ def main() -> int:
         "grower": grower,
 
         # Counts
+        "total_businesses": len(businesses),
         "total_farms": len(farms),
         "total_paddocks": len(paddocks),
         "total_bays": len(bays),
@@ -296,6 +299,7 @@ def main() -> int:
         "active_season_name": seasons.get(active_season, {}).get("name") if active_season else None,
 
         # Raw data for other modules to consume
+        "businesses": businesses,
         "farms": farms,
         "paddocks": paddocks,
         "bays": bays,
@@ -310,6 +314,7 @@ def main() -> int:
         "hierarchy": hierarchy,
 
         # Lists for dropdowns
+        "business_names": business_names,
         "farm_names": farm_names,
         "paddock_names": paddock_names,
         "season_names": season_names,
