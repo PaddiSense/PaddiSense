@@ -32,6 +32,7 @@ from typing import Any
 # File locations
 DATA_DIR = Path("/config/local_data/registry")
 CONFIG_FILE = DATA_DIR / "config.json"
+CROPS_FILE = DATA_DIR / "crops.json"
 BACKUP_DIR = DATA_DIR / "backups"
 
 # PWM data for migration
@@ -106,6 +107,31 @@ def log_transaction(
             "entity_name": entity_name,
             "details": details,
         }
+    )
+
+
+def load_crops() -> dict[str, Any]:
+    """Load crops config from JSON file."""
+    if not CROPS_FILE.exists():
+        return {
+            "version": "1.0.0",
+            "crops": {},
+        }
+    try:
+        return json.loads(CROPS_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, IOError):
+        return {
+            "version": "1.0.0",
+            "crops": {},
+        }
+
+
+def save_crops(crops_data: dict[str, Any]) -> None:
+    """Save crops config to JSON file."""
+    crops_data["modified"] = datetime.now().isoformat(timespec="seconds")
+    CROPS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    CROPS_FILE.write_text(
+        json.dumps(crops_data, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
 
@@ -194,6 +220,38 @@ def cmd_edit_paddock(args: argparse.Namespace) -> int:
     if args.current_season is not None:
         paddock["current_season"] = args.current_season
         changes.append(f"current_season={args.current_season}")
+
+    # Crop 1 assignment (early season crop)
+    if args.crop_1_id is not None:
+        if args.crop_1_id == "" or args.crop_1_id.lower() == "none":
+            # Clear crop 1
+            if "crop_1" in paddock:
+                del paddock["crop_1"]
+                changes.append("crop_1=cleared")
+        else:
+            crop_1 = paddock.setdefault("crop_1", {})
+            crop_1["crop_id"] = args.crop_1_id
+            if args.crop_1_start is not None:
+                crop_1["start_month"] = args.crop_1_start
+            if args.crop_1_end is not None:
+                crop_1["end_month"] = args.crop_1_end
+            changes.append(f"crop_1={args.crop_1_id}")
+
+    # Crop 2 assignment (late season crop)
+    if args.crop_2_id is not None:
+        if args.crop_2_id == "" or args.crop_2_id.lower() == "none":
+            # Clear crop 2
+            if "crop_2" in paddock:
+                del paddock["crop_2"]
+                changes.append("crop_2=cleared")
+        else:
+            crop_2 = paddock.setdefault("crop_2", {})
+            crop_2["crop_id"] = args.crop_2_id
+            if args.crop_2_start is not None:
+                crop_2["start_month"] = args.crop_2_start
+            if args.crop_2_end is not None:
+                crop_2["end_month"] = args.crop_2_end
+            changes.append(f"crop_2={args.crop_2_id}")
 
     paddock["modified"] = datetime.now().isoformat(timespec="seconds")
 
@@ -632,6 +690,221 @@ def cmd_delete_farm(args: argparse.Namespace) -> int:
 
 
 # =============================================================================
+# CROP COMMANDS
+# =============================================================================
+
+
+def cmd_add_crop(args: argparse.Namespace) -> int:
+    """Add a new crop type."""
+    crops_data = load_crops()
+    crops = crops_data.setdefault("crops", {})
+
+    crop_id = generate_id(args.name)
+
+    if crop_id in crops:
+        print(json.dumps({"error": f"Crop '{crop_id}' already exists"}))
+        return 1
+
+    # Parse stages from JSON string if provided
+    stages = []
+    if args.stages:
+        try:
+            stages = json.loads(args.stages)
+        except json.JSONDecodeError:
+            print(json.dumps({"error": "Invalid stages JSON format"}))
+            return 1
+
+    crops[crop_id] = {
+        "name": args.name,
+        "typical_start_month": args.start_month or 1,
+        "typical_end_month": args.end_month or 12,
+        "spans_new_year": args.start_month and args.end_month and args.start_month > args.end_month,
+        "stages": stages,
+        "color": args.color or "#4caf50",
+    }
+
+    if not crops_data.get("created"):
+        crops_data["created"] = datetime.now().isoformat(timespec="seconds")
+
+    save_crops(crops_data)
+
+    print(json.dumps({
+        "success": True,
+        "crop_id": crop_id,
+        "message": f"Created crop type '{args.name}'"
+    }))
+    return 0
+
+
+def cmd_edit_crop(args: argparse.Namespace) -> int:
+    """Edit an existing crop type."""
+    crops_data = load_crops()
+    crops = crops_data.get("crops", {})
+
+    if args.id not in crops:
+        print(json.dumps({"error": f"Crop '{args.id}' not found"}))
+        return 1
+
+    crop = crops[args.id]
+    changes = []
+
+    if args.name is not None:
+        crop["name"] = args.name
+        changes.append(f"name={args.name}")
+
+    if args.start_month is not None:
+        crop["typical_start_month"] = args.start_month
+        changes.append(f"start_month={args.start_month}")
+
+    if args.end_month is not None:
+        crop["typical_end_month"] = args.end_month
+        changes.append(f"end_month={args.end_month}")
+
+    # Update spans_new_year based on months
+    if args.start_month is not None or args.end_month is not None:
+        start = crop.get("typical_start_month", 1)
+        end = crop.get("typical_end_month", 12)
+        crop["spans_new_year"] = start > end
+
+    if args.stages is not None:
+        try:
+            crop["stages"] = json.loads(args.stages)
+            changes.append("stages=updated")
+        except json.JSONDecodeError:
+            print(json.dumps({"error": "Invalid stages JSON format"}))
+            return 1
+
+    if args.color is not None:
+        crop["color"] = args.color
+        changes.append(f"color={args.color}")
+
+    save_crops(crops_data)
+
+    print(json.dumps({
+        "success": True,
+        "crop_id": args.id,
+        "message": f"Updated crop '{crop['name']}'"
+    }))
+    return 0
+
+
+def cmd_delete_crop(args: argparse.Namespace) -> int:
+    """Delete a crop type."""
+    crops_data = load_crops()
+    crops = crops_data.get("crops", {})
+
+    if args.id not in crops:
+        print(json.dumps({"error": f"Crop '{args.id}' not found"}))
+        return 1
+
+    crop_name = crops[args.id].get("name", args.id)
+    del crops[args.id]
+
+    save_crops(crops_data)
+
+    print(json.dumps({
+        "success": True,
+        "crop_id": args.id,
+        "message": f"Deleted crop '{crop_name}'"
+    }))
+    return 0
+
+
+def cmd_list_crops(args: argparse.Namespace) -> int:
+    """List all crop types."""
+    crops_data = load_crops()
+    crops = crops_data.get("crops", {})
+
+    crop_list = []
+    for crop_id, crop in crops.items():
+        crop_list.append({
+            "id": crop_id,
+            "name": crop.get("name", crop_id),
+            "start_month": crop.get("typical_start_month"),
+            "end_month": crop.get("typical_end_month"),
+            "stage_count": len(crop.get("stages", [])),
+            "color": crop.get("color", "#4caf50"),
+        })
+
+    print(json.dumps({"crops": crop_list}))
+    return 0
+
+
+def cmd_add_crop_stage(args: argparse.Namespace) -> int:
+    """Add a stage to a crop type."""
+    crops_data = load_crops()
+    crops = crops_data.get("crops", {})
+
+    if args.crop_id not in crops:
+        print(json.dumps({"error": f"Crop '{args.crop_id}' not found"}))
+        return 1
+
+    crop = crops[args.crop_id]
+    stages = crop.setdefault("stages", [])
+
+    stage_id = generate_id(args.name)
+
+    # Check if stage already exists
+    if any(s.get("id") == stage_id for s in stages):
+        print(json.dumps({"error": f"Stage '{stage_id}' already exists in crop"}))
+        return 1
+
+    # Determine order
+    max_order = max([s.get("order", 0) for s in stages], default=0)
+    order = args.order if args.order else max_order + 1
+
+    stages.append({
+        "id": stage_id,
+        "name": args.name,
+        "order": order,
+    })
+
+    # Sort stages by order
+    stages.sort(key=lambda s: s.get("order", 0))
+
+    save_crops(crops_data)
+
+    print(json.dumps({
+        "success": True,
+        "crop_id": args.crop_id,
+        "stage_id": stage_id,
+        "message": f"Added stage '{args.name}' to crop '{crop['name']}'"
+    }))
+    return 0
+
+
+def cmd_delete_crop_stage(args: argparse.Namespace) -> int:
+    """Delete a stage from a crop type."""
+    crops_data = load_crops()
+    crops = crops_data.get("crops", {})
+
+    if args.crop_id not in crops:
+        print(json.dumps({"error": f"Crop '{args.crop_id}' not found"}))
+        return 1
+
+    crop = crops[args.crop_id]
+    stages = crop.get("stages", [])
+
+    # Find and remove stage
+    stage_name = args.stage_id
+    original_len = len(stages)
+    stages[:] = [s for s in stages if s.get("id") != args.stage_id]
+
+    if len(stages) == original_len:
+        print(json.dumps({"error": f"Stage '{args.stage_id}' not found in crop"}))
+        return 1
+
+    save_crops(crops_data)
+
+    print(json.dumps({
+        "success": True,
+        "crop_id": args.crop_id,
+        "message": f"Deleted stage from crop '{crop['name']}'"
+    }))
+    return 0
+
+
+# =============================================================================
 # SYSTEM COMMANDS
 # =============================================================================
 
@@ -908,6 +1181,13 @@ def main() -> int:
     p_edit.add_argument("--farm", help="Farm ID")
     p_edit.add_argument("--current_season", type=lambda x: x.lower() == "true",
                         help="Is paddock in current season (true/false)")
+    # Crop rotation arguments
+    p_edit.add_argument("--crop_1_id", help="Crop 1 ID (early season)")
+    p_edit.add_argument("--crop_1_start", type=int, help="Crop 1 start month (1-12)")
+    p_edit.add_argument("--crop_1_end", type=int, help="Crop 1 end month (1-12)")
+    p_edit.add_argument("--crop_2_id", help="Crop 2 ID (late season)")
+    p_edit.add_argument("--crop_2_start", type=int, help="Crop 2 start month (1-12)")
+    p_edit.add_argument("--crop_2_end", type=int, help="Crop 2 end month (1-12)")
 
     p_del = subparsers.add_parser("delete_paddock", help="Delete a paddock")
     p_del.add_argument("--id", required=True, help="Paddock ID")
@@ -963,6 +1243,36 @@ def main() -> int:
     f_del = subparsers.add_parser("delete_farm", help="Delete a farm")
     f_del.add_argument("--id", required=True, help="Farm ID")
 
+    # Crop commands
+    c_add = subparsers.add_parser("add_crop", help="Add a new crop type")
+    c_add.add_argument("--name", required=True, help="Crop name")
+    c_add.add_argument("--start_month", type=int, help="Typical start month (1-12)")
+    c_add.add_argument("--end_month", type=int, help="Typical end month (1-12)")
+    c_add.add_argument("--stages", help="JSON array of stages")
+    c_add.add_argument("--color", help="Hex color code")
+
+    c_edit = subparsers.add_parser("edit_crop", help="Edit a crop type")
+    c_edit.add_argument("--id", required=True, help="Crop ID")
+    c_edit.add_argument("--name", help="New name")
+    c_edit.add_argument("--start_month", type=int, help="Typical start month (1-12)")
+    c_edit.add_argument("--end_month", type=int, help="Typical end month (1-12)")
+    c_edit.add_argument("--stages", help="JSON array of stages")
+    c_edit.add_argument("--color", help="Hex color code")
+
+    c_del = subparsers.add_parser("delete_crop", help="Delete a crop type")
+    c_del.add_argument("--id", required=True, help="Crop ID")
+
+    subparsers.add_parser("list_crops", help="List all crop types")
+
+    cs_add = subparsers.add_parser("add_crop_stage", help="Add a stage to a crop")
+    cs_add.add_argument("--crop_id", required=True, help="Crop ID")
+    cs_add.add_argument("--name", required=True, help="Stage name")
+    cs_add.add_argument("--order", type=int, help="Stage order")
+
+    cs_del = subparsers.add_parser("delete_crop_stage", help="Delete a stage from a crop")
+    cs_del.add_argument("--crop_id", required=True, help="Crop ID")
+    cs_del.add_argument("--stage_id", required=True, help="Stage ID")
+
     # System commands
     subparsers.add_parser("init", help="Initialize the system")
     subparsers.add_parser("status", help="Get system status")
@@ -998,6 +1308,12 @@ def main() -> int:
         "add_farm": cmd_add_farm,
         "edit_farm": cmd_edit_farm,
         "delete_farm": cmd_delete_farm,
+        "add_crop": cmd_add_crop,
+        "edit_crop": cmd_edit_crop,
+        "delete_crop": cmd_delete_crop,
+        "list_crops": cmd_list_crops,
+        "add_crop_stage": cmd_add_crop_stage,
+        "delete_crop_stage": cmd_delete_crop_stage,
         "init": cmd_init,
         "status": cmd_status,
         "migrate_from_pwm": cmd_migrate_from_pwm,

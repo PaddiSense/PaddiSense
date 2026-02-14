@@ -38,10 +38,14 @@ command_line:
         - paddocks
         - bays
         - seasons
+        - crops
+        - current_crops
+        - current_month
         - hierarchy
         - farm_names
         - paddock_names
         - season_names
+        - crop_names
         - modules
         - backup_count
 
@@ -125,6 +129,49 @@ shell_command:
 
   registry_delete_farm: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_farm --id '{{ id }}'"
 
+  # Crop commands
+  registry_add_crop: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py add_crop
+    --name '{{ name }}'
+    {% if start_month is defined %}--start_month {{ start_month }}{% endif %}
+    {% if end_month is defined %}--end_month {{ end_month }}{% endif %}
+    {% if color is defined %}--color '{{ color }}'{% endif %}
+    {% if stages is defined %}--stages '{{ stages }}'{% endif %}
+
+  registry_edit_crop: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_crop
+    --id '{{ id }}'
+    {% if name is defined %}--name '{{ name }}'{% endif %}
+    {% if start_month is defined %}--start_month {{ start_month }}{% endif %}
+    {% if end_month is defined %}--end_month {{ end_month }}{% endif %}
+    {% if color is defined %}--color '{{ color }}'{% endif %}
+    {% if stages is defined %}--stages '{{ stages }}'{% endif %}
+
+  registry_delete_crop: "python3 /config/PaddiSense/registry/python/registry_backend.py delete_crop --id '{{ id }}'"
+  registry_list_crops: "python3 /config/PaddiSense/registry/python/registry_backend.py list_crops"
+
+  registry_add_crop_stage: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py add_crop_stage
+    --crop_id '{{ crop_id }}'
+    --name '{{ name }}'
+    {% if order is defined %}--order {{ order }}{% endif %}
+
+  registry_delete_crop_stage: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py delete_crop_stage
+    --crop_id '{{ crop_id }}'
+    --stage_id '{{ stage_id }}'
+
+  # Paddock crop assignment (extends edit_paddock)
+  registry_set_paddock_crops: >-
+    python3 /config/PaddiSense/registry/python/registry_backend.py edit_paddock
+    --id '{{ id }}'
+    {% if crop_1_id is defined %}--crop_1_id '{{ crop_1_id }}'{% endif %}
+    {% if crop_1_start is defined %}--crop_1_start {{ crop_1_start }}{% endif %}
+    {% if crop_1_end is defined %}--crop_1_end {{ crop_1_end }}{% endif %}
+    {% if crop_2_id is defined %}--crop_2_id '{{ crop_2_id }}'{% endif %}
+    {% if crop_2_start is defined %}--crop_2_start {{ crop_2_start }}{% endif %}
+    {% if crop_2_end is defined %}--crop_2_end {{ crop_2_end }}{% endif %}
+
 # -----------------------------------------------------------------------------
 # TEMPLATE SENSORS
 # -----------------------------------------------------------------------------
@@ -187,8 +234,9 @@ input_select:
   registry_paddock_editor_mode:
     name: "Paddock Editor Mode"
     options:
-      - "Add New Paddock"
-      - "Edit Existing Paddock"
+      - "View"
+      - "Edit"
+      - "Add New"
     icon: mdi:view-grid
 
   registry_season_editor_mode:
@@ -242,6 +290,104 @@ input_select:
       - "weather"
       - "pwm"
     icon: mdi:puzzle
+
+  # Crop editor mode
+  registry_crop_editor_mode:
+    name: "Crop Editor Mode"
+    options:
+      - "Add New Crop"
+      - "Edit Existing Crop"
+    icon: mdi:sprout
+
+  # Crop selector (for editing)
+  registry_crop:
+    name: "Registry Crop"
+    options:
+      - "Select..."
+    icon: mdi:sprout
+
+  # Crop 1 selector (for paddock assignment)
+  registry_paddock_crop_1:
+    name: "Crop 1 (Early Season)"
+    options:
+      - "None"
+    icon: mdi:sprout
+
+  # Crop 2 selector (for paddock assignment)
+  registry_paddock_crop_2:
+    name: "Crop 2 (Late Season)"
+    options:
+      - "None"
+    icon: mdi:sprout
+
+  # Month selectors for crop assignment
+  registry_crop_1_start_month:
+    name: "Crop 1 Start Month"
+    options:
+      - "Jan"
+      - "Feb"
+      - "Mar"
+      - "Apr"
+      - "May"
+      - "Jun"
+      - "Jul"
+      - "Aug"
+      - "Sep"
+      - "Oct"
+      - "Nov"
+      - "Dec"
+    icon: mdi:calendar-start
+
+  registry_crop_1_end_month:
+    name: "Crop 1 End Month"
+    options:
+      - "Jan"
+      - "Feb"
+      - "Mar"
+      - "Apr"
+      - "May"
+      - "Jun"
+      - "Jul"
+      - "Aug"
+      - "Sep"
+      - "Oct"
+      - "Nov"
+      - "Dec"
+    icon: mdi:calendar-end
+
+  registry_crop_2_start_month:
+    name: "Crop 2 Start Month"
+    options:
+      - "Jan"
+      - "Feb"
+      - "Mar"
+      - "Apr"
+      - "May"
+      - "Jun"
+      - "Jul"
+      - "Aug"
+      - "Sep"
+      - "Oct"
+      - "Nov"
+      - "Dec"
+    icon: mdi:calendar-start
+
+  registry_crop_2_end_month:
+    name: "Crop 2 End Month"
+    options:
+      - "Jan"
+      - "Feb"
+      - "Mar"
+      - "Apr"
+      - "May"
+      - "Jun"
+      - "Jul"
+      - "Aug"
+      - "Sep"
+      - "Oct"
+      - "Nov"
+      - "Dec"
+    icon: mdi:calendar-end
 
 # -----------------------------------------------------------------------------
 # INPUT TEXT (for add/edit forms)
@@ -306,6 +452,32 @@ input_text:
     icon: mdi:file-excel
     max: 100
 
+  # Crop edit helpers
+  registry_new_crop_name:
+    name: "New Crop Name"
+    icon: mdi:sprout
+    max: 50
+
+  registry_edit_crop_pointer:
+    name: "Edit Crop Pointer"
+    icon: mdi:target
+    max: 50
+
+  registry_edit_crop_name:
+    name: "Crop Name"
+    icon: mdi:sprout
+    max: 50
+
+  registry_edit_crop_color:
+    name: "Crop Color"
+    icon: mdi:palette
+    max: 10
+
+  registry_new_stage_name:
+    name: "New Stage Name"
+    icon: mdi:leaf
+    max: 50
+
 # -----------------------------------------------------------------------------
 # INPUT NUMBER (for add paddock form)
 # -----------------------------------------------------------------------------
@@ -326,6 +498,22 @@ input_number:
     step: 1
     mode: box
 
+  registry_crop_start_month:
+    name: "Crop Start Month"
+    icon: mdi:calendar-start
+    min: 1
+    max: 12
+    step: 1
+    mode: box
+
+  registry_crop_end_month:
+    name: "Crop End Month"
+    icon: mdi:calendar-end
+    min: 1
+    max: 12
+    step: 1
+    mode: box
+
 
 # -----------------------------------------------------------------------------
 # INPUT BOOLEAN (for edit forms)
@@ -334,6 +522,10 @@ input_boolean:
   registry_edit_current_season:
     name: "Current Season"
     icon: mdi:calendar-check
+
+  registry_paddock_edit_mode:
+    name: "Paddock Edit Mode"
+    icon: mdi:pencil
 
 # -----------------------------------------------------------------------------
 # INPUT DATETIME (for season dates)
@@ -699,6 +891,13 @@ script:
       # Load current values
       - variables:
           paddock: "{{ state_attr('sensor.farm_registry_data', 'paddocks')[id] | default({}) }}"
+          crops: "{{ state_attr('sensor.farm_registry_data', 'crops') | default({}) }}"
+      - variables:
+          crop_1: "{{ paddock.crop_1 | default({}) }}"
+          crop_2: "{{ paddock.crop_2 | default({}) }}"
+          crop_1_name: "{{ crops[crop_1.crop_id].name if crop_1.crop_id and crop_1.crop_id in crops else 'None' }}"
+          crop_2_name: "{{ crops[crop_2.crop_id].name if crop_2.crop_id and crop_2.crop_id in crops else 'None' }}"
+          month_names: "{{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.registry_edit_paddock_name
@@ -721,6 +920,37 @@ script:
           - service: input_boolean.turn_off
             target:
               entity_id: input_boolean.registry_edit_current_season
+      # Load crop rotation values
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_crop_1
+        data:
+          option: "{{ crop_1_name }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop_1_start_month
+        data:
+          option: "{{ month_names[(crop_1.start_month | default(1)) - 1] }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop_1_end_month
+        data:
+          option: "{{ month_names[(crop_1.end_month | default(12)) - 1] }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_crop_2
+        data:
+          option: "{{ crop_2_name }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop_2_start_month
+        data:
+          option: "{{ month_names[(crop_2.start_month | default(1)) - 1] }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop_2_end_month
+        data:
+          option: "{{ month_names[(crop_2.end_month | default(12)) - 1] }}"
 
   # Save paddock edit
   registry_save_paddock_edit:
@@ -1016,6 +1246,551 @@ script:
         data:
           option: "Select..."
 
+  # --------------------------------------------------------------------------
+  # CROP SCRIPTS
+  # --------------------------------------------------------------------------
+
+  # Add new crop type
+  registry_add_crop:
+    alias: "Registry - Add Crop"
+    icon: mdi:sprout
+    fields:
+      name:
+        description: "Crop name"
+        required: true
+        selector:
+          text:
+      start_month:
+        description: "Typical start month (1-12)"
+        selector:
+          number:
+            min: 1
+            max: 12
+      end_month:
+        description: "Typical end month (1-12)"
+        selector:
+          number:
+            min: 1
+            max: 12
+      color:
+        description: "Hex color code"
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_add_crop
+        data:
+          name: "{{ name }}"
+          start_month: "{{ start_month | default(1) }}"
+          end_month: "{{ end_month | default(12) }}"
+          color: "{{ color | default('#4caf50') }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_crop_name
+        data:
+          value: ""
+
+  # Delete crop type
+  registry_delete_crop:
+    alias: "Registry - Delete Crop"
+    icon: mdi:delete
+    fields:
+      id:
+        description: "Crop ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_delete_crop
+        data:
+          id: "{{ id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form after delete
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_crop
+        data:
+          option: "Select..."
+
+  # Open edit crop (loads values into helpers)
+  registry_open_edit_crop:
+    alias: "Registry - Open Edit Crop"
+    icon: mdi:pencil
+    fields:
+      id:
+        description: "Crop ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_crop_pointer
+        data:
+          value: "{{ id }}"
+      - variables:
+          crop: "{{ state_attr('sensor.farm_registry_data', 'crops')[id] | default({}) }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_crop_name
+        data:
+          value: "{{ crop.name | default('') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_crop_color
+        data:
+          value: "{{ crop.color | default('#4caf50') }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_crop_start_month
+        data:
+          value: "{{ crop.typical_start_month | default(1) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_crop_end_month
+        data:
+          value: "{{ crop.typical_end_month | default(12) }}"
+
+  # Save crop edit
+  registry_save_crop_edit:
+    alias: "Registry - Save Crop Edit"
+    icon: mdi:content-save
+    sequence:
+      - variables:
+          crop_id: "{{ states('input_text.registry_edit_crop_pointer') }}"
+          new_name: "{{ states('input_text.registry_edit_crop_name') }}"
+          new_color: "{{ states('input_text.registry_edit_crop_color') }}"
+          start_month: "{{ states('input_number.registry_crop_start_month') | int }}"
+          end_month: "{{ states('input_number.registry_crop_end_month') | int }}"
+      # Validate that a crop is selected
+      - condition: template
+        value_template: "{{ crop_id | length > 0 }}"
+      - service: shell_command.registry_edit_crop
+        data:
+          id: "{{ crop_id }}"
+          name: "{{ new_name }}"
+          color: "{{ new_color }}"
+          start_month: "{{ start_month }}"
+          end_month: "{{ end_month }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Refresh crop dropdown
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_crop
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['Select...'] + crops if crops else ['Select...'] }}
+
+  # Add stage to a crop
+  registry_add_crop_stage:
+    alias: "Registry - Add Crop Stage"
+    icon: mdi:leaf
+    fields:
+      crop_id:
+        description: "Crop ID"
+        required: true
+        selector:
+          text:
+      name:
+        description: "Stage name"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_add_crop_stage
+        data:
+          crop_id: "{{ crop_id }}"
+          name: "{{ name }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear stage name input
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_stage_name
+        data:
+          value: ""
+
+  # Delete stage from a crop
+  registry_delete_crop_stage:
+    alias: "Registry - Delete Crop Stage"
+    icon: mdi:delete
+    fields:
+      crop_id:
+        description: "Crop ID"
+        required: true
+        selector:
+          text:
+      stage_id:
+        description: "Stage ID"
+        required: true
+        selector:
+          text:
+    sequence:
+      - service: shell_command.registry_delete_crop_stage
+        data:
+          crop_id: "{{ crop_id }}"
+          stage_id: "{{ stage_id }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Set paddock crop rotation (with parameters - for programmatic use)
+  registry_set_paddock_crops:
+    alias: "Registry - Set Paddock Crops"
+    icon: mdi:sprout
+    fields:
+      paddock_id:
+        description: "Paddock ID"
+        required: true
+        selector:
+          text:
+      crop_1_id:
+        description: "Crop 1 ID (early season)"
+        selector:
+          text:
+      crop_1_start:
+        description: "Crop 1 start month (1-12)"
+        selector:
+          number:
+            min: 1
+            max: 12
+      crop_1_end:
+        description: "Crop 1 end month (1-12)"
+        selector:
+          number:
+            min: 1
+            max: 12
+      crop_2_id:
+        description: "Crop 2 ID (late season)"
+        selector:
+          text:
+      crop_2_start:
+        description: "Crop 2 start month (1-12)"
+        selector:
+          number:
+            min: 1
+            max: 12
+      crop_2_end:
+        description: "Crop 2 end month (1-12)"
+        selector:
+          number:
+            min: 1
+            max: 12
+    sequence:
+      - service: shell_command.registry_set_paddock_crops
+        data:
+          id: "{{ paddock_id }}"
+          crop_1_id: "{{ crop_1_id | default('') }}"
+          crop_1_start: "{{ crop_1_start | default(1) }}"
+          crop_1_end: "{{ crop_1_end | default(12) }}"
+          crop_2_id: "{{ crop_2_id | default('') }}"
+          crop_2_start: "{{ crop_2_start | default(1) }}"
+          crop_2_end: "{{ crop_2_end | default(12) }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Save paddock crops from form (reads input entities - for dashboard buttons)
+  registry_save_paddock_crops_from_form:
+    alias: "Registry - Save Paddock Crops from Form"
+    icon: mdi:sprout
+    sequence:
+      - variables:
+          paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
+          crop_1_name: "{{ states('input_select.registry_paddock_crop_1') }}"
+          crop_2_name: "{{ states('input_select.registry_paddock_crop_2') }}"
+          crop_1_start_name: "{{ states('input_select.registry_crop_1_start_month') }}"
+          crop_1_end_name: "{{ states('input_select.registry_crop_1_end_month') }}"
+          crop_2_start_name: "{{ states('input_select.registry_crop_2_start_month') }}"
+          crop_2_end_name: "{{ states('input_select.registry_crop_2_end_month') }}"
+          crops: "{{ state_attr('sensor.farm_registry_data', 'crops') or {} }}"
+      - variables:
+          # Convert crop names to IDs
+          crop_1_id: >-
+            {% if crop_1_name == 'None' %}{% else %}
+            {% for cid, c in crops.items() if c.name == crop_1_name %}{{ cid }}{% endfor %}
+            {% endif %}
+          crop_2_id: >-
+            {% if crop_2_name == 'None' %}{% else %}
+            {% for cid, c in crops.items() if c.name == crop_2_name %}{{ cid }}{% endfor %}
+            {% endif %}
+          # Convert month names to numbers
+          month_map: "{{ {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12} }}"
+      - variables:
+          crop_1_start: "{{ month_map[crop_1_start_name] | default(1) }}"
+          crop_1_end: "{{ month_map[crop_1_end_name] | default(12) }}"
+          crop_2_start: "{{ month_map[crop_2_start_name] | default(1) }}"
+          crop_2_end: "{{ month_map[crop_2_end_name] | default(12) }}"
+      # Validate paddock is selected
+      - condition: template
+        value_template: "{{ paddock_id | length > 0 }}"
+      - service: shell_command.registry_set_paddock_crops
+        data:
+          id: "{{ paddock_id | trim }}"
+          crop_1_id: "{{ crop_1_id | trim }}"
+          crop_1_start: "{{ crop_1_start }}"
+          crop_1_end: "{{ crop_1_end }}"
+          crop_2_id: "{{ crop_2_id | trim }}"
+          crop_2_start: "{{ crop_2_start }}"
+          crop_2_end: "{{ crop_2_end }}"
+      - delay:
+          seconds: 1
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+
+  # Save all paddock changes (details + crops) from form
+  registry_save_paddock_all:
+    alias: "Registry - Save All Paddock Changes"
+    icon: mdi:content-save-all
+    sequence:
+      # Capture paddock ID first (before any script clears it)
+      - variables:
+          paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
+          new_name: "{{ states('input_text.registry_edit_paddock_name') }}"
+          current_season: "{{ is_state('input_boolean.registry_edit_current_season', 'on') }}"
+          crop_1_name: "{{ states('input_select.registry_paddock_crop_1') }}"
+          crop_2_name: "{{ states('input_select.registry_paddock_crop_2') }}"
+          crop_1_start_name: "{{ states('input_select.registry_crop_1_start_month') }}"
+          crop_1_end_name: "{{ states('input_select.registry_crop_1_end_month') }}"
+          crop_2_start_name: "{{ states('input_select.registry_crop_2_start_month') }}"
+          crop_2_end_name: "{{ states('input_select.registry_crop_2_end_month') }}"
+          crops: "{{ state_attr('sensor.farm_registry_data', 'crops') or {} }}"
+      # Validate paddock is selected
+      - condition: template
+        value_template: "{{ paddock_id | length > 0 }}"
+      # Convert crop names to IDs and month names to numbers
+      - variables:
+          crop_1_id: >-
+            {% if crop_1_name == 'None' %}{% else %}
+            {% for cid, c in crops.items() if c.name == crop_1_name %}{{ cid }}{% endfor %}
+            {% endif %}
+          crop_2_id: >-
+            {% if crop_2_name == 'None' %}{% else %}
+            {% for cid, c in crops.items() if c.name == crop_2_name %}{{ cid }}{% endfor %}
+            {% endif %}
+          month_map: "{{ {'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12} }}"
+      - variables:
+          crop_1_start: "{{ month_map[crop_1_start_name] | default(1) }}"
+          crop_1_end: "{{ month_map[crop_1_end_name] | default(12) }}"
+          crop_2_start: "{{ month_map[crop_2_start_name] | default(1) }}"
+          crop_2_end: "{{ month_map[crop_2_end_name] | default(12) }}"
+      # Save paddock details (name, current_season)
+      - service: shell_command.registry_edit_paddock
+        data:
+          id: "{{ paddock_id }}"
+          name: "{{ new_name }}"
+          current_season: "{{ current_season }}"
+      - delay:
+          milliseconds: 300
+      # Save crop rotation
+      - service: shell_command.registry_set_paddock_crops
+        data:
+          id: "{{ paddock_id | trim }}"
+          crop_1_id: "{{ crop_1_id | trim }}"
+          crop_1_start: "{{ crop_1_start }}"
+          crop_1_end: "{{ crop_1_end }}"
+          crop_2_id: "{{ crop_2_id | trim }}"
+          crop_2_start: "{{ crop_2_start }}"
+          crop_2_end: "{{ crop_2_end }}"
+      - delay:
+          seconds: 1
+      # Refresh data
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      - delay:
+          milliseconds: 500
+      # Clear form after successful save
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          option: "Select..."
+      # Switch back to View mode
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_editor_mode
+        data:
+          option: "View"
+
+  # Start editing selected paddock (HFM pattern)
+  registry_paddock_start_edit:
+    alias: "Registry - Start Paddock Edit"
+    icon: mdi:pencil
+    sequence:
+      # Validate a paddock is selected
+      - condition: template
+        value_template: "{{ states('input_text.registry_edit_paddock_pointer') | length > 0 }}"
+      # Switch to Edit mode
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_editor_mode
+        data:
+          option: "Edit"
+
+  # Start adding new paddock (HFM pattern)
+  registry_paddock_start_add:
+    alias: "Registry - Start Paddock Add"
+    icon: mdi:plus
+    sequence:
+      # Clear the form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_paddock_name
+        data:
+          value: ""
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.registry_new_paddock_bay_count
+        data:
+          value: 4
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_new_paddock_farm
+        data:
+          option: "Select..."
+      # Switch to Add mode
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_editor_mode
+        data:
+          option: "Add New"
+
+  # Clear paddock form / return to View mode (HFM pattern)
+  registry_paddock_clear_form:
+    alias: "Registry - Clear Paddock Form"
+    icon: mdi:close
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_editor_mode
+        data:
+          option: "View"
+
+  # Delete selected paddock (HFM pattern)
+  registry_paddock_delete:
+    alias: "Registry - Delete Selected Paddock"
+    icon: mdi:delete
+    sequence:
+      - variables:
+          paddock_id: "{{ states('input_text.registry_edit_paddock_pointer') }}"
+      # Validate a paddock is selected
+      - condition: template
+        value_template: "{{ paddock_id | length > 0 }}"
+      # Delete the paddock
+      - service: shell_command.registry_delete_paddock
+        data:
+          id: "{{ paddock_id }}"
+      - delay:
+          seconds: 1
+      # Refresh data
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear selection
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_edit_paddock_pointer
+        data:
+          value: ""
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          option: "Select..."
+      # Stay in View mode
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_editor_mode
+        data:
+          option: "View"
+
+  # Add paddock from form and return to View mode
+  registry_add_paddock_from_form:
+    alias: "Registry - Add Paddock from Form"
+    icon: mdi:view-grid-plus
+    sequence:
+      - variables:
+          paddock_name: "{{ states('input_text.registry_new_paddock_name') }}"
+          bay_count: "{{ states('input_number.registry_new_paddock_bay_count') | int }}"
+          farm_name: "{{ states('input_select.registry_new_paddock_farm') }}"
+          farms: "{{ state_attr('sensor.farm_registry_data', 'farms') or {} }}"
+      - variables:
+          farm_id: >-
+            {% for fid, f in farms.items() if f.name == farm_name %}{{ fid }}{% endfor %}
+      # Validate
+      - condition: template
+        value_template: "{{ paddock_name | length > 0 and farm_name != 'Select...' }}"
+      # Add paddock
+      - service: shell_command.registry_add_paddock
+        data:
+          name: "{{ paddock_name }}"
+          bay_count: "{{ bay_count }}"
+          farm: "{{ farm_id | default('farm_1') | trim }}"
+          bay_prefix: "B-"
+      - delay:
+          seconds: 1
+      # Refresh data
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.farm_registry_data
+      # Clear form
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.registry_new_paddock_name
+        data:
+          value: ""
+      # Switch back to View mode
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.registry_paddock_editor_mode
+        data:
+          option: "View"
+      # Refresh dropdowns
+      - delay:
+          milliseconds: 500
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock
+        data:
+          options: >-
+            {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
+            {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+
 # -----------------------------------------------------------------------------
 # AUTOMATIONS
 # -----------------------------------------------------------------------------
@@ -1071,6 +1846,28 @@ automation:
           options: >-
             {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
             {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
+      # Crop dropdowns
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_crop
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['Select...'] + crops if crops else ['Select...'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_crop_1
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['None'] + crops if crops else ['None'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_crop_2
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['None'] + crops if crops else ['None'] }}
 
   # Update season dropdown when data changes
   - id: registry_update_season_dropdown
@@ -1089,6 +1886,38 @@ automation:
           options: >-
             {% set seasons = state_attr('sensor.farm_registry_data', 'season_names') or [] %}
             {{ ['Select...'] + seasons if seasons else ['Select...'] }}
+
+  # Update crop dropdowns when data changes
+  - id: registry_update_crop_dropdowns
+    alias: "Registry - Update Crop Dropdowns"
+    trigger:
+      - platform: state
+        entity_id: sensor.farm_registry_data
+    condition:
+      - condition: template
+        value_template: "{{ state_attr('sensor.farm_registry_data', 'crop_names') is not none }}"
+    action:
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_crop_1
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['None'] + crops if crops else ['None'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_paddock_crop_2
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['None'] + crops if crops else ['None'] }}
+      - service: input_select.set_options
+        target:
+          entity_id: input_select.registry_crop
+        data:
+          options: >-
+            {% set crops = state_attr('sensor.farm_registry_data', 'crop_names') or [] %}
+            {{ ['Select...'] + crops if crops else ['Select...'] }}
 
   # Update paddock dropdown when data changes (all paddocks)
   - id: registry_update_paddock_dropdown
@@ -1200,6 +2029,10 @@ automation:
       - condition: template
         value_template: "{{ trigger.to_state.state != 'Select...' }}"
     action:
+      # Turn off edit mode when selecting a new paddock
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.registry_paddock_edit_mode
       - variables:
           paddock_name: "{{ states('input_select.registry_paddock') }}"
           paddocks: "{{ state_attr('sensor.farm_registry_data', 'paddocks') or {} }}"
@@ -1212,13 +2045,13 @@ automation:
         data:
           id: "{{ paddock_id | trim }}"
 
-  # Refresh paddock dropdown when switching to edit mode
+  # Refresh paddock dropdown when switching to View mode
   - id: registry_refresh_paddock_dropdown_on_mode_change
     alias: "Registry - Refresh Paddock Dropdown on Mode Change"
     trigger:
       - platform: state
         entity_id: input_select.registry_paddock_editor_mode
-        to: "Edit Existing Paddock"
+        to: "View"
     action:
       - service: homeassistant.update_entity
         target:
@@ -1239,11 +2072,6 @@ automation:
           options: >-
             {% set paddocks = state_attr('sensor.farm_registry_data', 'paddock_names') or [] %}
             {{ ['Select...'] + paddocks if paddocks else ['Select...'] }}
-      - service: input_select.select_option
-        target:
-          entity_id: input_select.registry_paddock
-        data:
-          option: "Select..."
 
   # Load farm edit form when farm is selected
   - id: registry_load_farm_on_select

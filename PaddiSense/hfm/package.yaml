@@ -176,6 +176,7 @@ command_line:
         - devices
         - paddock_names
         - paddock_map
+        - paddocks_with_crops
         - product_names
         - crop_stage_names
         - crop_stage_ids

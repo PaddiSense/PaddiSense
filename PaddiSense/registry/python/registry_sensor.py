@@ -26,6 +26,7 @@ import yaml
 # Paths
 DATA_DIR = Path("/config/local_data/registry")
 CONFIG_FILE = DATA_DIR / "config.json"
+CROPS_FILE = DATA_DIR / "crops.json"
 BACKUP_DIR = DATA_DIR / "backups"
 SERVER_YAML = Path("/config/server.yaml")
 VERSION_FILE = Path("/config/PaddiSense/registry/VERSION")
@@ -116,6 +117,79 @@ def get_active_season(seasons: dict[str, Any]) -> str | None:
     return None
 
 
+def load_crops() -> dict[str, Any]:
+    """Load crops config from JSON file."""
+    if not CROPS_FILE.exists():
+        return {
+            "version": "1.0.0",
+            "crops": {},
+        }
+    try:
+        return json.loads(CROPS_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, IOError):
+        return {
+            "version": "1.0.0",
+            "crops": {},
+        }
+
+
+def is_in_month_range(current_month: int, start_month: int, end_month: int) -> bool:
+    """Check if current month is within a start-end range (handles year wrapping)."""
+    if start_month <= end_month:
+        # Normal range (e.g., May-Sep: 5-9)
+        return start_month <= current_month <= end_month
+    else:
+        # Wraps around year (e.g., Oct-May: 10-5)
+        return current_month >= start_month or current_month <= end_month
+
+
+def get_current_crop_for_paddock(paddock: dict, current_month: int) -> dict | None:
+    """Determine the current crop for a paddock based on today's month."""
+    crop_1 = paddock.get("crop_1", {})
+    crop_2 = paddock.get("crop_2", {})
+
+    # Check if today falls in crop_1 range
+    if crop_1 and crop_1.get("crop_id"):
+        start = crop_1.get("start_month", 1)
+        end = crop_1.get("end_month", 12)
+        if is_in_month_range(current_month, start, end):
+            return crop_1
+
+    # Check if today falls in crop_2 range
+    if crop_2 and crop_2.get("crop_id"):
+        start = crop_2.get("start_month", 1)
+        end = crop_2.get("end_month", 12)
+        if is_in_month_range(current_month, start, end):
+            return crop_2
+
+    return None
+
+
+def build_current_crops(
+    paddocks: dict[str, Any],
+    crops: dict[str, Any],
+    current_month: int
+) -> dict[str, Any]:
+    """Build a mapping of paddock_id to current crop info."""
+    current_crops = {}
+
+    for pid, paddock in paddocks.items():
+        current = get_current_crop_for_paddock(paddock, current_month)
+        if current:
+            crop_id = current.get("crop_id")
+            crop_data = crops.get(crop_id, {})
+            current_crops[pid] = {
+                "crop_id": crop_id,
+                "crop_name": crop_data.get("name", crop_id),
+                "crop_color": crop_data.get("color", "#4caf50"),
+                "stages": crop_data.get("stages", []),
+            }
+        else:
+            current_crops[pid] = None
+
+    return current_crops
+
+
 def build_hierarchy_summary(
     farms: dict[str, Any],
     paddocks: dict[str, Any],
@@ -157,6 +231,7 @@ def build_hierarchy_summary(
 def main() -> int:
     config = load_config()
     server = load_server_yaml()
+    crops_data = load_crops()
 
     # Extract data
     grower = extract_grower(server)
@@ -165,6 +240,7 @@ def main() -> int:
     paddocks = config.get("paddocks", {})
     bays = config.get("bays", {})
     seasons = config.get("seasons", {})
+    crops = crops_data.get("crops", {})
 
     # System status
     initialized = config.get("initialized", False)
@@ -177,9 +253,15 @@ def main() -> int:
     farm_names = sorted([f.get("name", fid) for fid, f in farms.items()])
     paddock_names = sorted([p.get("name", pid) for pid, p in paddocks.items()])
     season_names = sorted([s.get("name", sid) for sid, s in seasons.items()])
+    crop_names = sorted([c.get("name", cid) for cid, c in crops.items()])
 
     # Build hierarchy
     hierarchy = build_hierarchy_summary(farms, paddocks, bays)
+
+    # Build current crops mapping (paddock_id -> current crop info)
+    from datetime import datetime
+    current_month = datetime.now().month
+    current_crops = build_current_crops(paddocks, crops, current_month)
 
     # Count backups
     backup_count = 0
@@ -218,6 +300,11 @@ def main() -> int:
         "paddocks": paddocks,
         "bays": bays,
         "seasons": seasons,
+        "crops": crops,
+
+        # Current crops per paddock (based on today's month)
+        "current_crops": current_crops,
+        "current_month": current_month,
 
         # Hierarchy summary for UI
         "hierarchy": hierarchy,
@@ -226,6 +313,7 @@ def main() -> int:
         "farm_names": farm_names,
         "paddock_names": paddock_names,
         "season_names": season_names,
+        "crop_names": crop_names,
 
         # Enabled modules (for conditional UI)
         "modules": modules,

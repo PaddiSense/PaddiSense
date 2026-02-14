@@ -18,6 +18,7 @@ APPLICATORS_FILE = DATA_DIR / "applicators.json"
 BACKUPS_DIR = DATA_DIR / "backups"
 VERSION_FILE = Path("/config/PaddiSense/hfm/VERSION")
 REGISTRY_FILE = Path("/config/local_data/registry/config.json")
+CROPS_FILE = Path("/config/local_data/registry/crops.json")
 IPM_INVENTORY_FILE = Path("/config/local_data/ipm/inventory.json")
 
 
@@ -46,6 +47,86 @@ def get_paddock_names() -> dict:
     registry = load_json(REGISTRY_FILE, {})
     paddocks = registry.get("paddocks", {})
     return {pid: p.get("name", pid) for pid, p in paddocks.items()}
+
+
+def is_in_month_range(current_month: int, start_month: int, end_month: int) -> bool:
+    """Check if current month is within a start-end range (handles year wrapping)."""
+    if start_month <= end_month:
+        return start_month <= current_month <= end_month
+    else:
+        # Wraps around year (e.g., Oct-May: 10-5)
+        return current_month >= start_month or current_month <= end_month
+
+
+def get_current_crop_for_paddock(paddock: dict, current_month: int) -> dict | None:
+    """Determine the current crop for a paddock based on today's month."""
+    crop_1 = paddock.get("crop_1", {})
+    crop_2 = paddock.get("crop_2", {})
+
+    if crop_1 and crop_1.get("crop_id"):
+        start = crop_1.get("start_month", 1)
+        end = crop_1.get("end_month", 12)
+        if is_in_month_range(current_month, start, end):
+            return crop_1
+
+    if crop_2 and crop_2.get("crop_id"):
+        start = crop_2.get("start_month", 1)
+        end = crop_2.get("end_month", 12)
+        if is_in_month_range(current_month, start, end):
+            return crop_2
+
+    return None
+
+
+def get_paddocks_with_crops() -> dict:
+    """Get paddock data including current crop information."""
+    registry = load_json(REGISTRY_FILE, {})
+    crops_data = load_json(CROPS_FILE, {})
+    paddocks = registry.get("paddocks", {})
+    crops = crops_data.get("crops", {})
+    current_month = datetime.now().month
+
+    result = {}
+    for pid, paddock in paddocks.items():
+        current = get_current_crop_for_paddock(paddock, current_month)
+        crop_info = None
+        if current:
+            crop_id = current.get("crop_id")
+            crop_data = crops.get(crop_id, {})
+            crop_info = {
+                "crop_id": crop_id,
+                "crop_name": crop_data.get("name", crop_id),
+                "crop_color": crop_data.get("color", "#4caf50"),
+                "stages": crop_data.get("stages", []),
+            }
+
+        result[pid] = {
+            "id": pid,
+            "name": paddock.get("name", pid),
+            "farm_id": paddock.get("farm_id"),
+            "current_season": paddock.get("current_season", True),
+            "current_crop": crop_info,
+        }
+
+    return result
+
+
+def get_crop_stages_for_paddock(paddock_id: str) -> list:
+    """Get the crop stages for a paddock's current crop."""
+    registry = load_json(REGISTRY_FILE, {})
+    crops_data = load_json(CROPS_FILE, {})
+    paddocks = registry.get("paddocks", {})
+    crops = crops_data.get("crops", {})
+    current_month = datetime.now().month
+
+    paddock = paddocks.get(paddock_id, {})
+    current = get_current_crop_for_paddock(paddock, current_month)
+    if not current:
+        return []
+
+    crop_id = current.get("crop_id")
+    crop_data = crops.get(crop_id, {})
+    return crop_data.get("stages", [])
 
 
 def get_product_names() -> list:
@@ -159,6 +240,9 @@ def main():
     # Get product names from IPM
     product_names = get_product_names()
 
+    # Get paddock data with current crops
+    paddocks_with_crops = get_paddocks_with_crops()
+
     # Config items for dropdowns
     crop_stages = config.get("crop_stages", [])
     application_methods = config.get("application_methods", [])
@@ -207,6 +291,7 @@ def main():
         # Integration data
         "paddock_names": paddock_list,
         "paddock_map": paddock_names,
+        "paddocks_with_crops": paddocks_with_crops,
         "product_names": product_names,
 
         # Lists for dropdowns
