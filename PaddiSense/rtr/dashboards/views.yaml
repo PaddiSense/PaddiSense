@@ -570,31 +570,33 @@ views:
     sections:
       - type: grid
         cards:
-          # Header
+          # Title Header - Yellow bar style
           - type: custom:button-card
-            show_name: false
+            show_name: true
             show_state: false
-            show_icon: false
+            show_icon: true
+            name: RTR Settings
+            icon: mdi:cog
             tap_action:
               action: none
             styles:
               card:
-                - background: transparent
+                - background: "#E9E100"
+                - border-radius: 12px 12px 0 0
+                - padding: 16px
                 - box-shadow: none
-                - padding: 0 0 16px 0
-            custom_fields:
-              header: |
-                [[[
-                  return `
-                    <div style="display:flex;align-items:center;gap:12px;">
-                      <ha-icon icon="mdi:cog" style="--mdc-icon-size:32px;color:#43a047;"></ha-icon>
-                      <div>
-                        <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">RTR Settings</div>
-                        <div style="font-size:13px;color:var(--secondary-text-color);">Manage Real Time Rice configuration</div>
-                      </div>
-                    </div>
-                  `;
-                ]]]
+              grid:
+                - grid-template-areas: '"i n"'
+                - grid-template-columns: 40px 1fr
+              icon:
+                - color: "#000000"
+                - width: 28px
+                - height: 28px
+              name:
+                - color: "#000000"
+                - font-size: 20px
+                - font-weight: 700
+                - justify-self: start
 
           # Current configuration status
           - type: custom:button-card
@@ -607,8 +609,9 @@ views:
             styles:
               card:
                 - background: var(--card-background-color)
-                - border-radius: 16px 16px 0 0
+                - border-radius: 0
                 - padding: 20px
+                - box-shadow: 0 2px 8px rgba(0,0,0,0.1)
             custom_fields:
               status: |
                 [[[
@@ -623,32 +626,27 @@ views:
                   const statusText = configured ? 'Configured' : 'Not Configured';
 
                   return `
-                    <div>
-                      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                        <div style="width:48px;height:48px;border-radius:50%;background:rgba(${configured ? '67,160,71' : '255,152,0'},0.15);display:flex;align-items:center;justify-content:center;">
-                          <ha-icon icon="${statusIcon}" style="--mdc-icon-size:26px;color:${statusColor};"></ha-icon>
+                    <div style="display:flex;align-items:center;gap:14px;padding-bottom:${configured ? '16px' : '0'};${configured ? 'border-bottom:1px solid var(--divider-color);margin-bottom:16px;' : ''}">
+                      <div style="width:52px;height:52px;border-radius:12px;background:${configured ? 'rgba(67,160,71,0.12)' : 'rgba(255,152,0,0.12)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <ha-icon icon="${statusIcon}" style="--mdc-icon-size:28px;color:${statusColor};"></ha-icon>
+                      </div>
+                      <div style="flex:1;">
+                        <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);">${statusText}</div>
+                        <div style="font-size:14px;color:var(--secondary-text-color);margin-top:2px;">${configured ? paddockCount + ' paddocks loaded' : 'Enter your RTR URL to get started'}</div>
+                      </div>
+                    </div>
+                    ${configured ? `
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div style="background:rgba(0,0,0,0.04);border-radius:10px;padding:14px;">
+                          <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Last Updated</div>
+                          <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${lastUpdated}</div>
                         </div>
-                        <div>
-                          <div style="font-size:18px;font-weight:700;color:var(--primary-text-color);">Status: ${statusText}</div>
-                          <div style="font-size:13px;color:var(--secondary-text-color);">${configured ? paddockCount + ' paddocks loaded' : 'Enter your RTR URL to get started'}</div>
+                        <div style="background:rgba(0,0,0,0.04);border-radius:10px;padding:14px;">
+                          <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Paddocks</div>
+                          <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${paddockCount}</div>
                         </div>
                       </div>
-
-                      ${configured ? `
-                        <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:16px;">
-                          <div style="display:grid;gap:12px;">
-                            <div>
-                              <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Last Updated</div>
-                              <div style="font-size:14px;color:var(--primary-text-color);">${lastUpdated}</div>
-                            </div>
-                            <div>
-                              <div style="font-size:11px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:4px;">Paddocks</div>
-                              <div style="font-size:14px;color:var(--primary-text-color);">${paddockCount}</div>
-                            </div>
-                          </div>
-                        </div>
-                      ` : ''}
-                    </div>
+                    ` : ''}
                   `;
                 ]]]
 
