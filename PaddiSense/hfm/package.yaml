@@ -1778,6 +1778,54 @@ automation:
         data:
           options: "{{ stage_names }}"
 
+  # Dynamic crop stage dropdown based on selected paddock's current crop
+  - id: hfm_update_crop_stage_for_paddock
+    alias: "HFM Update Crop Stage for Selected Paddock"
+    trigger:
+      - platform: state
+        entity_id: sensor.hfm_drafts
+      - platform: state
+        entity_id: input_select.hfm_event_type
+    action:
+      - variables:
+          event_type: "{{ states('input_select.hfm_event_type') }}"
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+          drafts: "{{ state_attr('sensor.hfm_drafts', 'drafts') or {} }}"
+          draft: "{{ drafts.get(device_id, {}) }}"
+          selected_paddocks: "{{ draft.get('data', {}).get('paddocks', []) }}"
+          paddocks_with_crops: "{{ state_attr('sensor.hfm_events', 'paddocks_with_crops') or {} }}"
+      - choose:
+          # Crop Stage event with paddocks selected - use paddock's crop stages
+          - conditions:
+              - condition: template
+                value_template: "{{ event_type == 'Crop Stage' and selected_paddocks | length > 0 }}"
+            sequence:
+              - variables:
+                  first_paddock_id: "{{ selected_paddocks[0] }}"
+                  paddock_data: "{{ paddocks_with_crops.get(first_paddock_id, {}) }}"
+                  current_crop: "{{ paddock_data.get('current_crop', {}) }}"
+                  crop_stages: "{{ current_crop.get('stages', []) if current_crop else [] }}"
+                  stage_options: >
+                    {% set ns = namespace(opts=['Select Stage']) %}
+                    {% for s in crop_stages %}
+                      {% set ns.opts = ns.opts + [s.name] %}
+                    {% endfor %}
+                    {{ ns.opts }}
+              - service: input_select.set_options
+                target:
+                  entity_id: input_select.hfm_crop_stage
+                data:
+                  options: "{{ stage_options if stage_options | length > 1 else ['Select Stage', 'No stages defined'] }}"
+        # Default - use all crop stages from HFM config
+        default:
+          - variables:
+              all_stages: "{{ state_attr('sensor.hfm_events', 'crop_stage_names') or [] }}"
+          - service: input_select.set_options
+            target:
+              entity_id: input_select.hfm_crop_stage
+            data:
+              options: "{{ ['Select Stage'] + all_stages if all_stages else ['Select Stage'] }}"
+
   - id: hfm_update_applicator_edit_options
     alias: "HFM Update Applicator Edit Options"
     trigger:
@@ -2398,6 +2446,19 @@ script:
             - input_text.hfm_product_rate_6
         data:
           value: ""
+      # Clear the draft for this device
+      - variables:
+          device_id: "{{ states('input_text.hfm_current_device') }}"
+      - condition: template
+        value_template: "{{ device_id != '' }}"
+      - service: shell_command.hfm_clear_draft
+        data:
+          device_id: "{{ device_id }}"
+      - delay:
+          milliseconds: 300
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.hfm_drafts
 
   hfm_submit_event:
     alias: "HFM Submit Event"

@@ -1895,6 +1895,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -1930,7 +1935,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 0 ? 'flex' : 'none';
+                                    if (paddocks.length <= 0) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[0]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -1961,6 +1981,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -1996,7 +2021,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 1 ? 'flex' : 'none';
+                                    if (paddocks.length <= 1) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[1]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2031,6 +2071,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2066,7 +2111,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 2 ? 'flex' : 'none';
+                                    if (paddocks.length <= 2) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[2]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2097,6 +2157,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2132,7 +2197,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 3 ? 'flex' : 'none';
+                                    if (paddocks.length <= 3) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[3]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2167,6 +2247,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2202,7 +2287,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 4 ? 'flex' : 'none';
+                                    if (paddocks.length <= 4) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[4]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2233,6 +2333,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2268,7 +2373,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 5 ? 'flex' : 'none';
+                                    if (paddocks.length <= 5) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[5]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2303,6 +2423,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2338,7 +2463,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 6 ? 'flex' : 'none';
+                                    if (paddocks.length <= 6) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[6]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2369,6 +2509,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2404,7 +2549,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 7 ? 'flex' : 'none';
+                                    if (paddocks.length <= 7) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[7]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2439,6 +2599,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2474,7 +2639,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 8 ? 'flex' : 'none';
+                                    if (paddocks.length <= 8) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[8]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2505,6 +2685,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2540,7 +2725,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 9 ? 'flex' : 'none';
+                                    if (paddocks.length <= 9) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[9]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2575,6 +2775,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2610,7 +2815,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 10 ? 'flex' : 'none';
+                                    if (paddocks.length <= 10) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[10]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2641,6 +2861,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2676,7 +2901,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 11 ? 'flex' : 'none';
+                                    if (paddocks.length <= 11) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[11]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2711,6 +2951,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2746,7 +2991,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 12 ? 'flex' : 'none';
+                                    if (paddocks.length <= 12) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[12]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2777,6 +3037,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2812,7 +3077,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 13 ? 'flex' : 'none';
+                                    if (paddocks.length <= 13) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[13]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2847,6 +3127,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2882,7 +3167,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 14 ? 'flex' : 'none';
+                                    if (paddocks.length <= 14) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[14]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2913,6 +3213,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -2948,7 +3253,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 15 ? 'flex' : 'none';
+                                    if (paddocks.length <= 15) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[15]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -2983,6 +3303,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -3018,7 +3343,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 16 ? 'flex' : 'none';
+                                    if (paddocks.length <= 16) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[16]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -3049,6 +3389,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -3084,7 +3429,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 17 ? 'flex' : 'none';
+                                    if (paddocks.length <= 17) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[17]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -3119,6 +3479,11 @@ views:
                       cards:
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -3154,7 +3519,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 18 ? 'flex' : 'none';
+                                    if (paddocks.length <= 18) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[18]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
@@ -3185,6 +3565,11 @@ views:
                                   ]]]
                         - type: custom:button-card
                           entity: sensor.hfm_drafts
+                          triggers_update:
+                            - sensor.hfm_drafts
+                            - sensor.hfm_events
+                            - input_select.hfm_event_type
+                            - input_select.hfm_selected_farm
                           show_name: true
                           show_icon: false
                           tap_action:
@@ -3220,7 +3605,22 @@ views:
                                     let farmId = '';
                                     for (const fid in farms) { if (farms[fid] === selectedFarm) { farmId = fid; break; } }
                                     const paddocks = (entity?.attributes?.paddocks_by_farm || {})[farmId] || [];
-                                    return paddocks.length > 19 ? 'flex' : 'none';
+                                    if (paddocks.length <= 19) return 'none';
+                                    const eventType = states['input_select.hfm_event_type']?.state || '';
+                                    if (eventType === 'Crop Stage') {
+                                      const pwc = states['sensor.hfm_events']?.attributes?.paddocks_with_crops || {};
+                                      const pid = paddocks[19]?.id;
+                                      const crop = pwc[pid]?.current_crop;
+                                      if (!crop) return 'none';
+                                      const deviceId = states['input_text.hfm_current_device']?.state || '';
+                                      const draft = (entity?.attributes?.drafts || {})[deviceId] || {};
+                                      const sel = draft.data?.paddocks || [];
+                                      if (sel.length > 0) {
+                                        const firstCrop = pwc[sel[0]]?.current_crop;
+                                        if (firstCrop && crop.crop_id !== firstCrop.crop_id) return 'none';
+                                      }
+                                    }
+                                    return 'flex';
                                   ]]]
                               - background: |
                                   [[[
