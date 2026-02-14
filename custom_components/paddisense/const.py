@@ -230,16 +230,19 @@ SERVICE_INSTALL_MODULE_HACS = "install_module_hacs"
 
 # Required HACS frontend cards (installed during first setup)
 REQUIRED_HACS_CARDS = [
+    # Core UI cards
     {"repository": "custom-cards/button-card", "category": "plugin"},
     {"repository": "thomasloven/lovelace-card-mod", "category": "plugin"},
     {"repository": "thomasloven/lovelace-auto-entities", "category": "plugin"},
-    {"repository": "RomRider/apexcharts-card", "category": "plugin"},
     {"repository": "piitaya/lovelace-mushroom", "category": "plugin"},
+    {"repository": "RomRider/apexcharts-card", "category": "plugin"},
     {"repository": "kalkih/mini-graph-card", "category": "plugin"},
-    {"repository": "iantrich/restriction-card", "category": "plugin"},
     {"repository": "DBuit/flex-table-card", "category": "plugin"},
+    {"repository": "iantrich/restriction-card", "category": "plugin"},
+    # Timer cards (PWM module)
+    {"repository": "thomasloven/lovelace-circular-timer-card", "category": "plugin"},
+    {"repository": "pmongloid/flipdown-timer-card", "category": "plugin"},
     # Weather cards
-    {"repository": "Makin-Things/platinum-weather-card", "category": "plugin"},
     {"repository": "Makin-Things/lovelace-windrose-card", "category": "plugin"},
     {"repository": "Makin-Things/weather-radar-card", "category": "plugin"},
 ]
@@ -259,7 +262,6 @@ MODULE_HACS_INTEGRATIONS = {
 # Required HACS cards per module (in addition to core cards)
 MODULE_HACS_CARDS = {
     "weather": [
-        {"repository": "Makin-Things/platinum-weather-card", "category": "plugin"},
         {"repository": "Makin-Things/lovelace-windrose-card", "category": "plugin"},
         {"repository": "Makin-Things/weather-radar-card", "category": "plugin"},
     ],

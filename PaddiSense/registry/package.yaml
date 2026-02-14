@@ -55,6 +55,9 @@ command_line:
 # SHELL COMMANDS
 # -----------------------------------------------------------------------------
 shell_command:
+  # HACS installation
+  paddisense_install_hacs: "bash /config/PaddiSense/scripts/install_hacs.sh"
+
   # System commands
   registry_init: "python3 /config/PaddiSense/registry/python/registry_backend.py init"
   registry_status: "python3 /config/PaddiSense/registry/python/registry_backend.py status"

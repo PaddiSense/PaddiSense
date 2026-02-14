@@ -535,7 +535,7 @@ views:
                   service: paddisense.check_for_updates
                 styles:
                   card:
-                    - height: 56px
+                    - height: 70px
                     - border-radius: 12px
                   name:
                     - font-size: 14px
@@ -565,7 +565,7 @@ views:
                     text: Update PaddiSense? A backup will be created first.
                 styles:
                   card:
-                    - height: 56px
+                    - height: 70px
                     - border-radius: 12px
                     - display: |
                         [[[
@@ -2734,55 +2734,146 @@ views:
                   hacs: |
                     [[[
                       try {
-                        // Mandatory HACS components
-                        const mandatoryComponents = [
-                          { name: 'button-card', desc: 'Styled action buttons' },
+                        // Core HACS components (required for all modules)
+                        const coreComponents = [
+                          { name: 'button-card', desc: 'Action buttons' },
                           { name: 'card-mod', desc: 'Card styling' },
-                          { name: 'auto-entities', desc: 'Dynamic entity filtering' },
-                          { name: 'mini-graph-card', desc: 'Compact graph cards' },
-                          { name: 'apexcharts-card', desc: 'Advanced charts' },
-                          { name: 'mushroom', desc: 'Modern card collection' },
-                          { name: 'flex-table-card', desc: 'Flexible tables' },
-                          { name: 'browser_mod', desc: 'Browser control' },
-                          { name: 'circular-timer-card', desc: 'Circular timer display' },
-                          { name: 'flipdown-timer-card', desc: 'Flipdown timer display' },
-                          { name: 'windrose-card', desc: 'Wind direction display' },
-                          { name: 'platinum-weather-card', desc: 'Weather display' },
-                          { name: 'restriction-card', desc: 'Card access control' },
-                          { name: 'weather-radar-card', desc: 'Weather radar display' },
+                          { name: 'auto-entities', desc: 'Dynamic lists' },
+                          { name: 'mushroom', desc: 'Modern UI cards' },
+                          { name: 'apexcharts-card', desc: 'Charts & graphs' },
+                          { name: 'mini-graph-card', desc: 'Compact graphs' },
+                          { name: 'flex-table-card', desc: 'Data tables' },
+                          { name: 'restriction-card', desc: 'Access control' },
+                        ];
+
+                        // PWM module components
+                        const pwmComponents = [
+                          { name: 'circular-timer-card', desc: 'Timer display' },
+                          { name: 'flipdown-timer-card', desc: 'Countdown timer' },
+                        ];
+
+                        // Weather module components
+                        const weatherComponents = [
+                          { name: 'windrose-card', desc: 'Wind display' },
+                          { name: 'weather-radar-card', desc: 'Radar map' },
+                        ];
+
+                        // Integration requirements
+                        const integrations = [
+                          { name: 'Bureau of Meteorology', desc: 'BOM weather data (Weather module)' },
                         ];
 
                         let html = '<div>';
-                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Mandatory Components</div>';
-                        html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
-                        for (const comp of mandatoryComponents) {
-                          html += `<div style="background:rgba(76,175,80,0.1);border:1px solid #4caf50;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
-                            <ha-icon icon="mdi:check-circle" style="--mdc-icon-size:18px;color:#4caf50;"></ha-icon>
+
+                        // Core components
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Core Components (8)</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
+                        for (const comp of coreComponents) {
+                          html += `<div style="background:rgba(76,175,80,0.1);border:1px solid #4caf50;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+                            <ha-icon icon="mdi:check-circle" style="--mdc-icon-size:16px;color:#4caf50;"></ha-icon>
                             <div>
-                              <div style="font-size:13px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
-                              <div style="font-size:10px;color:var(--secondary-text-color);">${comp.desc}</div>
+                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
+                              <div style="font-size:9px;color:var(--secondary-text-color);">${comp.desc}</div>
                             </div>
                           </div>`;
                         }
-                        html += '</div></div>';
+                        html += '</div>';
 
+                        // PWM components
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">PWM Module (2)</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
+                        for (const comp of pwmComponents) {
+                          html += `<div style="background:rgba(0,150,136,0.1);border:1px solid #009688;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+                            <ha-icon icon="mdi:water" style="--mdc-icon-size:16px;color:#009688;"></ha-icon>
+                            <div>
+                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
+                              <div style="font-size:9px;color:var(--secondary-text-color);">${comp.desc}</div>
+                            </div>
+                          </div>`;
+                        }
+                        html += '</div>';
+
+                        // Weather components
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Weather Module (2)</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
+                        for (const comp of weatherComponents) {
+                          html += `<div style="background:rgba(33,150,243,0.1);border:1px solid #2196f3;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+                            <ha-icon icon="mdi:weather-cloudy" style="--mdc-icon-size:16px;color:#2196f3;"></ha-icon>
+                            <div>
+                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
+                              <div style="font-size:9px;color:var(--secondary-text-color);">${comp.desc}</div>
+                            </div>
+                          </div>`;
+                        }
+                        html += '</div>';
+
+                        // Integrations
+                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Integrations (1)</div>';
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+                        for (const int of integrations) {
+                          html += `<div style="background:rgba(156,39,176,0.1);border:1px solid #9c27b0;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
+                            <ha-icon icon="mdi:puzzle" style="--mdc-icon-size:16px;color:#9c27b0;"></ha-icon>
+                            <div>
+                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${int.name}</div>
+                              <div style="font-size:9px;color:var(--secondary-text-color);">${int.desc}</div>
+                            </div>
+                          </div>`;
+                        }
+                        html += '</div>';
+
+                        html += '</div>';
                         return html;
                       } catch (e) {
                         return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
                       }
                     ]]]
 
+              # HACS Installation buttons
+              - type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    template: template_action
+                    name: Install HACS
+                    icon: mdi:store
+                    tap_action:
+                      action: call-service
+                      service: shell_command.paddisense_install_hacs
+                    hold_action:
+                      action: none
+                    confirmation:
+                      text: |
+                        Install HACS (Home Assistant Community Store)?
+
+                        After installation, restart Home Assistant and configure HACS in Settings > Integrations.
+
+                  - type: custom:button-card
+                    template: template_success
+                    name: Install HACS Cards
+                    icon: mdi:download-box
+                    tap_action:
+                      action: call-service
+                      service: paddisense.install_hacs_cards
+                    hold_action:
+                      action: none
+                    confirmation:
+                      text: Install all required HACS frontend cards?
+
               - type: custom:button-card
-                template: template_success
-                name: Install All HACS Cards
-                icon: mdi:download-box
+                template: template_action
+                name: Install BOM Integration
+                icon: mdi:weather-cloudy
                 tap_action:
                   action: call-service
-                  service: paddisense.install_hacs_cards
+                  service: paddisense.install_module_hacs
+                  service_data:
+                    module_id: weather
                 hold_action:
                   action: none
                 confirmation:
-                  text: Install all mandatory HACS components?
+                  text: |
+                    Install Bureau of Meteorology integration?
+
+                    This is required for Australian weather forecasts.
 
               - type: custom:button-card
                 template: template_titleblock

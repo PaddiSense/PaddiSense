@@ -204,6 +204,17 @@ class PaddiSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._data[CONF_SELECTED_MODULES] = []
                 self._data[CONF_AGREEMENTS] = {}
 
+                # Report registration via telemetry (fire and forget)
+                from .telemetry import report_registration
+                self.hass.async_create_task(
+                    report_registration(
+                        server_id=result["server_id"],
+                        grower_name=grower_name,
+                        grower_email=grower_email,
+                        registered_at=result["registered_at"],
+                    )
+                )
+
                 # All modules are free - skip license step
                 # (License step kept for future premium features)
                 self._data[CONF_LICENSE_MODULES] = list(FREE_MODULES)

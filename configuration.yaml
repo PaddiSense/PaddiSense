@@ -27,6 +27,6 @@ lovelace:
 # Database Settings
 ##############################################################################
 recorder:
-  purge_keep_days: 365
+  purge_keep_days: 90
   auto_purge: true
-  commit_interval: 30
+  commit_interval: 5

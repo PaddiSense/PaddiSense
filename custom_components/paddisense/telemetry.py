@@ -65,6 +65,63 @@ def _load_telemetry_config() -> tuple[str | None, str]:
 # =============================================================================
 
 
+async def report_registration(
+    server_id: str,
+    grower_name: str,
+    grower_email: str,
+    registered_at: str,
+) -> dict[str, Any]:
+    """Report a new registration by creating a GitHub issue.
+
+    Called immediately when a grower completes registration.
+    Creates an issue so the developer knows about new installs.
+
+    Args:
+        server_id: Unique server identifier
+        grower_name: Name of the grower
+        grower_email: Email address
+        registered_at: ISO timestamp of registration
+
+    Returns:
+        Dict with success status
+    """
+    # Load telemetry config from local file
+    token, repo = _load_telemetry_config()
+
+    # Check if telemetry is configured
+    if not token:
+        _LOGGER.debug("Telemetry not configured (no token), skipping registration report")
+        return {"success": True, "local_only": True}
+
+    # Build issue content
+    issue_title = f"[Registration] {server_id} - {grower_name}"
+
+    issue_body = f"""## New PaddiSense Registration
+
+**Server ID:** `{server_id}`
+**Grower:** {grower_name}
+**Email:** {grower_email}
+**Registered:** {registered_at}
+
+### Status
+
+| Field | Value |
+|-------|-------|
+| Registration Time | {registered_at} |
+| First Contact | {datetime.now().strftime("%Y-%m-%d %H:%M")} |
+
+### Installed Modules
+
+_Initial registration - no modules installed yet_
+
+---
+*Created by PaddiSense on initial registration*
+"""
+
+    # Create the issue
+    return await _create_or_update_issue(server_id, issue_title, issue_body, token, repo)
+
+
 async def report_update_check(
     installed_modules: list[str],
     local_version: str | None,

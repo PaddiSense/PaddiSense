@@ -293,7 +293,7 @@ views:
                         card:
                           - background: "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)"
                           - border-radius: 12px
-                          - height: 56px
+                          - height: 70px
                           - box-shadow: 0 4px 12px rgba(21,101,192,0.3)
                         name:
                           - font-size: 14px
@@ -313,7 +313,7 @@ views:
                         card:
                           - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
                           - border-radius: 12px
-                          - height: 56px
+                          - height: 70px
                           - box-shadow: 0 4px 12px rgba(46,125,50,0.3)
                         name:
                           - font-size: 14px
@@ -335,7 +335,7 @@ views:
                         card:
                           - background: "linear-gradient(135deg, #E53935 0%, #C62828 100%)"
                           - border-radius: 12px
-                          - height: 56px
+                          - height: 70px
                           - box-shadow: 0 4px 12px rgba(198,40,40,0.3)
                         name:
                           - font-size: 14px
@@ -618,7 +618,7 @@ views:
                             card:
                               - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
                               - border-radius: 12px
-                              - height: 56px
+                              - height: 70px
                               - box-shadow: 0 4px 12px rgba(46,125,50,0.3)
                             name:
                               - font-size: 16px
@@ -638,7 +638,7 @@ views:
                             card:
                               - background: "linear-gradient(135deg, #616161 0%, #424242 100%)"
                               - border-radius: 12px
-                              - height: 56px
+                              - height: 70px
                               - box-shadow: 0 4px 12px rgba(0,0,0,0.2)
                             name:
                               - font-size: 16px
@@ -867,7 +867,7 @@ views:
                         card:
                           - background: "linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)"
                           - border-radius: 12px
-                          - height: 56px
+                          - height: 70px
                           - box-shadow: 0 4px 12px rgba(123,31,162,0.3)
                         name:
                           - font-size: 14px
@@ -887,7 +887,7 @@ views:
                         card:
                           - background: "linear-gradient(135deg, #43A047 0%, #2E7D32 100%)"
                           - border-radius: 12px
-                          - height: 56px
+                          - height: 70px
                           - box-shadow: 0 4px 12px rgba(46,125,50,0.3)
                         name:
                           - font-size: 14px
@@ -909,7 +909,7 @@ views:
                         card:
                           - background: "linear-gradient(135deg, #E53935 0%, #C62828 100%)"
                           - border-radius: 12px
-                          - height: 56px
+                          - height: 70px
                           - box-shadow: 0 4px 12px rgba(198,40,40,0.3)
                         name:
                           - font-size: 14px
@@ -1202,7 +1202,7 @@ views:
                         service: script.asm_adjust_stock
                       styles:
                         card:
-                          - height: 60px
+                          - height: 70px
                           - background: "#1565c0"
 
   #===========================================================================
@@ -1557,7 +1557,7 @@ views:
                             card:
                               - background: "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)"
                               - border-radius: 12px
-                              - height: 56px
+                              - height: 70px
                               - box-shadow: 0 4px 12px rgba(21,101,192,0.3)
                             name:
                               - font-size: 14px
@@ -1577,7 +1577,7 @@ views:
                             card:
                               - background: "linear-gradient(135deg, #616161 0%, #424242 100%)"
                               - border-radius: 12px
-                              - height: 56px
+                              - height: 70px
                               - box-shadow: 0 4px 12px rgba(0,0,0,0.2)
                             name:
                               - font-size: 14px
@@ -1734,7 +1734,7 @@ views:
                       text: "Delete this service event? This cannot be undone."
                   styles:
                     card:
-                      - height: 60px
+                      - height: 70px
                       - background: "#c62828"
 
               # History table (summary view)

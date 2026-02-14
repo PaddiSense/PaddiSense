@@ -1336,7 +1336,7 @@ views:
                     - entity: sensor.weather_local_1_wind_direction
                       state_not: unavailable
                   card:
-                    type: grid
+                    type: vertical-stack
                     cards:
                       - type: custom:windrose-card
                         grid_options:
@@ -1484,6 +1484,12 @@ views:
                         entity: sensor.weather_station_1_evapotranspiration
                         name: ETo
                         icon: mdi:water-outline
+                        state_display: >
+                          [[[
+                            const v = parseFloat(entity?.state);
+                            if (isNaN(v)) return '--';
+                            return v.toFixed(1) + ' mm';
+                          ]]]
                     - type: conditional
                       conditions:
                         - entity: input_number.weather_station_1_cdd

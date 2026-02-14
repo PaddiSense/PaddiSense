@@ -142,7 +142,7 @@ button_card_templates:
     show_state: false
     styles:
       card:
-        - height: 60px
+        - height: 70px
         - border-radius: 12px
       name:
         - font-size: 14px
@@ -1505,7 +1505,7 @@ views:
                     service: script.ipm_initialize_system
                   styles:
                     card:
-                      - height: 60px
+                      - height: 70px
                       - border-radius: 12px
                     icon:
                       - color: white
