@@ -16,550 +16,516 @@ views:
     sections:
       - type: grid
         cards:
-      # Header with title
-      - type: custom:button-card
-        entity: sensor.paddisense_real_time_rice
-        show_name: false
-        show_state: false
-        show_icon: false
-        tap_action:
-          action: none
-        styles:
-          card:
-            - background: transparent
-            - box-shadow: none
-            - padding: 0 0 8px 0
-          grid:
-            - display: block
-        custom_fields:
-          header: |
-            [[[
-              const attrs = entity.attributes || {};
-              const lastUpdated = attrs.last_updated || '';
-              let lastUpdateText = '';
+          # Title Header - Yellow bar style
+          - type: custom:button-card
+            show_name: true
+            show_state: false
+            show_icon: true
+            name: Real Time Rice
+            icon: mdi:rice
+            tap_action:
+              action: none
+            styles:
+              card:
+                - background: "#E9E100"
+                - border-radius: 12px
+                - padding: 16px
+                - box-shadow: none
+              grid:
+                - grid-template-areas: '"i n"'
+                - grid-template-columns: 40px 1fr
+              icon:
+                - color: "#000000"
+                - width: 28px
+                - height: 28px
+              name:
+                - color: "#000000"
+                - font-size: 20px
+                - font-weight: 700
+                - justify-self: start
 
-              if (lastUpdated) {
-                try {
-                  const d = new Date(lastUpdated);
-                  const now = new Date();
-                  const diffMs = now - d;
-                  const diffDays = Math.floor(diffMs / 86400000);
-                  const diffHours = Math.floor(diffMs / 3600000);
+          # Refresh Data Button
+          - type: custom:button-card
+            entity: script.rtr_refresh_data
+            name: Refresh Data
+            icon: mdi:refresh
+            show_state: false
+            tap_action:
+              action: call-service
+              service: script.rtr_refresh_data
+            styles:
+              card:
+                - background: "#0066cc"
+                - border-radius: 12px
+                - height: 70px
+              icon:
+                - color: white
+                - width: 24px
+                - height: 24px
+              name:
+                - color: white
+                - font-size: 16px
+                - font-weight: 700
 
-                  if (diffDays === 0) {
-                    if (diffHours < 1) {
-                      lastUpdateText = 'Updated just now';
-                    } else {
-                      lastUpdateText = `Updated ${diffHours}h ago`;
+          # Paddock Predictions - filtered by RTR Year matching active season
+          - type: custom:button-card
+            entity: sensor.farm_registry_data
+            triggers_update:
+              - sensor.paddisense_real_time_rice
+            show_name: false
+            show_state: false
+            show_icon: false
+            tap_action:
+              action: none
+            styles:
+              card:
+                - background: transparent
+                - box-shadow: none
+                - padding: 0
+              grid:
+                - display: block
+            custom_fields:
+              paddocks: |
+                [[[
+                  try {
+                    const registryEntity = entity;
+                    if (!registryEntity || !registryEntity.attributes) {
+                      return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">Loading registry...</div>`;
                     }
-                  } else if (diffDays === 1) {
-                    lastUpdateText = 'Updated yesterday';
-                  } else if (diffDays < 7) {
-                    lastUpdateText = `Updated ${diffDays} days ago`;
-                  } else {
-                    lastUpdateText = `Updated ${d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
-                  }
-                } catch(e) {
-                  lastUpdateText = lastUpdated;
-                }
-              }
 
-              return `
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <ha-icon icon="mdi:rice" style="--mdc-icon-size:32px;color:#43a047;"></ha-icon>
-                  <div>
-                    <div style="font-size:24px;font-weight:700;color:var(--primary-text-color);">Real Time Rice</div>
-                    <div style="font-size:13px;color:var(--secondary-text-color);">
-                      Crop growth predictions${lastUpdateText ? ` · <span style="color:#43a047;">${lastUpdateText}</span>` : ''}
-                    </div>
-                  </div>
-                </div>
-              `;
-            ]]]
+                    // Get active season from registry to determine RTR year filter
+                    // RTR Year = harvest year = the year in the season name
+                    // CY26 = crops harvested in 2026 → RTR Year 2026
+                    const activeSeason = registryEntity.attributes.active_season_name || '';
+                    let targetYear = null;
 
-      # Refresh Data Button
-      - type: custom:button-card
-        entity: script.rtr_refresh_data
-        name: Refresh Data
-        icon: mdi:refresh
-        show_state: false
-        tap_action:
-          action: call-service
-          service: script.rtr_refresh_data
-        styles:
-          card:
-            - background: "#0066cc"
-            - border-radius: 12px
-            - padding: 12px 20px
-            - margin-bottom: 16px
-          icon:
-            - color: white
-            - width: 20px
-            - height: 20px
-          name:
-            - color: white
-            - font-size: 14px
-            - font-weight: 600
+                    // Extract year from season name (CY26 -> 2026)
+                    const yearMatch = activeSeason.match(/(\d{2,4})/);
+                    if (yearMatch) {
+                      let yr = parseInt(yearMatch[1]);
+                      if (yr < 100) yr += 2000;  // CY26 -> 2026
+                      targetYear = yr.toString();
+                    }
 
-      # Paddock Predictions - filtered by RTR Year matching active season
-      - type: custom:button-card
-        entity: sensor.farm_registry_data
-        triggers_update:
-          - sensor.paddisense_real_time_rice
-        show_name: false
-        show_state: false
-        show_icon: false
-        tap_action:
-          action: none
-        styles:
-          card:
-            - background: transparent
-            - box-shadow: none
-            - padding: 0
-          grid:
-            - display: block
-        custom_fields:
-          paddocks: |
-            [[[
-              try {
-                const registryEntity = entity;
-                if (!registryEntity || !registryEntity.attributes) {
-                  return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">Loading registry...</div>`;
-                }
+                    // Get paddocks from registry that have current_season: true
+                    const registryPaddocks = registryEntity.attributes.paddocks || {};
+                    const currentSeasonPaddockNames = [];
 
-                // Get active season from registry to determine RTR year filter
-                // RTR Year = harvest year = the year in the season name
-                // CY26 = crops harvested in 2026 → RTR Year 2026
-                const activeSeason = registryEntity.attributes.active_season_name || '';
-                let targetYear = null;
+                    for (const [pid, p] of Object.entries(registryPaddocks)) {
+                      if (p.current_season === true) {
+                        // Store multiple name variations for matching
+                        const name = (p.name || pid).toLowerCase();
+                        currentSeasonPaddockNames.push({
+                          original: name,
+                          normalized: name.replace(/[^a-z0-9]/g, '_'),
+                          compact: name.replace(/[^a-z0-9]/g, ''),
+                          // Handle common abbreviations: W17 -> ward_17, SW4 -> sw4
+                          expanded: name.replace(/^w(\d+)/i, 'ward_$1').replace(/[^a-z0-9]/g, '_'),
+                        });
+                      }
+                    }
 
-                // Extract year from season name (CY26 -> 2026)
-                const yearMatch = activeSeason.match(/(\d{2,4})/);
-                if (yearMatch) {
-                  let yr = parseInt(yearMatch[1]);
-                  if (yr < 100) yr += 2000;  // CY26 -> 2026
-                  targetYear = yr.toString();
-                }
+                    // Get all RTR sensors from hass states
+                    const ha = document.querySelector('home-assistant');
+                    if (!ha || !ha.hass) {
+                      return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">Loading...</div>`;
+                    }
 
-                // Get paddocks from registry that have current_season: true
-                const registryPaddocks = registryEntity.attributes.paddocks || {};
-                const currentSeasonPaddockNames = [];
+                    // Helper to check if RTR paddock matches any registry paddock
+                    function matchesPaddock(rtrId, rtrName) {
+                      const rtrNorm = rtrId.toLowerCase();
+                      const rtrNameNorm = (rtrName || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+                      const rtrCompact = rtrNorm.replace(/[^a-z0-9]/g, '');
 
-                for (const [pid, p] of Object.entries(registryPaddocks)) {
-                  if (p.current_season === true) {
-                    // Store multiple name variations for matching
-                    const name = (p.name || pid).toLowerCase();
-                    currentSeasonPaddockNames.push({
-                      original: name,
-                      normalized: name.replace(/[^a-z0-9]/g, '_'),
-                      compact: name.replace(/[^a-z0-9]/g, ''),
-                      // Handle common abbreviations: W17 -> ward_17, SW4 -> sw4
-                      expanded: name.replace(/^w(\d+)/i, 'ward_$1').replace(/[^a-z0-9]/g, '_'),
+                      for (const p of currentSeasonPaddockNames) {
+                        // Direct matches
+                        if (rtrNorm === p.normalized || rtrNorm === p.expanded) return true;
+                        if (rtrNameNorm === p.normalized || rtrNameNorm === p.expanded) return true;
+                        if (rtrCompact === p.compact) return true;
+
+                        // Partial matches for bays (e.g., sw5_b1 matches sw5)
+                        if (rtrNorm.startsWith(p.normalized + '_') || rtrNorm.startsWith(p.expanded + '_')) return true;
+
+                        // Ward matching: ward_17 matches w17, ward_19 matches w19
+                        const wardMatch = rtrNorm.match(/^ward[_\s]*(\d+)/);
+                        if (wardMatch) {
+                          const wardNum = wardMatch[1];
+                          if (p.compact === 'w' + wardNum || p.normalized === 'w' + wardNum) return true;
+                        }
+                      }
+                      return false;
+                    }
+
+                    const rtrSensors = [];
+                    for (const [entityId, state] of Object.entries(ha.hass.states)) {
+                      if (entityId.startsWith('sensor.paddisense_rtr_') && !entityId.endsWith('_version')) {
+                        const paddockId = entityId.replace('sensor.paddisense_rtr_', '');
+                        const attrs = state.attributes || {};
+
+                        // Filter by year if we have a target year from active season
+                        if (targetYear && attrs.year && attrs.year !== targetYear) {
+                          continue;
+                        }
+
+                        // Check if paddock matches current season paddocks
+                        if (matchesPaddock(paddockId, attrs.paddock)) {
+                          rtrSensors.push({ entityId, state, paddockId });
+                        }
+                      }
+                    }
+
+                    if (rtrSensors.length === 0) {
+                      const sowYear = targetYear ? (parseInt(targetYear) - 1).toString() : '';
+                      let msg = targetYear
+                        ? `No RTR data for ${activeSeason} (sown ${sowYear}, harvest ${targetYear})`
+                        : 'No RTR data for current season paddocks';
+                      return `<div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
+                        <ha-icon icon="mdi:rice" style="--mdc-icon-size:48px;margin-bottom:12px;opacity:0.5;"></ha-icon>
+                        <div style="font-size:16px;">${msg}</div>
+                        <div style="font-size:14px;margin-top:8px;">Ensure paddocks are registered in RTR and refresh data</div>
+                        <div style="font-size:12px;margin-top:12px;color:var(--secondary-text-color);">
+                          Registry paddocks: ${currentSeasonPaddockNames.map(p => p.original).join(', ') || 'None'}
+                        </div>
+                      </div>`;
+                    }
+
+                    // Sort by paddock name
+                    rtrSensors.sort((a, b) => {
+                      const nameA = a.state.attributes.paddock || a.paddockId;
+                      const nameB = b.state.attributes.paddock || b.paddockId;
+                      return nameA.localeCompare(nameB);
                     });
-                  }
-                }
 
-                // Get all RTR sensors from hass states
-                const ha = document.querySelector('home-assistant');
-                if (!ha || !ha.hass) {
-                  return `<div style="text-align:center;padding:30px;color:var(--secondary-text-color);">Loading...</div>`;
-                }
-
-                // Helper to check if RTR paddock matches any registry paddock
-                function matchesPaddock(rtrId, rtrName) {
-                  const rtrNorm = rtrId.toLowerCase();
-                  const rtrNameNorm = (rtrName || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
-                  const rtrCompact = rtrNorm.replace(/[^a-z0-9]/g, '');
-
-                  for (const p of currentSeasonPaddockNames) {
-                    // Direct matches
-                    if (rtrNorm === p.normalized || rtrNorm === p.expanded) return true;
-                    if (rtrNameNorm === p.normalized || rtrNameNorm === p.expanded) return true;
-                    if (rtrCompact === p.compact) return true;
-
-                    // Partial matches for bays (e.g., sw5_b1 matches sw5)
-                    if (rtrNorm.startsWith(p.normalized + '_') || rtrNorm.startsWith(p.expanded + '_')) return true;
-
-                    // Ward matching: ward_17 matches w17, ward_19 matches w19
-                    const wardMatch = rtrNorm.match(/^ward[_\s]*(\d+)/);
-                    if (wardMatch) {
-                      const wardNum = wardMatch[1];
-                      if (p.compact === 'w' + wardNum || p.normalized === 'w' + wardNum) return true;
-                    }
-                  }
-                  return false;
-                }
-
-                const rtrSensors = [];
-                for (const [entityId, state] of Object.entries(ha.hass.states)) {
-                  if (entityId.startsWith('sensor.paddisense_rtr_') && !entityId.endsWith('_version')) {
-                    const paddockId = entityId.replace('sensor.paddisense_rtr_', '');
-                    const attrs = state.attributes || {};
-
-                    // Filter by year if we have a target year from active season
-                    if (targetYear && attrs.year && attrs.year !== targetYear) {
-                      continue;
+                    // Helper functions
+                    function formatDate(d) {
+                      if (!d) return '—';
+                      try {
+                        const date = new Date(d);
+                        return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                      } catch(e) { return d; }
                     }
 
-                    // Check if paddock matches current season paddocks
-                    if (matchesPaddock(paddockId, attrs.paddock)) {
-                      rtrSensors.push({ entityId, state, paddockId });
+                    function getDays(d) {
+                      if (!d) return null;
+                      try {
+                        const now = new Date();
+                        now.setHours(0, 0, 0, 0);
+                        const target = new Date(d);
+                        target.setHours(0, 0, 0, 0);
+                        return Math.round((target - now) / 86400000);
+                      } catch(e) { return null; }
                     }
+
+                    function badge(d, showDays = false) {
+                      const days = getDays(d);
+                      let color = 'var(--primary-text-color)';
+                      let bg = 'rgba(0,0,0,0.05)';
+                      let daysText = '';
+
+                      if (days !== null) {
+                        if (days < 0) { color = '#9e9e9e'; bg = 'rgba(158,158,158,0.15)'; daysText = '(past)'; }
+                        else if (days === 0) { color = '#f44336'; bg = 'rgba(244,67,54,0.15)'; daysText = '(today)'; }
+                        else if (days <= 7) { color = '#ff9800'; bg = 'rgba(255,152,0,0.15)'; daysText = `(${days}d)`; }
+                        else if (days <= 14) { color = '#4caf50'; bg = 'rgba(76,175,80,0.15)'; daysText = `(${days}d)`; }
+                        else { daysText = `(${days}d)`; }
+                      }
+
+                      const daysSpan = showDays && daysText ? `<span style="font-size:11px;margin-left:4px;opacity:0.8;">${daysText}</span>` : '';
+                      return `<span style="padding:6px 10px;border-radius:8px;background:${bg};color:${color};font-weight:600;font-size:15px;">${formatDate(d)}${daysSpan}</span>`;
+                    }
+
+                    // Show filter info - clarify the year mapping
+                    const sowYear = targetYear ? (parseInt(targetYear) - 1).toString() : '';
+                    let html = `<div style="margin-bottom:12px;padding:10px 14px;background:rgba(67,160,71,0.1);border-radius:8px;display:flex;align-items:center;gap:10px;">
+                      <ha-icon icon="mdi:filter" style="--mdc-icon-size:18px;color:#43a047;"></ha-icon>
+                      <span style="font-size:13px;color:var(--primary-text-color);">
+                        Showing <strong>${rtrSensors.length}</strong> paddocks for <strong>${activeSeason || 'current season'}</strong>${targetYear ? ` (sown ${sowYear}, harvest ${targetYear})` : ''}
+                      </span>
+                    </div>`;
+
+                    html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+
+                    for (const sensor of rtrSensors) {
+                      const a = sensor.state.attributes;
+                      const name = a.paddock || sensor.paddockId.replace(/_/g, ' ').toUpperCase();
+                      const variety = a.variety || '';
+                      const method = a.sow_method || '';
+                      const year = a.year || '';
+                      const subtitle = [variety, method, year ? `CY${year.slice(-2)}` : ''].filter(x => x).join(' · ');
+                      const warning = a.warnings || '';
+
+                      html += `
+                        <div style="background:var(--card-background-color);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08);border-left:4px solid #43a047;">
+                          <!-- Header -->
+                          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                            <div style="width:50px;height:50px;border-radius:50%;background:rgba(67,160,71,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                              <ha-icon icon="mdi:rice" style="--mdc-icon-size:26px;color:#43a047;"></ha-icon>
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                              <div style="font-size:20px;font-weight:700;color:var(--primary-text-color);">${name}</div>
+                              ${subtitle ? `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">${subtitle}</div>` : ''}
+                            </div>
+                          </div>
+
+                          <!-- Dates Grid -->
+                          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--divider-color,rgba(255,255,255,0.1));">
+                            <!-- Sow Date -->
+                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
+                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Sown</div>
+                              <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${formatDate(a.sow_date)}</div>
+                            </div>
+
+                            <!-- PI Date -->
+                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
+                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">PI</div>
+                              <div>${badge(a.pi_date, true)}</div>
+                            </div>
+
+                            <!-- Flowering -->
+                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
+                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Flowering</div>
+                              <div>${badge(a.flowering_date, true)}</div>
+                            </div>
+
+                            <!-- Harvest -->
+                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
+                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Harvest 22%</div>
+                              <div>${badge(a.harvest_date, true)}</div>
+                            </div>
+
+                            <!-- Predicted Moisture -->
+                            <div style="padding:10px;background:rgba(33,150,243,0.08);border-radius:8px;text-align:center;">
+                              <div style="font-size:10px;font-weight:600;color:#2196f3;text-transform:uppercase;margin-bottom:6px;">Moisture</div>
+                              <div style="font-size:18px;font-weight:700;color:#2196f3;">${a.moisture_predict ? a.moisture_predict + '%' : '—'}</div>
+                            </div>
+
+                            <!-- Moisture Date -->
+                            <div style="padding:10px;background:rgba(33,150,243,0.08);border-radius:8px;text-align:center;">
+                              <div style="font-size:10px;font-weight:600;color:#2196f3;text-transform:uppercase;margin-bottom:6px;">Moisture Date</div>
+                              <div>${a.moisture_date ? badge(a.moisture_date, false) : '<span style="color:var(--secondary-text-color);">—</span>'}</div>
+                            </div>
+                          </div>
+
+                          ${warning ? `
+                            <div style="margin-top:12px;padding:10px 12px;background:rgba(244,67,54,0.1);border-radius:8px;color:#f44336;font-size:13px;display:flex;align-items:center;gap:8px;">
+                              <ha-icon icon="mdi:alert" style="--mdc-icon-size:18px;flex-shrink:0;"></ha-icon>
+                              <span>${warning}</span>
+                            </div>
+                          ` : ''}
+                        </div>
+                      `;
+                    }
+
+                    html += '</div>';
+                    return html;
+                  } catch (e) {
+                    return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
                   }
-                }
+                ]]]
 
-                if (rtrSensors.length === 0) {
-                  const sowYear = targetYear ? (parseInt(targetYear) - 1).toString() : '';
-                  let msg = targetYear
-                    ? `No RTR data for ${activeSeason} (sown ${sowYear}, harvest ${targetYear})`
-                    : 'No RTR data for current season paddocks';
-                  return `<div style="text-align:center;padding:40px;color:var(--secondary-text-color);">
-                    <ha-icon icon="mdi:rice" style="--mdc-icon-size:48px;margin-bottom:12px;opacity:0.5;"></ha-icon>
-                    <div style="font-size:16px;">${msg}</div>
-                    <div style="font-size:14px;margin-top:8px;">Ensure paddocks are registered in RTR and refresh data</div>
-                    <div style="font-size:12px;margin-top:12px;color:var(--secondary-text-color);">
-                      Registry paddocks: ${currentSeasonPaddockNames.map(p => p.original).join(', ') || 'None'}
-                    </div>
-                  </div>`;
-                }
+          # Setup card when RTR not configured
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: sensor.paddisense_real_time_rice
+                state: "Not configured"
+            card:
+              type: vertical-stack
+              cards:
+                - type: custom:button-card
+                  show_name: false
+                  show_state: false
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - background: var(--card-background-color)
+                      - box-shadow: 0 2px 8px rgba(0,0,0,0.1)
+                      - border-radius: 16px 16px 0 0
+                      - padding: 24px
+                      - border-left: 4px solid #ff9800
+                  custom_fields:
+                    setup: |
+                      [[[
+                        return `
+                          <div style="text-align:center;">
+                            <div style="width:80px;height:80px;margin:0 auto 16px;border-radius:50%;background:rgba(255,152,0,0.15);display:flex;align-items:center;justify-content:center;">
+                              <ha-icon icon="mdi:cog-outline" style="--mdc-icon-size:40px;color:#ff9800;"></ha-icon>
+                            </div>
+                            <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">Set Up Real Time Rice</div>
+                            <div style="font-size:14px;color:var(--secondary-text-color);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
+                              Connect your RTR dashboard to display crop growth predictions for your paddocks.
+                            </div>
 
-                // Sort by paddock name
-                rtrSensors.sort((a, b) => {
-                  const nameA = a.state.attributes.paddock || a.paddockId;
-                  const nameB = b.state.attributes.paddock || b.paddockId;
-                  return nameA.localeCompare(nameB);
-                });
+                            <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:20px;text-align:left;max-width:500px;margin:0 auto;">
+                              <div style="font-weight:600;color:var(--primary-text-color);margin-bottom:16px;">How to set up:</div>
 
-                // Helper functions
-                function formatDate(d) {
-                  if (!d) return '—';
-                  try {
-                    const date = new Date(d);
-                    return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-                  } catch(e) { return d; }
-                }
+                              <div style="display:flex;gap:12px;margin-bottom:16px;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
+                                <div style="padding-top:2px;">
+                                  <div style="font-weight:600;color:var(--primary-text-color);">Find your RTR link</div>
+                                  <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Open the email from Real Time Rice containing your dashboard link</div>
+                                </div>
+                              </div>
 
-                function getDays(d) {
-                  if (!d) return null;
-                  try {
-                    const now = new Date();
-                    now.setHours(0, 0, 0, 0);
-                    const target = new Date(d);
-                    target.setHours(0, 0, 0, 0);
-                    return Math.round((target - now) / 86400000);
-                  } catch(e) { return null; }
-                }
+                              <div style="display:flex;gap:12px;margin-bottom:16px;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
+                                <div style="padding-top:2px;">
+                                  <div style="font-weight:600;color:var(--primary-text-color);">Copy the URL</div>
+                                  <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Copy the full link (ends with .html or .csv)</div>
+                                </div>
+                              </div>
 
-                function badge(d, showDays = false) {
-                  const days = getDays(d);
-                  let color = 'var(--primary-text-color)';
-                  let bg = 'rgba(0,0,0,0.05)';
-                  let daysText = '';
+                              <div style="display:flex;gap:12px;">
+                                <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
+                                <div style="padding-top:2px;">
+                                  <div style="font-weight:600;color:var(--primary-text-color);">Enter the URL below</div>
+                                  <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Paste your RTR URL and tap Save</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                      ]]]
 
-                  if (days !== null) {
-                    if (days < 0) { color = '#9e9e9e'; bg = 'rgba(158,158,158,0.15)'; daysText = '(past)'; }
-                    else if (days === 0) { color = '#f44336'; bg = 'rgba(244,67,54,0.15)'; daysText = '(today)'; }
-                    else if (days <= 7) { color = '#ff9800'; bg = 'rgba(255,152,0,0.15)'; daysText = `(${days}d)`; }
-                    else if (days <= 14) { color = '#4caf50'; bg = 'rgba(76,175,80,0.15)'; daysText = `(${days}d)`; }
-                    else { daysText = `(${days}d)`; }
-                  }
+                # URL Input Field
+                - type: entities
+                  entities:
+                    - entity: input_text.rtr_url_input
+                      name: RTR URL
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 0;
+                        box-shadow: none;
+                        border-left: 4px solid #ff9800;
+                      }
 
-                  const daysSpan = showDays && daysText ? `<span style="font-size:11px;margin-left:4px;opacity:0.8;">${daysText}</span>` : '';
-                  return `<span style="padding:6px 10px;border-radius:8px;background:${bg};color:${color};font-weight:600;font-size:15px;">${formatDate(d)}${daysSpan}</span>`;
-                }
+                # Save URL Button
+                - type: custom:button-card
+                  entity: script.rtr_set_url
+                  name: Save RTR URL
+                  icon: mdi:content-save
+                  show_state: false
+                  tap_action:
+                    action: call-service
+                    service: script.rtr_set_url
+                  styles:
+                    card:
+                      - background: "#ff9800"
+                      - border-radius: 0 0 16px 16px
+                      - height: 70px
+                      - border-left: 4px solid #ff9800
+                    icon:
+                      - color: white
+                      - width: 24px
+                      - height: 24px
+                    name:
+                      - color: white
+                      - font-size: 16px
+                      - font-weight: 700
 
-                // Show filter info - clarify the year mapping
-                const sowYear = targetYear ? (parseInt(targetYear) - 1).toString() : '';
-                let html = `<div style="margin-bottom:12px;padding:10px 14px;background:rgba(67,160,71,0.1);border-radius:8px;display:flex;align-items:center;gap:10px;">
-                  <ha-icon icon="mdi:filter" style="--mdc-icon-size:18px;color:#43a047;"></ha-icon>
-                  <span style="font-size:13px;color:var(--primary-text-color);">
-                    Showing <strong>${rtrSensors.length}</strong> paddocks for <strong>${activeSeason || 'current season'}</strong>${targetYear ? ` (sown ${sowYear}, harvest ${targetYear})` : ''}
-                  </span>
-                </div>`;
+                - type: custom:button-card
+                  show_name: false
+                  show_icon: false
+                  show_state: false
+                  tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - background: transparent
+                      - box-shadow: none
+                      - padding: 8px 0
+                  custom_fields:
+                    note: |
+                      [[[
+                        return `<div style="text-align:center;font-size:12px;color:var(--secondary-text-color);">
+                          Data will refresh automatically each day at 6am
+                        </div>`;
+                      ]]]
 
-                html += '<div style="display:flex;flex-direction:column;gap:12px;">';
-
-                for (const sensor of rtrSensors) {
-                  const a = sensor.state.attributes;
-                  const name = a.paddock || sensor.paddockId.replace(/_/g, ' ').toUpperCase();
-                  const variety = a.variety || '';
-                  const method = a.sow_method || '';
-                  const year = a.year || '';
-                  const subtitle = [variety, method, year ? `CY${year.slice(-2)}` : ''].filter(x => x).join(' · ');
-                  const warning = a.warnings || '';
-
-                  html += `
-                    <div style="background:var(--card-background-color);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08);border-left:4px solid #43a047;">
-                      <!-- Header -->
-                      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-                        <div style="width:50px;height:50px;border-radius:50%;background:rgba(67,160,71,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                          <ha-icon icon="mdi:rice" style="--mdc-icon-size:26px;color:#43a047;"></ha-icon>
-                        </div>
-                        <div style="flex:1;min-width:0;">
-                          <div style="font-size:20px;font-weight:700;color:var(--primary-text-color);">${name}</div>
-                          ${subtitle ? `<div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">${subtitle}</div>` : ''}
-                        </div>
-                      </div>
-
-                      <!-- Dates Grid -->
-                      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--divider-color,rgba(255,255,255,0.1));">
-                        <!-- Sow Date -->
-                        <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                          <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Sown</div>
-                          <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${formatDate(a.sow_date)}</div>
-                        </div>
-
-                        <!-- PI Date -->
-                        <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                          <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">PI</div>
-                          <div>${badge(a.pi_date, true)}</div>
-                        </div>
-
-                        <!-- Flowering -->
-                        <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                          <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Flowering</div>
-                          <div>${badge(a.flowering_date, true)}</div>
-                        </div>
-
-                        <!-- Harvest -->
-                        <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                          <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Harvest 22%</div>
-                          <div>${badge(a.harvest_date, true)}</div>
-                        </div>
-
-                        <!-- Predicted Moisture -->
-                        <div style="padding:10px;background:rgba(33,150,243,0.08);border-radius:8px;text-align:center;">
-                          <div style="font-size:10px;font-weight:600;color:#2196f3;text-transform:uppercase;margin-bottom:6px;">Moisture</div>
-                          <div style="font-size:18px;font-weight:700;color:#2196f3;">${a.moisture_predict ? a.moisture_predict + '%' : '—'}</div>
-                        </div>
-
-                        <!-- Moisture Date -->
-                        <div style="padding:10px;background:rgba(33,150,243,0.08);border-radius:8px;text-align:center;">
-                          <div style="font-size:10px;font-weight:600;color:#2196f3;text-transform:uppercase;margin-bottom:6px;">Moisture Date</div>
-                          <div>${a.moisture_date ? badge(a.moisture_date, false) : '<span style="color:var(--secondary-text-color);">—</span>'}</div>
-                        </div>
-                      </div>
-
-                      ${warning ? `
-                        <div style="margin-top:12px;padding:10px 12px;background:rgba(244,67,54,0.1);border-radius:8px;color:#f44336;font-size:13px;display:flex;align-items:center;gap:8px;">
-                          <ha-icon icon="mdi:alert" style="--mdc-icon-size:18px;flex-shrink:0;"></ha-icon>
-                          <span>${warning}</span>
-                        </div>
-                      ` : ''}
-                    </div>
-                  `;
-                }
-
-                html += '</div>';
-                return html;
-              } catch (e) {
-                return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
-              }
-            ]]]
-
-      # Setup card when RTR not configured
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: sensor.paddisense_real_time_rice
-            state: "Not configured"
-        card:
-          type: vertical-stack
-          cards:
-            - type: custom:button-card
+          # Notice when no active season is set
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: sensor.paddisense_real_time_rice
+                state_not: "Not configured"
+              - condition: state
+                entity: sensor.farm_registry_data
+                attribute: active_season
+                state: ""
+            card:
+              type: custom:button-card
               show_name: false
               show_state: false
               show_icon: false
               tap_action:
-                action: none
+                action: navigate
+                navigation_path: /paddisense-manager/seasons
               styles:
                 card:
-                  - background: var(--card-background-color)
-                  - box-shadow: 0 2px 8px rgba(0,0,0,0.1)
-                  - border-radius: 16px 16px 0 0
-                  - padding: 24px
-                  - border-left: 4px solid #ff9800
+                  - background: rgba(33,150,243,0.1)
+                  - border-left: 4px solid #2196f3
+                  - border-radius: 12px
+                  - padding: 16px
+                  - cursor: pointer
               custom_fields:
-                setup: |
+                notice: |
                   [[[
                     return `
-                      <div style="text-align:center;">
-                        <div style="width:80px;height:80px;margin:0 auto 16px;border-radius:50%;background:rgba(255,152,0,0.15);display:flex;align-items:center;justify-content:center;">
-                          <ha-icon icon="mdi:cog-outline" style="--mdc-icon-size:40px;color:#ff9800;"></ha-icon>
-                        </div>
-                        <div style="font-size:22px;font-weight:700;color:var(--primary-text-color);margin-bottom:8px;">Set Up Real Time Rice</div>
-                        <div style="font-size:14px;color:var(--secondary-text-color);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">
-                          Connect your RTR dashboard to display crop growth predictions for your paddocks.
-                        </div>
-
-                        <div style="background:rgba(0,0,0,0.03);border-radius:12px;padding:20px;text-align:left;max-width:500px;margin:0 auto;">
-                          <div style="font-weight:600;color:var(--primary-text-color);margin-bottom:16px;">How to set up:</div>
-
-                          <div style="display:flex;gap:12px;margin-bottom:16px;">
-                            <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
-                            <div style="padding-top:2px;">
-                              <div style="font-weight:600;color:var(--primary-text-color);">Find your RTR link</div>
-                              <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Open the email from Real Time Rice containing your dashboard link</div>
-                            </div>
-                          </div>
-
-                          <div style="display:flex;gap:12px;margin-bottom:16px;">
-                            <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
-                            <div style="padding-top:2px;">
-                              <div style="font-weight:600;color:var(--primary-text-color);">Copy the URL</div>
-                              <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Copy the full link (ends with .html or .csv)</div>
-                            </div>
-                          </div>
-
-                          <div style="display:flex;gap:12px;">
-                            <div style="width:28px;height:28px;border-radius:50%;background:#ff9800;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
-                            <div style="padding-top:2px;">
-                              <div style="font-weight:600;color:var(--primary-text-color);">Enter the URL below</div>
-                              <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">Paste your RTR URL and tap Save</div>
-                            </div>
+                      <div style="display:flex;align-items:center;gap:14px;">
+                        <ha-icon icon="mdi:calendar-alert" style="--mdc-icon-size:32px;color:#2196f3;"></ha-icon>
+                        <div>
+                          <div style="font-weight:600;color:var(--primary-text-color);">No Active Season</div>
+                          <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">
+                            Set an active season to filter RTR predictions. <span style="color:#2196f3;">Tap to go to Seasons →</span>
                           </div>
                         </div>
                       </div>
                     `;
                   ]]]
 
-            # URL Input Field
-            - type: entities
-              entities:
-                - entity: input_text.rtr_url_input
-                  name: RTR URL
-              card_mod:
-                style: |
-                  ha-card {
-                    border-radius: 0;
-                    box-shadow: none;
-                    border-left: 4px solid #ff9800;
-                  }
-
-            # Save URL Button
-            - type: custom:button-card
-              entity: script.rtr_set_url
-              name: Save RTR URL
-              icon: mdi:content-save
-              show_state: false
-              tap_action:
-                action: call-service
-                service: script.rtr_set_url
-              styles:
-                card:
-                  - background: "#ff9800"
-                  - border-radius: 0 0 16px 16px
-                  - padding: 14px 20px
-                  - border-left: 4px solid #ff9800
-                icon:
-                  - color: white
-                  - width: 20px
-                  - height: 20px
-                name:
-                  - color: white
-                  - font-size: 15px
-                  - font-weight: 600
-
-            - type: custom:button-card
+          # Notice when no paddocks marked for current season
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: sensor.paddisense_real_time_rice
+                state_not: "Not configured"
+              - condition: numeric_state
+                entity: sensor.farm_registry_data
+                attribute: total_paddocks
+                below: 1
+            card:
+              type: custom:button-card
               show_name: false
-              show_icon: false
               show_state: false
+              show_icon: false
               tap_action:
-                action: none
+                action: navigate
+                navigation_path: /paddisense-manager/paddocks
               styles:
                 card:
-                  - background: transparent
-                  - box-shadow: none
-                  - padding: 8px 0
+                  - background: rgba(156,39,176,0.1)
+                  - border-left: 4px solid #9c27b0
+                  - border-radius: 12px
+                  - padding: 16px
+                  - cursor: pointer
               custom_fields:
-                note: |
+                notice: |
                   [[[
-                    return `<div style="text-align:center;font-size:12px;color:var(--secondary-text-color);">
-                      Data will refresh automatically each day at 6am
-                    </div>`;
+                    return `
+                      <div style="display:flex;align-items:center;gap:14px;">
+                        <ha-icon icon="mdi:land-fields" style="--mdc-icon-size:32px;color:#9c27b0;"></ha-icon>
+                        <div>
+                          <div style="font-weight:600;color:var(--primary-text-color);">No Paddocks Registered</div>
+                          <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">
+                            Add paddocks and mark them for the current season. <span style="color:#9c27b0;">Tap to go to Paddocks →</span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
                   ]]]
-
-      # Notice when no active season is set
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: sensor.paddisense_real_time_rice
-            state_not: "Not configured"
-          - condition: state
-            entity: sensor.farm_registry_data
-            attribute: active_season
-            state: ""
-        card:
-          type: custom:button-card
-          show_name: false
-          show_state: false
-          show_icon: false
-          tap_action:
-            action: navigate
-            navigation_path: /paddisense-manager/seasons
-          styles:
-            card:
-              - background: rgba(33,150,243,0.1)
-              - border-left: 4px solid #2196f3
-              - border-radius: 12px
-              - padding: 16px
-              - cursor: pointer
-          custom_fields:
-            notice: |
-              [[[
-                return `
-                  <div style="display:flex;align-items:center;gap:14px;">
-                    <ha-icon icon="mdi:calendar-alert" style="--mdc-icon-size:32px;color:#2196f3;"></ha-icon>
-                    <div>
-                      <div style="font-weight:600;color:var(--primary-text-color);">No Active Season</div>
-                      <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">
-                        Set an active season to filter RTR predictions. <span style="color:#2196f3;">Tap to go to Seasons →</span>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              ]]]
-
-      # Notice when no paddocks marked for current season
-      - type: conditional
-        conditions:
-          - condition: state
-            entity: sensor.paddisense_real_time_rice
-            state_not: "Not configured"
-          - condition: numeric_state
-            entity: sensor.farm_registry_data
-            attribute: total_paddocks
-            below: 1
-        card:
-          type: custom:button-card
-          show_name: false
-          show_state: false
-          show_icon: false
-          tap_action:
-            action: navigate
-            navigation_path: /paddisense-manager/paddocks
-          styles:
-            card:
-              - background: rgba(156,39,176,0.1)
-              - border-left: 4px solid #9c27b0
-              - border-radius: 12px
-              - padding: 16px
-              - cursor: pointer
-          custom_fields:
-            notice: |
-              [[[
-                return `
-                  <div style="display:flex;align-items:center;gap:14px;">
-                    <ha-icon icon="mdi:land-fields" style="--mdc-icon-size:32px;color:#9c27b0;"></ha-icon>
-                    <div>
-                      <div style="font-weight:600;color:var(--primary-text-color);">No Paddocks Registered</div>
-                      <div style="font-size:13px;color:var(--secondary-text-color);margin-top:2px;">
-                        Add paddocks and mark them for the current season. <span style="color:#9c27b0;">Tap to go to Paddocks →</span>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              ]]]
 
   # Settings view for RTR configuration
   - title: Settings
