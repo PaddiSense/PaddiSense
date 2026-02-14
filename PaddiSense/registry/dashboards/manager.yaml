@@ -823,8 +823,8 @@ views:
                           tap_action:
                             action: call-service
                             service: script.registry_delete_farm
-                            data:
-                              id: "{{ states('input_text.registry_edit_farm_pointer') }}"
+                            service_data:
+                              id: "[[[ return states['input_text.registry_edit_farm_pointer'].state; ]]]"
                           hold_action:
                             action: none
                           confirmation:
@@ -1626,8 +1626,8 @@ views:
                           tap_action:
                             action: call-service
                             service: script.registry_set_active_season
-                            data:
-                              id: "{{ states('input_text.registry_edit_season_pointer') }}"
+                            service_data:
+                              id: "[[[ return states['input_text.registry_edit_season_pointer'].state; ]]]"
                           hold_action:
                             action: none
                           confirmation:
@@ -1640,8 +1640,8 @@ views:
                           tap_action:
                             action: call-service
                             service: script.registry_delete_season
-                            data:
-                              id: "{{ states('input_text.registry_edit_season_pointer') }}"
+                            service_data:
+                              id: "[[[ return states['input_text.registry_edit_season_pointer'].state; ]]]"
                           hold_action:
                             action: none
                           confirmation:
@@ -2079,7 +2079,7 @@ views:
                               }
                               return '';
                             ]]]
-                          name: "{{ states('input_text.registry_new_stage_name') }}"
+                          name: "[[[ return states['input_text.registry_new_stage_name'].state; ]]]"
 
               # ----------------------------------------------------------------
               # ADD NEW CROP
@@ -2107,7 +2107,7 @@ views:
                   action: call-service
                   service: script.registry_add_crop
                   service_data:
-                    name: "{{ states('input_text.registry_new_crop_name') }}"
+                    name: "[[[ return states['input_text.registry_new_crop_name'].state; ]]]"
                     start_month: 1
                     end_month: 12
                     color: "#4caf50"
