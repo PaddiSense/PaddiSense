@@ -147,9 +147,22 @@ def is_in_month_range(current_month, start_month, end_month):
 - `sensor.hfm_events`:
   - `paddocks_with_crops` - Paddock data with current_crop field
 
+### Season-Locked Crop Rotation UI (Simplified 2026-02-15)
+The paddock crop rotation form uses **season-locked months** for simplicity:
+- **Crop 1 start**: Auto-derived from active season start (hidden from user)
+- **Crop 1 end**: User selects (visible as "Ends In" dropdown)
+- **Crop 2 start**: Auto-derived as Crop 1 end + 1 (hidden from user)
+- **Crop 2 end**: Auto-derived from active season end (hidden from user)
+
+**UI Labels**: "CROP 1 (From Season Start)" and "CROP 2 (To Season End)"
+
+**Example for CY26 (May 2025 - April 2026):**
+- User selects: Crop 1 = Rice, Ends In = October
+- System auto-calculates: Rice (May→Oct), Fallow (Nov→Apr)
+
 ### UI Locations
 - **PSM → Crops view**: Add/edit/delete crop types and stages
-- **PSM → Paddocks → Edit**: Crop rotation assignment (Crop 1/Crop 2 with months)
+- **PSM → Paddocks → Edit**: Simplified crop rotation (crop selector + end month only)
 - **HFM**: Paddocks show current crop badge (future enhancement)
 
 ### Next Steps (Not Yet Implemented)
@@ -218,3 +231,31 @@ registry_backend.py edit_farm --id north_block --business ""  # clear assignment
 - `registry_update_business_dropdowns` - Updates dropdowns when sensor changes
 - `registry_load_business_on_select` - Loads form when business selected
 - `registry_filter_farms_by_business` - Filters farm dropdown when business filter changes
+
+## CSV Import/Export System (Implemented 2026-02-15)
+
+### Overview
+Growers can import farm structure from CSV (Excel-compatible) and export templates.
+
+### CSV Template Columns
+| Column | Required | Description |
+|--------|----------|-------------|
+| Business Name | Yes | Creates business if not exists |
+| Farm Name | Yes | Creates farm under business |
+| Paddock Name | Yes | Creates paddock under farm |
+| Brown Area (ha) | No | Paddock brown area |
+| Green Area (ha) | No | Paddock green area |
+| Crop 1 | No | First crop name (must match existing crop type) |
+| Crop 1 Start Month | No | 1-12 |
+| Crop 1 End Month | No | 1-12 |
+| Crop 2 | No | Second crop name |
+| Crop 2 Start Month | No | 1-12 |
+| Crop 2 End Month | No | 1-12 |
+
+### Services
+- `paddisense.export_registry_template` - Creates `/config/paddisense_import_template.csv`
+- `paddisense.import_from_excel` - Imports from CSV file in /config
+
+### UI Location
+- **PSM → Farms view**: "Import from CSV" button (top)
+- **PSM → Settings view**: Import section with template download button
