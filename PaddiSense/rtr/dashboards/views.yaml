@@ -245,6 +245,30 @@ views:
 
                     html += '<div style="display:flex;flex-direction:column;gap:12px;">';
 
+                    // Helper to get card background based on moisture
+                    function getMoistureCardStyle(moisture) {
+                      if (moisture === null || moisture === undefined || moisture === '') {
+                        return { bg: 'var(--card-background-color)', border: '#43a047' };
+                      }
+                      const m = parseFloat(moisture);
+                      if (isNaN(m)) {
+                        return { bg: 'var(--card-background-color)', border: '#43a047' };
+                      }
+                      if (m > 26) {
+                        // 40-26: blue
+                        return { bg: 'rgba(33,150,243,0.15)', border: '#2196f3' };
+                      } else if (m > 22) {
+                        // 26-22: light blue
+                        return { bg: 'rgba(100,181,246,0.2)', border: '#64b5f6' };
+                      } else if (m >= 18) {
+                        // 22-18: green
+                        return { bg: 'rgba(76,175,80,0.15)', border: '#4caf50' };
+                      } else {
+                        // <18: red
+                        return { bg: 'rgba(244,67,54,0.15)', border: '#f44336' };
+                      }
+                    }
+
                     for (const sensor of rtrSensors) {
                       const a = sensor.state.attributes;
                       const name = a.paddock || sensor.paddockId.replace(/_/g, ' ').toUpperCase();
@@ -253,9 +277,10 @@ views:
                       const year = a.year || '';
                       const subtitle = [variety, method, year ? `CY${year.slice(-2)}` : ''].filter(x => x).join(' · ');
                       const warning = a.warnings || '';
+                      const cardStyle = getMoistureCardStyle(a.moisture_predict);
 
                       html += `
-                        <div style="background:var(--card-background-color);border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08);border-left:4px solid #43a047;">
+                        <div style="background:${cardStyle.bg};border-radius:12px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.08);border-left:4px solid ${cardStyle.border};">
                           <!-- Header -->
                           <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
                             <div style="width:50px;height:50px;border-radius:50%;background:rgba(67,160,71,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
