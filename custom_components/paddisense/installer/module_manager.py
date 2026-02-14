@@ -12,6 +12,8 @@ from typing import Any
 from ..const import (
     AVAILABLE_MODULES,
     DATA_DIR,
+    FREE_MODULES,
+    LOCKED_MODULES,
     LOVELACE_DASHBOARDS_YAML,
     MODULE_HACS_CARDS,
     MODULE_HACS_INTEGRATIONS,
@@ -20,6 +22,7 @@ from ..const import (
     PACKAGES_DIR,
     PADDISENSE_DIR,
 )
+from ..registration import get_allowed_modules
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -676,6 +679,16 @@ class ModuleManager:
                 "error": f"Unknown module: {module_id}",
                 "error_type": "ModuleNotFoundError",
             }
+
+        # License/registration check - PWM and WSS require additional licensing
+        if module_id in LOCKED_MODULES:
+            allowed = get_allowed_modules()
+            if module_id not in allowed:
+                return {
+                    "success": False,
+                    "error": f"Module '{module_id}' requires a license. Contact PaddiSense for access.",
+                    "error_type": "ModuleLicenseError",
+                }
 
         module_dir = self.paddisense_dir / module_id
         if not module_dir.is_dir():
