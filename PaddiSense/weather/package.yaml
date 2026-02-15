@@ -2,10 +2,11 @@ template:
   - sensor:
       - name: "Weather Station 1 Delta T"
         state: >-
-          {% set t = states('sensor.ecowittgateway_1_outdoor_temperature') | float(0)
-             if has_value('sensor.ecowittgateway_1_outdoor_temperature') else 0 %}
-          {% set rh = states('sensor.ecowittgateway_1_humidity') | float(0)
-             if has_value('sensor.ecowittgateway_1_humidity') else 0 %}
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {% set t = states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_outdoor_temperature') else 0 %}
+          {% set rh = states('sensor.' ~ prefix ~ '_humidity') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_humidity') else 0 %}
           {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
           {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
           {% set c = atan(rh - 1.676331) %}
@@ -61,7 +62,8 @@ template:
   - sensor:
       - name: "Weather Station 1 Filtered Solar Radiation"
         state: >-
-          {% set input = 'sensor.ecowittgateway_1_solar_radiation' %}
+          {% set prefix = state_attr('binary_sensor.weather_local_station_1_enabled', 'entity_prefix') or 'gw1100c' %}
+          {% set input = 'sensor.' ~ prefix ~ '_solar_radiation' %}
           {% set val = states(input) | float(0) %}
           {{ val * 300 / 1000000 if has_value(input) and 0 < val < 2000 else 0 }}
         unit_of_measurement: "MJ"
@@ -361,7 +363,8 @@ template:
           {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_0') }}
         attributes:
           category: >-
-            {% set uv = states('sensor.home_forecast_uv_0') | float(0) %}
+            {% set prefix = states('sensor.bom_detected_prefix') %}
+            {% set uv = states('sensor.' ~ prefix ~ '_forecast_uv_0') | float(0) %}
             {% if uv < 3 %}Low
             {% elif uv < 6 %}Moderate
             {% elif uv < 8 %}High
@@ -2662,38 +2665,38 @@ input_select:
 # =============================================================================
 
 sensor:
-  # Local gateway statistics
+  # Local gateway statistics (uses wrapper sensors for dynamic prefix support)
   - platform: statistics
     name: Weather Station 1 Min Temperature
-    entity_id: sensor.ecowittgateway_1_outdoor_temperature
+    entity_id: sensor.weather_local_1_temperature
     state_characteristic: value_min
     max_age:
       hours: 24
 
   - platform: statistics
     name: Weather Station 1 Max Temperature
-    entity_id: sensor.ecowittgateway_1_outdoor_temperature
+    entity_id: sensor.weather_local_1_temperature
     state_characteristic: value_max
     max_age:
       hours: 24
 
   - platform: statistics
     name: Weather Station 1 Min Humidity
-    entity_id: sensor.ecowittgateway_1_humidity
+    entity_id: sensor.weather_local_1_humidity
     state_characteristic: value_min
     max_age:
       hours: 24
 
   - platform: statistics
     name: Weather Station 1 Max Humidity
-    entity_id: sensor.ecowittgateway_1_humidity
+    entity_id: sensor.weather_local_1_humidity
     state_characteristic: value_max
     max_age:
       hours: 24
 
   - platform: statistics
     name: Weather Station 1 Avg Wind Speed
-    entity_id: sensor.ecowittgateway_1_wind_speed
+    entity_id: sensor.weather_local_1_wind_speed
     state_characteristic: mean
     max_age:
       hours: 24
