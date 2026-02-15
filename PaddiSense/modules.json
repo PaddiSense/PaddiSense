@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "version": "1.0.0-pr.1",
+  "version": "2026.2.1",
   "hacs_frontend_required": [
     {
       "id": "button-card",
@@ -40,7 +40,7 @@
       "dashboard_title": "PaddiSense Manager",
       "dashboard_file": "registry/dashboards/manager.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "ipm": {
       "name": "Inventory Manager",
@@ -50,7 +50,7 @@
       "dashboard_title": "Inventory Manager",
       "dashboard_file": "ipm/dashboards/inventory.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "asm": {
       "name": "Asset Service Manager",
@@ -60,7 +60,7 @@
       "dashboard_title": "Asset Service Manager",
       "dashboard_file": "asm/dashboards/views.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "weather": {
       "name": "Weather Stations",
@@ -70,7 +70,7 @@
       "dashboard_title": "Weather",
       "dashboard_file": "weather/dashboards/views.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "pwm": {
       "name": "Water Management",
@@ -80,7 +80,7 @@
       "dashboard_title": "Water Management",
       "dashboard_file": "pwm/dashboards/views.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "rtr": {
       "name": "Real Time Rice",
@@ -90,7 +90,7 @@
       "dashboard_title": "Real Time Rice",
       "dashboard_file": "rtr/dashboards/views.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "str": {
       "name": "Stock Tracker",
@@ -100,7 +100,7 @@
       "dashboard_title": "Stock Tracker",
       "dashboard_file": "str/dashboards/views.yaml",
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "hfm": {
       "name": "Hey Farmer",
@@ -111,7 +111,7 @@
       "dashboard_file": "hfm/dashboards/views.yaml",
       "dependencies": ["ipm"],
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     },
     "wss": {
       "name": "Worker Safety",
@@ -126,7 +126,7 @@
         "lovelace-card-mod"
       ],
       "status": "pr",
-      "version": "1.0.0-pr.1"
+      "version": "2026.2.1"
     }
   }
 }
