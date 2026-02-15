@@ -455,7 +455,7 @@ input_text:
   paddisense_license_key:
     name: "License Key"
     icon: mdi:key
-    max: 500
+    max: 255
     mode: text
 
   paddisense_license_module:
