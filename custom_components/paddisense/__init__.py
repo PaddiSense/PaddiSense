@@ -805,8 +805,8 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
                     )
                 elif module_id == "weather":
                     post_install_msg = (
-                        "\n\n**Next Step:** After restart, configure the Bureau of Meteorology "
-                        "integration in Settings → Devices & Services."
+                        "\n\n**Auto-Setup:** After restart, BOM Weather will be configured "
+                        "automatically. The Weather dashboard will show data shortly."
                     )
 
                 await hass.services.async_call(

@@ -101,6 +101,45 @@ template:
 # Required HACS integration: bureau_of_meteorology
 # Install via HACS -> Integrations -> Search "Bureau of Meteorology"
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# BOM DETECTION SENSORS - Auto-detect BOM status and configuration
+# -----------------------------------------------------------------------------
+  - sensor:
+      - name: "BOM Detected Prefix"
+        unique_id: bom_detected_prefix
+        icon: mdi:weather-cloudy
+        state: >-
+          {# Try standard "home" prefix first (PaddiSense default) #}
+          {% if has_value('sensor.home_observations_temp') %}
+            home
+          {# Fallback: scan for any BOM observation sensor #}
+          {% else %}
+            {% set ns = namespace(prefix='unknown') %}
+            {% for state in states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
+              {% set ns.prefix = state.entity_id | replace('sensor.', '') | replace('_observations_temp', '') %}
+            {% endfor %}
+            {{ ns.prefix }}
+          {% endif %}
+
+  - binary_sensor:
+      - name: "BOM Integration Configured"
+        unique_id: bom_integration_configured
+        icon: mdi:check-circle
+        state: >-
+          {# BOM is configured if we have observation or forecast sensors #}
+          {% set prefix = states('sensor.bom_detected_prefix') %}
+          {% if prefix and prefix not in ['unknown', 'unavailable', 'undefined'] %}
+            {{ has_value('sensor.' ~ prefix ~ '_observations_temp')
+               or has_value('sensor.' ~ prefix ~ '_forecast_temp_min_0') }}
+          {% else %}
+            {# Fallback: scan for any BOM-style sensors #}
+            {% set obs = states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
+            {% set fcst = states.sensor | selectattr('entity_id', 'search', '_forecast_temp_min_0$') | list %}
+            {{ obs | length > 0 or fcst | length > 0 }}
+          {% endif %}
+
+# =============================================================================
 # BOM FORECAST SENSORS - 7-Day Forecast (Temp, Rain, UV, Fire Danger)
 # Observation sensors are defined in the later BOM TEMPLATE SENSORS section
 # =============================================================================
@@ -2896,10 +2935,76 @@ utility_meter:
 
 
 # =============================================================================
-# AUTOMATIONS - CDD daily updates
+# AUTOMATIONS - BOM Auto-Setup & CDD daily updates
 # =============================================================================
 
 automation:
+  # -----------------------------------------------------------------------------
+  # BOM Auto-Configure on Startup
+  # After Weather module install, HA restarts. This automation detects if BOM
+  # integration is installed but not configured, and auto-configures it.
+  # -----------------------------------------------------------------------------
+  - id: weather_bom_auto_configure_on_startup
+    alias: "Weather: Auto-Configure BOM on Startup"
+    mode: single
+    trigger:
+      - platform: homeassistant
+        event: start
+    condition:
+      # Only run if BOM is not yet configured
+      # (This automation only exists when Weather module is installed,
+      # and module install triggers HACS to install BOM integration)
+      - condition: state
+        entity_id: binary_sensor.bom_integration_configured
+        state: "off"
+    action:
+      # Wait a bit for all integrations to fully load
+      - delay: "00:00:10"
+      # Recheck - BOM might have loaded during the delay
+      - condition: state
+        entity_id: binary_sensor.bom_integration_configured
+        state: "off"
+      # Notify user
+      - service: persistent_notification.create
+        data:
+          title: "Weather Module"
+          message: "Auto-configuring Bureau of Meteorology integration..."
+          notification_id: "weather_bom_auto_setup"
+      # Run the BOM setup script
+      - service: shell_command.weather_bom_setup
+      # Wait for config flow to complete
+      - delay: "00:00:05"
+      # Check result
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.bom_integration_configured
+                state: "on"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "Weather Module"
+                  message: >
+                    BOM Weather configured successfully!
+
+                    Sensors are now available with the "home" prefix.
+                    The Weather dashboard should now show BOM data.
+                  notification_id: "weather_bom_auto_setup"
+        default:
+          - service: persistent_notification.create
+            data:
+              title: "Weather Module"
+              message: >
+                BOM auto-configuration could not complete.
+
+                This may happen if:
+                • Home Assistant location is not set to Australia
+                • Internet connection is unavailable
+                • BOM API is temporarily unavailable
+
+                You can try manually: PSM → Settings → "Setup BOM Weather"
+              notification_id: "weather_bom_auto_setup"
+
   # Local gateway CDD
   - id: "weather_station_1_cdd_automation"
     alias: Weather Station 1 Cumulative Degree Days Automation
@@ -3052,7 +3157,7 @@ script:
       - choose:
           - conditions:
               - condition: state
-                entity: binary_sensor.bom_integration_configured
+                entity_id: binary_sensor.bom_integration_configured
                 state: "on"
             sequence:
               - service: persistent_notification.create
@@ -3083,7 +3188,7 @@ script:
       - choose:
           - conditions:
               - condition: state
-                entity: binary_sensor.bom_integration_configured
+                entity_id: binary_sensor.bom_integration_configured
                 state: "on"
             sequence:
               - service: persistent_notification.create
