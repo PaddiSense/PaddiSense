@@ -1153,7 +1153,7 @@ views:
 
   ###########################################################################
   # VIEW 4: LOCAL STATIONS (Ecowitt Gateway Data)
-  # Conditional: Only shows content when local station is enabled
+  # Supports up to 4 local stations with tab selector
   ###########################################################################
   - title: Local Stations
     path: local-1
@@ -1162,23 +1162,169 @@ views:
     sections:
       - type: grid
         cards:
-          # Show when station is NOT configured - setup message
+          # Station Tab Selector - 4 buttons in horizontal stack
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: input_select.weather_local_active_station
+                name: "1"
+                show_state: false
+                icon: mdi:numeric-1-circle
+                styles:
+                  card:
+                    - height: 50px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'Station 1'
+                            ? 'linear-gradient(135deg, #43A047 0%, #2E7D32 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 1' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 1' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: input_select.select_option
+                  service_data:
+                    entity_id: input_select.weather_local_active_station
+                    option: "Station 1"
+
+              - type: custom:button-card
+                entity: input_select.weather_local_active_station
+                name: "2"
+                show_state: false
+                icon: mdi:numeric-2-circle
+                styles:
+                  card:
+                    - height: 50px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'Station 2'
+                            ? 'linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 2' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 2' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: input_select.select_option
+                  service_data:
+                    entity_id: input_select.weather_local_active_station
+                    option: "Station 2"
+
+              - type: custom:button-card
+                entity: input_select.weather_local_active_station
+                name: "3"
+                show_state: false
+                icon: mdi:numeric-3-circle
+                styles:
+                  card:
+                    - height: 50px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'Station 3'
+                            ? 'linear-gradient(135deg, #6A1B9A 0%, #4A148C 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 3' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 3' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: input_select.select_option
+                  service_data:
+                    entity_id: input_select.weather_local_active_station
+                    option: "Station 3"
+
+              - type: custom:button-card
+                entity: input_select.weather_local_active_station
+                name: "4"
+                show_state: false
+                icon: mdi:numeric-4-circle
+                styles:
+                  card:
+                    - height: 50px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'Station 4'
+                            ? 'linear-gradient(135deg, #E65100 0%, #BF360C 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                  name:
+                    - font-size: 14px
+                    - font-weight: 700
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 4' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'Station 4' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: input_select.select_option
+                  service_data:
+                    entity_id: input_select.weather_local_active_station
+                    option: "Station 4"
+
+          # =====================================================================
+          # STATION 1 CONTENT (shown when Station 1 is active)
+          # =====================================================================
+          # Show when Station 1 not configured
           - type: conditional
             conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 1"
               - entity: binary_sensor.weather_local_station_1_enabled
                 state: "off"
             card:
               type: markdown
               content: |
-                ## Local Station Not Configured
+                ## Local Station 1 Not Configured
 
-                No local weather station has been configured.
+                No local weather station has been configured in slot 1.
 
                 Go to **Settings** to initialize and configure a local station.
 
-          # Show when station IS configured - full weather view
+          # Show Station 1 data when configured
           - type: conditional
             conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 1"
               - entity: binary_sensor.weather_local_station_1_enabled
                 state: "on"
             card:
@@ -1577,6 +1723,705 @@ views:
                 - type: markdown
                   content: |
                     {% set dt = states('sensor.weather_station_1_delta_t') | float(0) %}
+                    {% if dt < 2 %}
+                    **Warning: Delta T < 2C** - Conditions too humid, risk of drift/poor evaporation
+                    {% elif dt > 8 %}
+                    **Warning: Delta T > 8C** - Conditions too dry, risk of evaporation before absorption
+                    {% else %}
+                    **Good: Delta T {{ dt | round(1) }}C** - Good spraying conditions
+                    {% endif %}
+
+                    | Condition | Delta T Range |
+                    |-----------|---------------|
+                    | Too Humid | < 2C |
+                    | Marginal | 2-4C |
+                    | Ideal | 4-8C |
+                    | Marginal | 8-10C |
+                    | Too Dry | > 10C |
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 12px;
+                        padding: 12px;
+                        background: var(--card-background-color);
+                      }
+                      table {
+                        width: 100%;
+                        font-size: 0.9rem;
+                      }
+                      th, td {
+                        padding: 4px 8px;
+                        border-bottom: 1px solid var(--divider-color);
+                      }
+
+          # =====================================================================
+          # STATION 2 CONTENT (shown when Station 2 is active)
+          # =====================================================================
+          - type: conditional
+            conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 2"
+              - entity: binary_sensor.weather_local_station_2_enabled
+                state: "off"
+            card:
+              type: markdown
+              content: |
+                ## Local Station 2 Not Configured
+
+                Go to **Settings → Local Stations** to configure Station 2.
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 12px;
+                    padding: 24px;
+                    text-align: center;
+                    background: var(--card-background-color);
+                    border-left: 4px solid #ff9800;
+                  }
+
+          - type: conditional
+            conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 2"
+              - entity: binary_sensor.weather_local_station_2_enabled
+                state: "on"
+            card:
+              type: vertical-stack
+              cards:
+                # Station Header
+                - type: custom:button-card
+                  template: station_header
+                  entity: binary_sensor.weather_local_station_2_enabled
+                  triggers_update:
+                    - binary_sensor.weather_local_station_2_enabled
+                    - sensor.weather_local_config
+                  icon: mdi:home-thermometer
+                  name: |
+                    [[[
+                      return entity?.attributes?.name || 'Local Station 2';
+                    ]]]
+                  state_display: "Ecowitt Gateway"
+                  styles:
+                    card:
+                      - background: "linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)"
+
+                # Basic Stats Grid
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_2_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_2_temperature
+                        name: Temp
+                        icon: mdi:thermometer
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_2_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_2_humidity
+                        name: Humidity
+                        icon: mdi:water-percent
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_2_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_2_wind_speed
+                        name: Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_2_daily_rain
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_2_daily_rain
+                        name: Rain
+                        icon: mdi:weather-rainy
+
+                # Delta T & Calculated Sensors
+                - type: custom:mushroom-title-card
+                  title: Calculated Metrics
+
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_2_delta_t
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_2_delta_t
+                        name: Delta T
+                        icon: mdi:thermometer-lines
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_2_evapotranspiration
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_2_evapotranspiration
+                        name: ETo
+                        icon: mdi:water-outline
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_2_degree_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_2_degree_day
+                        name: Degree Day
+                        icon: mdi:chart-timeline-variant
+                    - type: conditional
+                      conditions:
+                        - entity: input_number.weather_station_2_cdd
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: input_number.weather_station_2_cdd
+                        name: CDD Total
+                        icon: mdi:chart-multiple
+
+                # 24h Statistics
+                - type: custom:mushroom-title-card
+                  title: 24h Statistics
+
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_2_min_temp_24h
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_2_min_temp_24h
+                        name: Min Temp
+                        icon: mdi:thermometer-low
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_2_max_temp_24h
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_2_max_temp_24h
+                        name: Max Temp
+                        icon: mdi:thermometer-high
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_2_avg_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_2_avg_wind_speed
+                        name: Avg Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: utility_meter.weather_station_2_solar_radiation_mj_m2_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: utility_meter.weather_station_2_solar_radiation_mj_m2_day
+                        name: Solar (MJ/m2)
+                        icon: mdi:white-balance-sunny
+
+                # Spray Conditions
+                - type: custom:mushroom-title-card
+                  title: Spray Conditions
+
+                - type: markdown
+                  content: |
+                    {% set dt = states('sensor.weather_station_2_delta_t') | float(0) %}
+                    {% if dt < 2 %}
+                    **Warning: Delta T < 2C** - Conditions too humid, risk of drift/poor evaporation
+                    {% elif dt > 8 %}
+                    **Warning: Delta T > 8C** - Conditions too dry, risk of evaporation before absorption
+                    {% else %}
+                    **Good: Delta T {{ dt | round(1) }}C** - Good spraying conditions
+                    {% endif %}
+
+                    | Condition | Delta T Range |
+                    |-----------|---------------|
+                    | Too Humid | < 2C |
+                    | Marginal | 2-4C |
+                    | Ideal | 4-8C |
+                    | Marginal | 8-10C |
+                    | Too Dry | > 10C |
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 12px;
+                        padding: 12px;
+                        background: var(--card-background-color);
+                      }
+                      table {
+                        width: 100%;
+                        font-size: 0.9rem;
+                      }
+                      th, td {
+                        padding: 4px 8px;
+                        border-bottom: 1px solid var(--divider-color);
+                      }
+
+          # =====================================================================
+          # STATION 3 CONTENT (shown when Station 3 is active)
+          # =====================================================================
+          - type: conditional
+            conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 3"
+              - entity: binary_sensor.weather_local_station_3_enabled
+                state: "off"
+            card:
+              type: markdown
+              content: |
+                ## Local Station 3 Not Configured
+
+                Go to **Settings → Local Stations** to configure Station 3.
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 12px;
+                    padding: 24px;
+                    text-align: center;
+                    background: var(--card-background-color);
+                    border-left: 4px solid #ff9800;
+                  }
+
+          - type: conditional
+            conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 3"
+              - entity: binary_sensor.weather_local_station_3_enabled
+                state: "on"
+            card:
+              type: vertical-stack
+              cards:
+                # Station Header
+                - type: custom:button-card
+                  template: station_header
+                  entity: binary_sensor.weather_local_station_3_enabled
+                  triggers_update:
+                    - binary_sensor.weather_local_station_3_enabled
+                    - sensor.weather_local_config
+                  icon: mdi:home-thermometer
+                  name: |
+                    [[[
+                      return entity?.attributes?.name || 'Local Station 3';
+                    ]]]
+                  state_display: "Ecowitt Gateway"
+                  styles:
+                    card:
+                      - background: "linear-gradient(135deg, #6A1B9A 0%, #4A148C 100%)"
+
+                # Basic Stats Grid
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_3_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_3_temperature
+                        name: Temp
+                        icon: mdi:thermometer
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_3_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_3_humidity
+                        name: Humidity
+                        icon: mdi:water-percent
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_3_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_3_wind_speed
+                        name: Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_3_daily_rain
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_3_daily_rain
+                        name: Rain
+                        icon: mdi:weather-rainy
+
+                # Delta T & Calculated Sensors
+                - type: custom:mushroom-title-card
+                  title: Calculated Metrics
+
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_3_delta_t
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_3_delta_t
+                        name: Delta T
+                        icon: mdi:thermometer-lines
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_3_evapotranspiration
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_3_evapotranspiration
+                        name: ETo
+                        icon: mdi:water-outline
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_3_degree_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_3_degree_day
+                        name: Degree Day
+                        icon: mdi:chart-timeline-variant
+                    - type: conditional
+                      conditions:
+                        - entity: input_number.weather_station_3_cdd
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: input_number.weather_station_3_cdd
+                        name: CDD Total
+                        icon: mdi:chart-multiple
+
+                # 24h Statistics
+                - type: custom:mushroom-title-card
+                  title: 24h Statistics
+
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_3_min_temp_24h
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_3_min_temp_24h
+                        name: Min Temp
+                        icon: mdi:thermometer-low
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_3_max_temp_24h
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_3_max_temp_24h
+                        name: Max Temp
+                        icon: mdi:thermometer-high
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_3_avg_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_3_avg_wind_speed
+                        name: Avg Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: utility_meter.weather_station_3_solar_radiation_mj_m2_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: utility_meter.weather_station_3_solar_radiation_mj_m2_day
+                        name: Solar (MJ/m2)
+                        icon: mdi:white-balance-sunny
+
+                # Spray Conditions
+                - type: custom:mushroom-title-card
+                  title: Spray Conditions
+
+                - type: markdown
+                  content: |
+                    {% set dt = states('sensor.weather_station_3_delta_t') | float(0) %}
+                    {% if dt < 2 %}
+                    **Warning: Delta T < 2C** - Conditions too humid, risk of drift/poor evaporation
+                    {% elif dt > 8 %}
+                    **Warning: Delta T > 8C** - Conditions too dry, risk of evaporation before absorption
+                    {% else %}
+                    **Good: Delta T {{ dt | round(1) }}C** - Good spraying conditions
+                    {% endif %}
+
+                    | Condition | Delta T Range |
+                    |-----------|---------------|
+                    | Too Humid | < 2C |
+                    | Marginal | 2-4C |
+                    | Ideal | 4-8C |
+                    | Marginal | 8-10C |
+                    | Too Dry | > 10C |
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 12px;
+                        padding: 12px;
+                        background: var(--card-background-color);
+                      }
+                      table {
+                        width: 100%;
+                        font-size: 0.9rem;
+                      }
+                      th, td {
+                        padding: 4px 8px;
+                        border-bottom: 1px solid var(--divider-color);
+                      }
+
+          # =====================================================================
+          # STATION 4 CONTENT (shown when Station 4 is active)
+          # =====================================================================
+          - type: conditional
+            conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 4"
+              - entity: binary_sensor.weather_local_station_4_enabled
+                state: "off"
+            card:
+              type: markdown
+              content: |
+                ## Local Station 4 Not Configured
+
+                Go to **Settings → Local Stations** to configure Station 4.
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 12px;
+                    padding: 24px;
+                    text-align: center;
+                    background: var(--card-background-color);
+                    border-left: 4px solid #ff9800;
+                  }
+
+          - type: conditional
+            conditions:
+              - entity: input_select.weather_local_active_station
+                state: "Station 4"
+              - entity: binary_sensor.weather_local_station_4_enabled
+                state: "on"
+            card:
+              type: vertical-stack
+              cards:
+                # Station Header
+                - type: custom:button-card
+                  template: station_header
+                  entity: binary_sensor.weather_local_station_4_enabled
+                  triggers_update:
+                    - binary_sensor.weather_local_station_4_enabled
+                    - sensor.weather_local_config
+                  icon: mdi:home-thermometer
+                  name: |
+                    [[[
+                      return entity?.attributes?.name || 'Local Station 4';
+                    ]]]
+                  state_display: "Ecowitt Gateway"
+                  styles:
+                    card:
+                      - background: "linear-gradient(135deg, #E65100 0%, #BF360C 100%)"
+
+                # Basic Stats Grid
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_4_temperature
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_4_temperature
+                        name: Temp
+                        icon: mdi:thermometer
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_4_humidity
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_4_humidity
+                        name: Humidity
+                        icon: mdi:water-percent
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_4_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_4_wind_speed
+                        name: Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_local_4_daily_rain
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_local_4_daily_rain
+                        name: Rain
+                        icon: mdi:weather-rainy
+
+                # Delta T & Calculated Sensors
+                - type: custom:mushroom-title-card
+                  title: Calculated Metrics
+
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_4_delta_t
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_4_delta_t
+                        name: Delta T
+                        icon: mdi:thermometer-lines
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_4_evapotranspiration
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_4_evapotranspiration
+                        name: ETo
+                        icon: mdi:water-outline
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_4_degree_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_4_degree_day
+                        name: Degree Day
+                        icon: mdi:chart-timeline-variant
+                    - type: conditional
+                      conditions:
+                        - entity: input_number.weather_station_4_cdd
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: input_number.weather_station_4_cdd
+                        name: CDD Total
+                        icon: mdi:chart-multiple
+
+                # 24h Statistics
+                - type: custom:mushroom-title-card
+                  title: 24h Statistics
+
+                - type: grid
+                  columns: 2
+                  square: false
+                  cards:
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_4_min_temp_24h
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_4_min_temp_24h
+                        name: Min Temp
+                        icon: mdi:thermometer-low
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_4_max_temp_24h
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_4_max_temp_24h
+                        name: Max Temp
+                        icon: mdi:thermometer-high
+                    - type: conditional
+                      conditions:
+                        - entity: sensor.weather_station_4_avg_wind_speed
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: sensor.weather_station_4_avg_wind_speed
+                        name: Avg Wind
+                        icon: mdi:weather-windy
+                    - type: conditional
+                      conditions:
+                        - entity: utility_meter.weather_station_4_solar_radiation_mj_m2_day
+                          state_not: unavailable
+                      card:
+                        type: custom:button-card
+                        template: small_stat
+                        entity: utility_meter.weather_station_4_solar_radiation_mj_m2_day
+                        name: Solar (MJ/m2)
+                        icon: mdi:white-balance-sunny
+
+                # Spray Conditions
+                - type: custom:mushroom-title-card
+                  title: Spray Conditions
+
+                - type: markdown
+                  content: |
+                    {% set dt = states('sensor.weather_station_4_delta_t') | float(0) %}
                     {% if dt < 2 %}
                     **Warning: Delta T < 2C** - Conditions too humid, risk of drift/poor evaporation
                     {% elif dt > 8 %}
@@ -3340,26 +4185,27 @@ views:
                           text: "Remove station from slot 4?"
 
           # =========================================================================
-          # LOCAL STATION SETTINGS
+          # LOCAL STATION SETTINGS (4 SLOTS)
           # =========================================================================
           - type: custom:button-card
             template: wapi_section_title
-            name: Local Station Settings
+            name: Manage Local Stations
 
+          # Slot Status Overview
           - type: markdown
-            content: >
+            content: |
               {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
-              {% set s = cfg.get('1', {}) %}
-              {% if s %}
-              **Local Station 1:** {{ s.get('name', 'Not configured') }}
+              {% set status = states('sensor.weather_local_slot_status') %}
+              **Status:** {{ status }}
+            card_mod:
+              style: |
+                ha-card {
+                  border-radius: 12px;
+                  padding: 12px;
+                  background: var(--card-background-color);
+                }
 
-              Entity Prefix: `{{ s.get('entity_prefix', 'not set') }}`
-
-              Status: {{ 'Enabled' if s.get('enabled') else 'Disabled' }}
-              {% else %}
-              No local station configured. Click **Initialize** to set up.
-              {% endif %}
-
+          # Initialize & Refresh buttons
           - type: horizontal-stack
             cards:
               - type: custom:button-card
@@ -3386,93 +4232,426 @@ views:
                   action: call-service
                   service: script.weather_local_refresh
 
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.weather_local_station_1_enabled
-                state: "on"
-            card:
-              type: vertical-stack
-              cards:
-                - type: entities
-                  title: Edit Local Station
-                  show_header_toggle: false
-                  entities:
-                    - entity: input_text.weather_local_station_name
-                      name: Station Name
-                    - entity: input_text.weather_local_station_prefix
-                      name: Entity Prefix
+          # 2x2 Slot Grid
+          - type: grid
+            columns: 2
+            square: false
+            cards:
+              # SLOT 1
+              - type: custom:button-card
+                entity: binary_sensor.weather_local_station_1_enabled
+                template: wapi_slot_card
+                triggers_update:
+                  - binary_sensor.weather_local_station_1_enabled
+                  - sensor.weather_local_config
+                name: "Slot 1"
+                label: |
+                  [[[
+                    const name = entity?.attributes?.name;
+                    return name || 'Empty';
+                  ]]]
+                icon: mdi:numeric-1-circle
+                styles:
+                  card:
+                    - height: 80px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'on'
+                            ? 'linear-gradient(135deg, #43A047 0%, #2E7D32 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                    - border: |
+                        [[[
+                          return entity?.state === 'on' ? 'none' : '2px dashed var(--divider-color)';
+                        ]]]
+                  name:
+                    - font-size: 12px
+                    - font-weight: bold
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  label:
+                    - font-size: 14px
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'rgba(255,255,255,0.9)' : 'var(--secondary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_load_station
+                  service_data:
+                    slot: "1"
 
-                - type: markdown
-                  content: |
-                    **Entity Prefix** is the prefix of your Ecowitt sensors.
-                    Example: if your sensor is `sensor.gw1100c_outdoor_temperature`,
-                    the prefix is `gw1100c`. Check Developer Tools > States to find yours.
+              # SLOT 2
+              - type: custom:button-card
+                entity: binary_sensor.weather_local_station_2_enabled
+                template: wapi_slot_card
+                triggers_update:
+                  - binary_sensor.weather_local_station_2_enabled
+                  - sensor.weather_local_config
+                name: "Slot 2"
+                label: |
+                  [[[
+                    const name = entity?.attributes?.name;
+                    return name || 'Empty';
+                  ]]]
+                icon: mdi:numeric-2-circle
+                styles:
+                  card:
+                    - height: 80px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'on'
+                            ? 'linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                    - border: |
+                        [[[
+                          return entity?.state === 'on' ? 'none' : '2px dashed var(--divider-color)';
+                        ]]]
+                  name:
+                    - font-size: 12px
+                    - font-weight: bold
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  label:
+                    - font-size: 14px
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'rgba(255,255,255,0.9)' : 'var(--secondary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_load_station
+                  service_data:
+                    slot: "2"
 
-                - type: horizontal-stack
-                  cards:
-                    - type: custom:button-card
-                      name: Save Config
-                      icon: mdi:content-save
-                      styles:
-                        card:
-                          - height: 70px
-                          - border-radius: 12px
-                          - background: "#2e7d32"
-                        name:
-                          - font-size: 12px
-                          - font-weight: 700
-                          - color: white
-                        icon:
-                          - color: white
-                      tap_action:
-                        action: call-service
-                        service: script.weather_local_set_station_config
-                        service_data:
-                          slot: "1"
+              # SLOT 3
+              - type: custom:button-card
+                entity: binary_sensor.weather_local_station_3_enabled
+                template: wapi_slot_card
+                triggers_update:
+                  - binary_sensor.weather_local_station_3_enabled
+                  - sensor.weather_local_config
+                name: "Slot 3"
+                label: |
+                  [[[
+                    const name = entity?.attributes?.name;
+                    return name || 'Empty';
+                  ]]]
+                icon: mdi:numeric-3-circle
+                styles:
+                  card:
+                    - height: 80px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'on'
+                            ? 'linear-gradient(135deg, #6A1B9A 0%, #4A148C 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                    - border: |
+                        [[[
+                          return entity?.state === 'on' ? 'none' : '2px dashed var(--divider-color)';
+                        ]]]
+                  name:
+                    - font-size: 12px
+                    - font-weight: bold
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  label:
+                    - font-size: 14px
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'rgba(255,255,255,0.9)' : 'var(--secondary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_load_station
+                  service_data:
+                    slot: "3"
 
-                    - type: custom:button-card
-                      name: Disable Station
-                      icon: mdi:pause-circle
-                      styles:
-                        card:
-                          - height: 70px
-                          - border-radius: 12px
-                          - background: "#ff9800"
-                        name:
-                          - font-size: 12px
-                          - font-weight: 700
-                          - color: white
-                        icon:
-                          - color: white
-                      tap_action:
-                        action: call-service
-                        service: script.weather_local_disable_station
-                        service_data:
-                          slot: "1"
-                        confirmation:
-                          text: "Disable local station 1?"
+              # SLOT 4
+              - type: custom:button-card
+                entity: binary_sensor.weather_local_station_4_enabled
+                template: wapi_slot_card
+                triggers_update:
+                  - binary_sensor.weather_local_station_4_enabled
+                  - sensor.weather_local_config
+                name: "Slot 4"
+                label: |
+                  [[[
+                    const name = entity?.attributes?.name;
+                    return name || 'Empty';
+                  ]]]
+                icon: mdi:numeric-4-circle
+                styles:
+                  card:
+                    - height: 80px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          return entity?.state === 'on'
+                            ? 'linear-gradient(135deg, #E65100 0%, #BF360C 100%)'
+                            : 'var(--card-background-color)';
+                        ]]]
+                    - border: |
+                        [[[
+                          return entity?.state === 'on' ? 'none' : '2px dashed var(--divider-color)';
+                        ]]]
+                  name:
+                    - font-size: 12px
+                    - font-weight: bold
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                  label:
+                    - font-size: 14px
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'rgba(255,255,255,0.9)' : 'var(--secondary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return entity?.state === 'on' ? 'white' : 'var(--primary-text-color)';
+                        ]]]
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_load_station
+                  service_data:
+                    slot: "4"
 
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.weather_local_station_1_enabled
-                state: "off"
-            card:
-              type: custom:button-card
-              name: Enable Local Station
-              icon: mdi:play-circle
-              styles:
-                card:
-                  - height: 42px
-                  - border-radius: 12px
-                  - background: "#43a047"
-                name:
-                  - font-size: 12px
-                  - font-weight: 700
-                  - color: white
-                icon:
-                  - color: white
-              tap_action:
-                action: call-service
-                service: script.weather_local_enable_station
-                service_data:
-                  slot: "1"
+          # Station Edit Form
+          - type: entities
+            title: |
+              {% set slot = states('input_number.weather_local_station_slot') | int %}
+              Edit Station {{ slot }}
+            show_header_toggle: false
+            entities:
+              - entity: input_number.weather_local_station_slot
+                name: Slot Number
+              - entity: input_text.weather_local_station_prefix
+                name: Entity Prefix (required)
+              - entity: input_text.weather_local_station_name
+                name: Station Name (optional)
+
+          - type: markdown
+            content: |
+              **Entity Prefix** is the prefix of your Ecowitt sensors.
+              Example: if your sensor is `sensor.gw1100c_outdoor_temperature`,
+              the prefix is `gw1100c`. Check Developer Tools > States to find yours.
+
+              Leave **Station Name** empty to auto-derive from prefix.
+
+          # Save / Add New / Clear Form buttons
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                name: Save Station
+                icon: mdi:content-save
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - background: "#2e7d32"
+                  name:
+                    - font-size: 12px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_set_station_config
+                  service_data:
+                    slot: "{{ states('input_number.weather_local_station_slot') | int }}"
+
+              - type: custom:button-card
+                name: Add New
+                icon: mdi:plus-circle
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - background: "#1565c0"
+                  name:
+                    - font-size: 12px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_clear_form
+
+              - type: custom:button-card
+                name: Clear Form
+                icon: mdi:eraser
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - background: "#757575"
+                  name:
+                    - font-size: 12px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_clear_form
+
+          # Per-slot management: Enable/Disable, Remove
+          - type: custom:mushroom-title-card
+            title: Station Actions
+
+          - type: markdown
+            content: |
+              {% set slot = states('input_number.weather_local_station_slot') | int %}
+              {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+              {% set s = cfg.get(slot | string, {}) %}
+              {% if s.get('enabled') %}
+              **Slot {{ slot }}:** {{ s.get('name', 'Configured') }} (Enabled)
+              {% elif s.get('entity_prefix') %}
+              **Slot {{ slot }}:** {{ s.get('name', 'Configured') }} (Disabled)
+              {% else %}
+              **Slot {{ slot }}:** Not configured
+              {% endif %}
+
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: input_number.weather_local_station_slot
+                name: |
+                  [[[
+                    const slot = parseInt(entity?.state || 1);
+                    const sensors = {
+                      1: 'binary_sensor.weather_local_station_1_enabled',
+                      2: 'binary_sensor.weather_local_station_2_enabled',
+                      3: 'binary_sensor.weather_local_station_3_enabled',
+                      4: 'binary_sensor.weather_local_station_4_enabled'
+                    };
+                    const sensorState = states[sensors[slot]]?.state;
+                    return sensorState === 'on' ? 'Disable' : 'Enable';
+                  ]]]
+                icon: |
+                  [[[
+                    const slot = parseInt(entity?.state || 1);
+                    const sensors = {
+                      1: 'binary_sensor.weather_local_station_1_enabled',
+                      2: 'binary_sensor.weather_local_station_2_enabled',
+                      3: 'binary_sensor.weather_local_station_3_enabled',
+                      4: 'binary_sensor.weather_local_station_4_enabled'
+                    };
+                    const sensorState = states[sensors[slot]]?.state;
+                    return sensorState === 'on' ? 'mdi:pause-circle' : 'mdi:play-circle';
+                  ]]]
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          const slot = parseInt(entity?.state || 1);
+                          const sensors = {
+                            1: 'binary_sensor.weather_local_station_1_enabled',
+                            2: 'binary_sensor.weather_local_station_2_enabled',
+                            3: 'binary_sensor.weather_local_station_3_enabled',
+                            4: 'binary_sensor.weather_local_station_4_enabled'
+                          };
+                          const sensorState = states[sensors[slot]]?.state;
+                          return sensorState === 'on' ? '#ff9800' : '#43a047';
+                        ]]]
+                  name:
+                    - font-size: 12px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: |
+                    [[[
+                      const slot = parseInt(entity?.state || 1);
+                      const sensors = {
+                        1: 'binary_sensor.weather_local_station_1_enabled',
+                        2: 'binary_sensor.weather_local_station_2_enabled',
+                        3: 'binary_sensor.weather_local_station_3_enabled',
+                        4: 'binary_sensor.weather_local_station_4_enabled'
+                      };
+                      const sensorState = states[sensors[slot]]?.state;
+                      return sensorState === 'on'
+                        ? 'script.weather_local_disable_station'
+                        : 'script.weather_local_enable_station';
+                    ]]]
+                  service_data:
+                    slot: "{{ states('input_number.weather_local_station_slot') | int }}"
+
+              - type: custom:button-card
+                name: Remove
+                icon: mdi:delete
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - background: "#c62828"
+                  name:
+                    - font-size: 12px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_remove_station
+                  service_data:
+                    slot: "{{ states('input_number.weather_local_station_slot') | int }}"
+                  confirmation:
+                    text: "Remove station from this slot?"
+
+              - type: custom:button-card
+                name: Reset CDD
+                icon: mdi:restart
+                styles:
+                  card:
+                    - height: 70px
+                    - border-radius: 12px
+                    - background: "#6a1b9a"
+                  name:
+                    - font-size: 12px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: script.weather_local_reset_cdd
+                  service_data:
+                    slot: "{{ states('input_number.weather_local_station_slot') | int }}"
+                  confirmation:
+                    text: "Reset Cumulative Degree Days for this slot?"

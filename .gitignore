@@ -55,6 +55,13 @@ secrets/*.yaml
 # PaddiSense per-server configuration
 server.yaml
 
+########################################
+# License Generator (ADMIN ONLY)
+# These files should NOT go to growers
+########################################
+PaddiSense/admin/
+PaddiSense/packages/license_generator.yaml
+
 # Dev mode bypass (for development servers only)
 .dev_mode
 

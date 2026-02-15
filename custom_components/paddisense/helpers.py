@@ -187,6 +187,28 @@ def get_repo_summary() -> dict[str, Any]:
     return summary
 
 
+def is_dev_mode() -> bool:
+    """Check if running on a development branch (bypasses license cleanup)."""
+    import subprocess
+    DEV_BRANCHES = {"dev", "develop", "development", "feature", "fix", "test", "local"}
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(PADDISENSE_DIR), "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            branch = result.stdout.strip().lower()
+            for dev_branch in DEV_BRANCHES:
+                if branch == dev_branch or branch.startswith(f"{dev_branch}/"):
+                    _LOGGER.info("Dev mode detected (branch: %s) - skipping license cleanup", branch)
+                    return True
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+    return False
+
+
 def cleanup_unlicensed_modules(licensed_modules: list[str]) -> dict[str, Any]:
     """Delete folders for modules not included in the license.
 
@@ -195,7 +217,19 @@ def cleanup_unlicensed_modules(licensed_modules: list[str]) -> dict[str, Any]:
 
     Returns:
         Dictionary with cleanup results.
+
+    Note:
+        Cleanup is SKIPPED when running on dev/develop/feature branches.
     """
+    # Dev mode bypass - never cleanup on development branches
+    if is_dev_mode():
+        return {
+            "success": True,
+            "removed": [],
+            "errors": [],
+            "skipped": "dev_mode",
+        }
+
     removed = []
     errors = []
 

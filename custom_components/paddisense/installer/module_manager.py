@@ -767,6 +767,9 @@ class ModuleManager:
             state.dashboard_added = True
             _LOGGER.debug("Dashboard registered: %s", state.dashboard_slug)
 
+            # Step 4: Run dashboard sync as safety check
+            self._run_dashboard_sync()
+
             # Success
             version = self._get_module_version(module_id)
             _LOGGER.info("Installed module %s v%s", module_id, version)
@@ -959,6 +962,32 @@ class ModuleManager:
 """
         content = header + yaml.dump(dashboards, default_flow_style=False, sort_keys=False)
         LOVELACE_DASHBOARDS_YAML.write_text(content, encoding="utf-8")
+
+    def _run_dashboard_sync(self) -> None:
+        """Run dashboard sync script to ensure all installed modules have dashboard entries."""
+        import subprocess
+
+        sync_script = self.paddisense_dir / "registry" / "python" / "sync_dashboards.py"
+        if not sync_script.exists():
+            _LOGGER.debug("Dashboard sync script not found, skipping")
+            return
+
+        try:
+            result = subprocess.run(
+                ["python3", str(sync_script)],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=str(self.paddisense_dir),
+            )
+            if result.returncode == 0:
+                _LOGGER.debug("Dashboard sync completed successfully")
+            else:
+                _LOGGER.warning("Dashboard sync returned non-zero: %s", result.stderr)
+        except subprocess.TimeoutExpired:
+            _LOGGER.warning("Dashboard sync timed out")
+        except Exception as e:
+            _LOGGER.warning("Dashboard sync failed: %s", e)
 
     def install_multiple(self, module_ids: list[str]) -> dict[str, Any]:
         """Install multiple modules."""

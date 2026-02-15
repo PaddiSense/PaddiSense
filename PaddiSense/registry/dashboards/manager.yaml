@@ -2796,3 +2796,171 @@ views:
                       navigation_path: /config/integrations/integration/paddisense
                     hold_action:
                       action: none
+
+              - type: custom:button-card
+                template: template_titleblock
+                variables:
+                  var_name: LICENSE MANAGEMENT
+
+              - type: markdown
+                content: |
+                  Enter a license key to unlock paid PaddiSense modules (PWM or WSS).
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                      padding: 12px;
+                      background: var(--card-background-color);
+                    }
+
+              - type: entities
+                entities:
+                  - entity: input_select.paddisense_license_module
+                    name: Module
+                  - entity: input_text.paddisense_license_key
+                    name: License Key
+                card_mod:
+                  style: |
+                    ha-card {
+                      border-radius: 12px;
+                      padding: 6px;
+                      background: var(--card-background-color);
+                    }
+
+              - type: custom:button-card
+                template: template_success
+                name: Submit License
+                icon: mdi:key-plus
+                tap_action:
+                  action: call-service
+                  service: script.paddisense_submit_license
+                confirmation:
+                  text: |
+                    [[[
+                      const mod = states['input_select.paddisense_license_module']?.state || '';
+                      const key = states['input_text.paddisense_license_key']?.state || '';
+                      if (mod.includes('Select') || !key) return 'Please select a module and enter License Key.';
+                      const modName = mod.split(' - ')[0];
+                      return `Submit license for ${modName} module?`;
+                    ]]]
+
+              #----------------------------------------------------------------
+              # LICENSE GENERATOR (Admin Only)
+              # Only visible when admin package is installed
+              #----------------------------------------------------------------
+              - type: conditional
+                conditions:
+                  - entity: input_text.license_email
+                    state_not: unavailable
+                card:
+                  type: vertical-stack
+                  cards:
+                    - type: custom:button-card
+                      template: template_titleblock
+                      variables:
+                        var_name: LICENSE GENERATOR (ADMIN)
+
+                    - type: markdown
+                      content: |
+                        **Administrator only.** Generate signed license keys for growers.
+                        Fill in the details below and click Generate. The license key will appear in the text box for easy copying.
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 12px;
+                            background: var(--card-background-color);
+                          }
+
+                    - type: entities
+                      entities:
+                        - entity: input_text.license_email
+                          name: Grower Email
+                        - entity: input_text.license_season
+                          name: Season
+                        - entity: input_select.license_modules
+                          name: Modules
+                        - entity: input_number.license_days
+                          name: Valid Days
+                      card_mod:
+                        style: |
+                          ha-card {
+                            border-radius: 12px;
+                            padding: 6px;
+                            background: var(--card-background-color);
+                          }
+
+                    - type: custom:button-card
+                      template: template_success
+                      name: Generate License Key
+                      icon: mdi:key-plus
+                      tap_action:
+                        action: call-service
+                        service: script.generate_license
+                      confirmation:
+                        text: |
+                          [[[
+                            const email = states['input_text.license_email']?.state || '';
+                            const modules = states['input_select.license_modules']?.state || '';
+                            const days = states['input_number.license_days']?.state || '365';
+                            if (!email) return 'Please enter grower email first.';
+                            return `Generate ${days}-day license for ${email} with modules: ${modules}?`;
+                          ]]]
+
+                    # Generated license display (easy to copy)
+                    - type: custom:button-card
+                      entity: sensor.paddisense_last_license
+                      triggers_update:
+                        - sensor.paddisense_last_license
+                        - input_text.license_last_generated
+                      show_icon: false
+                      show_name: false
+                      show_state: false
+                      tap_action:
+                        action: none
+                      styles:
+                        card:
+                          - background: var(--card-background-color)
+                          - border-radius: 12px
+                          - padding: 16px
+                          - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
+                        grid:
+                          - display: block
+                      custom_fields:
+                        license: |
+                          [[[
+                            const status = states['input_text.license_last_generated']?.state || '';
+                            const sensor = states['sensor.paddisense_last_license'];
+                            const key = sensor?.attributes?.license || '';
+
+                            if (status === 'Generating...') {
+                              return `
+                                <div style="color:#0066cc;font-size:14px;text-align:center;">
+                                  <ha-icon icon="mdi:loading" style="animation: spin 1s linear infinite;"></ha-icon>
+                                  Generating license...
+                                </div>
+                              `;
+                            }
+                            if (!key) {
+                              return `
+                                <div style="color:var(--secondary-text-color);font-size:13px;text-align:center;">
+                                  No license generated yet. Fill in details above and click Generate.
+                                </div>
+                              `;
+                            }
+                            return `
+                              <div>
+                                <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">
+                                  Generated License Key (select and copy):
+                                </div>
+                                <div style="background:#1a1a1a;border:1px solid #28a745;border-radius:8px;padding:12px;overflow-x:auto;">
+                                  <code style="font-size:11px;color:#28a745;word-break:break-all;user-select:all;">
+                                    ${key}
+                                  </code>
+                                </div>
+                                <div style="font-size:11px;color:var(--secondary-text-color);margin-top:8px;text-align:center;">
+                                  Click the key above to select it, then copy (Ctrl+C / Cmd+C)
+                                </div>
+                              </div>
+                            `;
+                          ]]]

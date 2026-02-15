@@ -67,12 +67,33 @@ command_line:
         - missing_count
         - missing_required_count
 
+  - sensor:
+      name: PaddiSense Version
+      unique_id: paddisense_version
+      command: "python3 /config/PaddiSense/registry/python/paddisense_sensor.py"
+      scan_interval: 300
+      value_template: "{{ value_json.version }}"
+      json_attributes:
+        - version
+        - git_branch
+        - dev_mode
+        - available_modules
+        - installed_modules
+        - licensed_modules
+        - total_available
+        - total_installed
+        - total_licensed
+
 # -----------------------------------------------------------------------------
 # SHELL COMMANDS
 # -----------------------------------------------------------------------------
 shell_command:
   # HACS installation
   paddisense_install_hacs: "bash /config/PaddiSense/scripts/install_hacs.sh"
+
+  # Browser Mod auto-setup (required for license popups)
+  paddisense_browser_mod_setup: "python3 /config/PaddiSense/registry/python/browser_mod_setup.py"
+  paddisense_browser_mod_check: "python3 /config/PaddiSense/registry/python/browser_mod_setup.py --check --json"
 
   # System commands
   registry_init: "python3 /config/PaddiSense/registry/python/registry_backend.py init"
@@ -82,6 +103,10 @@ shell_command:
   registry_reset: "python3 /config/PaddiSense/registry/python/registry_backend.py reset --token {{ token }}"
   registry_import: "python3 /config/PaddiSense/registry/python/registry_backend.py import_backup --filename '{{ filename }}'"
   registry_backup_list: "python3 /config/PaddiSense/registry/python/registry_backend.py backup_list"
+
+  # Dashboard sync (run after module install)
+  paddisense_sync_dashboards: "python3 /config/PaddiSense/registry/python/sync_dashboards.py"
+  paddisense_sync_dashboards_check: "python3 /config/PaddiSense/registry/python/sync_dashboards.py --check --json"
 
   # Paddock commands
   registry_add_paddock: >-
@@ -258,10 +283,25 @@ template:
         state: "{{ state_attr('sensor.farm_registry_data', 'initialized') | default(false) }}"
         icon: mdi:check-circle
 
+      # Browser Mod configured (required for license popups)
+      - name: "Browser Mod Configured"
+        unique_id: browser_mod_configured
+        state: "{{ integration_entities('browser_mod') | list | length > 0 }}"
+        icon: mdi:monitor-cellphone
+
 # -----------------------------------------------------------------------------
 # INPUT HELPERS
 # -----------------------------------------------------------------------------
 input_select:
+  # License module selector (paid modules only)
+  paddisense_license_module:
+    name: "Module to License"
+    options:
+      - "Select Module..."
+      - "PWM - Paddock Water Management"
+      - "WSS - Water Source Scheduling"
+    icon: mdi:puzzle
+
   # Editor mode selectors (IPM-style pattern)
   registry_business_editor_mode:
     name: "Business Editor Mode"
@@ -473,11 +513,6 @@ input_text:
     icon: mdi:key
     max: 255
     mode: text
-
-  paddisense_license_module:
-    name: "License Module Target"
-    icon: mdi:puzzle
-    max: 20
 
   registry_new_paddock_name:
     name: "New Paddock Name"
@@ -805,86 +840,74 @@ script:
         target:
           entity_id: sensor.farm_registry_data
 
-  # Submit license key (called from popup)
+  # Submit license key (called from Settings page)
   paddisense_submit_license:
     alias: "PaddiSense - Submit License"
     icon: mdi:key-plus
     sequence:
       - variables:
           license_key: "{{ states('input_text.paddisense_license_key') | trim }}"
-          target_module: "{{ states('input_text.paddisense_license_module') | trim }}"
-      # Validate we have a key
+          # Extract module ID from dropdown (e.g., "PWM - Paddock Water Management" -> "pwm")
+          selected_option: "{{ states('input_select.paddisense_license_module') }}"
+          target_module: >-
+            {% if 'PWM' in selected_option %}pwm
+            {% elif 'WSS' in selected_option %}wss
+            {% else %}{% endif %}
+      # Validate we have a key and module selected
       - condition: template
-        value_template: "{{ license_key | length > 10 }}"
+        value_template: "{{ license_key | length > 10 and target_module | length > 0 }}"
       # Call the add_license service
       - service: paddisense.add_license
         data:
           license_key: "{{ license_key }}"
-      # Clear the input
+      # Clear the inputs
       - service: input_text.set_value
         target:
           entity_id: input_text.paddisense_license_key
         data:
           value: ""
-      # Close the popup (browser_mod)
-      - service: browser_mod.close_popup
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.paddisense_license_module
+        data:
+          option: "Select Module..."
 
-  # Open license entry popup for a module
+  # Open license entry - redirects to Settings
   paddisense_open_license_popup:
-    alias: "PaddiSense - Open License Popup"
+    alias: "PaddiSense - Add License"
     icon: mdi:key
     fields:
       module_id:
-        description: "Module ID to license"
+        description: "Module ID to license (pwm or wss)"
         selector:
           text:
     sequence:
-      # Store which module we're licensing
-      - service: input_text.set_value
+      # Store which module we're licensing (map id to dropdown option)
+      - service: input_select.select_option
         target:
-          entity_id: input_text.paddisense_license_module
+          entity_id: input_select.paddisense_license_module
         data:
-          value: "{{ module_id }}"
+          option: >-
+            {% if module_id == 'pwm' %}PWM - Paddock Water Management
+            {% elif module_id == 'wss' %}WSS - Water Source Scheduling
+            {% else %}Select Module...{% endif %}
       # Clear any previous key
       - service: input_text.set_value
         target:
           entity_id: input_text.paddisense_license_key
         data:
           value: ""
-      # Open browser_mod popup
-      - service: browser_mod.popup
+      # Notify user to enter key in Settings
+      - service: persistent_notification.create
         data:
           title: "Enter License Key"
-          content:
-            type: vertical-stack
-            cards:
-              - type: markdown
-                content: |
-                  Enter your **{{ module_id | upper }}** license key below.
+          message: |
+            Enter your **{{ module_id | upper }}** license key in:
 
-                  License keys are provided by PaddiSense administrators.
-              - type: entities
-                entities:
-                  - entity: input_text.paddisense_license_key
-                    name: License Key
-              - type: custom:button-card
-                name: Submit License
-                icon: mdi:check
-                color_type: card
-                color: "#28a745"
-                styles:
-                  card:
-                    - height: 60px
-                    - border-radius: 12px
-                  name:
-                    - font-size: 16px
-                    - font-weight: 700
-                    - color: white
-                  icon:
-                    - color: white
-                tap_action:
-                  action: call-service
-                  service: script.paddisense_submit_license
+            **PSM → Settings → License Management**
+
+            The module has been pre-selected for you.
+          notification_id: paddisense_license_entry
 
   # Export backup
   registry_export_data:
@@ -2318,6 +2341,29 @@ script:
 # AUTOMATIONS
 # -----------------------------------------------------------------------------
 automation:
+  # Auto-configure Browser Mod on startup (required for license popups)
+  - id: paddisense_auto_setup_browser_mod
+    alias: "PaddiSense - Auto Setup Browser Mod"
+    trigger:
+      - platform: homeassistant
+        event: start
+    condition:
+      # Only run if browser_mod custom component exists but isn't configured
+      - condition: template
+        value_template: >-
+          {{ integration_entities('browser_mod') | list | length == 0 }}
+    action:
+      - delay:
+          seconds: 15
+      - service: shell_command.paddisense_browser_mod_setup
+      - delay:
+          seconds: 3
+      - service: persistent_notification.create
+        data:
+          title: "PaddiSense"
+          message: "Browser Mod integration configured automatically."
+          notification_id: paddisense_browser_mod_setup
+
   # Initialize dropdowns on Home Assistant startup
   - id: registry_init_dropdowns_on_startup
     alias: "Registry - Initialize Dropdowns on Startup"

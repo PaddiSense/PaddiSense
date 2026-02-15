@@ -90,6 +90,291 @@ template:
           max_temperature: "{{ states('sensor.weather_station_1_max_temperature') }}"
           min_temperature: "{{ states('sensor.weather_station_1_min_temperature') }}"
 
+  # -------------------------------------------------------------------------
+  # Local Station 2 Calculated Sensors
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Station 2 Delta T"
+        unique_id: weather_station_2_delta_t
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {% set t = states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_outdoor_temperature') else 0 %}
+          {% set rh = states('sensor.' ~ prefix ~ '_humidity') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_humidity') else 0 %}
+          {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
+          {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
+          {% set c = atan(rh - 1.676331) %}
+          {% set d = atan(t + rh) %}
+          {{ (t - (a + b - c + d - 4.686035)) | round(2) }}
+        unit_of_measurement: "°C"
+
+  - sensor:
+      - name: "Weather Station 2 Evapotranspiration"
+        unique_id: weather_station_2_evapotranspiration
+        state: >-
+          {% set maxT = states('sensor.weather_station_2_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_2_min_temperature') | float(0) %}
+          {% set maxRH = states('sensor.weather_station_2_max_humidity') | float(0) %}
+          {% set minRH = states('sensor.weather_station_2_min_humidity') | float(0) %}
+          {% set avgWS = (states('sensor.weather_station_2_avg_wind_speed') | float(0)) / 3.6 %}
+          {% set SolRad = (states('sensor.weather_station_2_solar_radiation_mj_m2_day') | float(0)) | round(1) %}
+
+          {% set e = 2.718281828459045 %}
+          {% set pi = 3.141592653589793 %}
+          {% set Day = ((now() - now().replace(month=1, day=1)).days + 1) | int %}
+
+          {% set avgT = (maxT + minT) / 2 %}
+          {% set PsyCon = 0.0665043028282533 %}
+          {% set MnSVP = ((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) + (0.6108 * e ** ((17.27 * minT) / (minT + 237.3)))) / 2 %}
+          {% set SSVPC = (4098 * (0.6108 * e ** ((17.27 * avgT) / (avgT + 237.3)))) / ((avgT + 237.3) ** 2) %}
+          {% set ActVP = (((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) * (minRH / 100)) + ((0.6108 * e ** ((17.27 * minT) / (minT + 237.3))) * (maxRH / 100))) / 2 %}
+          {% set VPD = MnSVP - ActVP %}
+
+          {% set alpha = 0.23 %}
+          {% set sigma = 0.000000004903 %}
+          {% set latitude = -35.5575 %}
+          {% set elevation = 180 %}
+
+          {% set Gsc = 0.0820 %}
+          {% set dr = 1 + 0.033 * cos((2 * pi / 365) * Day) %}
+          {% set delta = 0.409 * sin((2 * pi / 365) * Day - 1.39) %}
+          {% set omega_s = acos(-tan(latitude * pi / 180) * tan(delta)) %}
+          {% set Ra = (24 * 60 / pi) * Gsc * dr * (omega_s * sin(latitude * pi / 180) * sin(delta) + cos(latitude * pi / 180) * cos(delta) * sin(omega_s)) %}
+
+          {% set Rso = (0.75 + 2e-5 * elevation) * Ra %}
+
+          {% set TmaxK = maxT + 273.16 %}
+          {% set TminK = minT + 273.16 %}
+
+          {% set Rns = (1 - alpha) * SolRad %}
+          {% set Rnl = sigma * ((TmaxK**4 + TminK**4) / 2) * (0.34 - 0.14 * (ActVP**0.5)) * (1.35 * (SolRad / Rso) - 0.35) %}
+          {% set NetRad = Rns - Rnl %}
+
+          {{ (0.408 * NetRad * SSVPC / (SSVPC + PsyCon * (1 + 0.34 * avgWS)))
+             + ((900 / (avgT + 273)) * avgWS * VPD * PsyCon / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) }}
+        unit_of_measurement: "mm"
+
+  - sensor:
+      - name: "Weather Station 2 Filtered Solar Radiation"
+        unique_id: weather_station_2_filtered_solar_radiation
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {% set input = 'sensor.' ~ prefix ~ '_solar_radiation' %}
+          {% set val = states(input) | float(0) %}
+          {{ val * 300 / 1000000 if has_value(input) and 0 < val < 2000 else 0 }}
+        unit_of_measurement: "MJ"
+
+  - trigger:
+      - platform: time
+        at: "23:59:00"
+    sensor:
+      - name: "Weather Station 2 Degree Day"
+        unique_id: weather_station_2_degree_day
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:chart-line
+        availability: >-
+          {{ is_number(states('sensor.weather_station_2_max_temperature'))
+             and is_number(states('sensor.weather_station_2_min_temperature')) }}
+        state: >-
+          {% set maxT = states('sensor.weather_station_2_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_2_min_temperature') | float(0) %}
+          {{ (((maxT + minT) / 2) - 10) | round(2) }}
+        attributes:
+          max_temperature: "{{ states('sensor.weather_station_2_max_temperature') }}"
+          min_temperature: "{{ states('sensor.weather_station_2_min_temperature') }}"
+
+  # -------------------------------------------------------------------------
+  # Local Station 3 Calculated Sensors
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Station 3 Delta T"
+        unique_id: weather_station_3_delta_t
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {% set t = states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_outdoor_temperature') else 0 %}
+          {% set rh = states('sensor.' ~ prefix ~ '_humidity') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_humidity') else 0 %}
+          {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
+          {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
+          {% set c = atan(rh - 1.676331) %}
+          {% set d = atan(t + rh) %}
+          {{ (t - (a + b - c + d - 4.686035)) | round(2) }}
+        unit_of_measurement: "°C"
+
+  - sensor:
+      - name: "Weather Station 3 Evapotranspiration"
+        unique_id: weather_station_3_evapotranspiration
+        state: >-
+          {% set maxT = states('sensor.weather_station_3_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_3_min_temperature') | float(0) %}
+          {% set maxRH = states('sensor.weather_station_3_max_humidity') | float(0) %}
+          {% set minRH = states('sensor.weather_station_3_min_humidity') | float(0) %}
+          {% set avgWS = (states('sensor.weather_station_3_avg_wind_speed') | float(0)) / 3.6 %}
+          {% set SolRad = (states('sensor.weather_station_3_solar_radiation_mj_m2_day') | float(0)) | round(1) %}
+
+          {% set e = 2.718281828459045 %}
+          {% set pi = 3.141592653589793 %}
+          {% set Day = ((now() - now().replace(month=1, day=1)).days + 1) | int %}
+
+          {% set avgT = (maxT + minT) / 2 %}
+          {% set PsyCon = 0.0665043028282533 %}
+          {% set MnSVP = ((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) + (0.6108 * e ** ((17.27 * minT) / (minT + 237.3)))) / 2 %}
+          {% set SSVPC = (4098 * (0.6108 * e ** ((17.27 * avgT) / (avgT + 237.3)))) / ((avgT + 237.3) ** 2) %}
+          {% set ActVP = (((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) * (minRH / 100)) + ((0.6108 * e ** ((17.27 * minT) / (minT + 237.3))) * (maxRH / 100))) / 2 %}
+          {% set VPD = MnSVP - ActVP %}
+
+          {% set alpha = 0.23 %}
+          {% set sigma = 0.000000004903 %}
+          {% set latitude = -35.5575 %}
+          {% set elevation = 180 %}
+
+          {% set Gsc = 0.0820 %}
+          {% set dr = 1 + 0.033 * cos((2 * pi / 365) * Day) %}
+          {% set delta = 0.409 * sin((2 * pi / 365) * Day - 1.39) %}
+          {% set omega_s = acos(-tan(latitude * pi / 180) * tan(delta)) %}
+          {% set Ra = (24 * 60 / pi) * Gsc * dr * (omega_s * sin(latitude * pi / 180) * sin(delta) + cos(latitude * pi / 180) * cos(delta) * sin(omega_s)) %}
+
+          {% set Rso = (0.75 + 2e-5 * elevation) * Ra %}
+
+          {% set TmaxK = maxT + 273.16 %}
+          {% set TminK = minT + 273.16 %}
+
+          {% set Rns = (1 - alpha) * SolRad %}
+          {% set Rnl = sigma * ((TmaxK**4 + TminK**4) / 2) * (0.34 - 0.14 * (ActVP**0.5)) * (1.35 * (SolRad / Rso) - 0.35) %}
+          {% set NetRad = Rns - Rnl %}
+
+          {{ (0.408 * NetRad * SSVPC / (SSVPC + PsyCon * (1 + 0.34 * avgWS)))
+             + ((900 / (avgT + 273)) * avgWS * VPD * PsyCon / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) }}
+        unit_of_measurement: "mm"
+
+  - sensor:
+      - name: "Weather Station 3 Filtered Solar Radiation"
+        unique_id: weather_station_3_filtered_solar_radiation
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {% set input = 'sensor.' ~ prefix ~ '_solar_radiation' %}
+          {% set val = states(input) | float(0) %}
+          {{ val * 300 / 1000000 if has_value(input) and 0 < val < 2000 else 0 }}
+        unit_of_measurement: "MJ"
+
+  - trigger:
+      - platform: time
+        at: "23:59:00"
+    sensor:
+      - name: "Weather Station 3 Degree Day"
+        unique_id: weather_station_3_degree_day
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:chart-line
+        availability: >-
+          {{ is_number(states('sensor.weather_station_3_max_temperature'))
+             and is_number(states('sensor.weather_station_3_min_temperature')) }}
+        state: >-
+          {% set maxT = states('sensor.weather_station_3_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_3_min_temperature') | float(0) %}
+          {{ (((maxT + minT) / 2) - 10) | round(2) }}
+        attributes:
+          max_temperature: "{{ states('sensor.weather_station_3_max_temperature') }}"
+          min_temperature: "{{ states('sensor.weather_station_3_min_temperature') }}"
+
+  # -------------------------------------------------------------------------
+  # Local Station 4 Calculated Sensors
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Station 4 Delta T"
+        unique_id: weather_station_4_delta_t
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {% set t = states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_outdoor_temperature') else 0 %}
+          {% set rh = states('sensor.' ~ prefix ~ '_humidity') | float(0)
+             if has_value('sensor.' ~ prefix ~ '_humidity') else 0 %}
+          {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
+          {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
+          {% set c = atan(rh - 1.676331) %}
+          {% set d = atan(t + rh) %}
+          {{ (t - (a + b - c + d - 4.686035)) | round(2) }}
+        unit_of_measurement: "°C"
+
+  - sensor:
+      - name: "Weather Station 4 Evapotranspiration"
+        unique_id: weather_station_4_evapotranspiration
+        state: >-
+          {% set maxT = states('sensor.weather_station_4_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_4_min_temperature') | float(0) %}
+          {% set maxRH = states('sensor.weather_station_4_max_humidity') | float(0) %}
+          {% set minRH = states('sensor.weather_station_4_min_humidity') | float(0) %}
+          {% set avgWS = (states('sensor.weather_station_4_avg_wind_speed') | float(0)) / 3.6 %}
+          {% set SolRad = (states('sensor.weather_station_4_solar_radiation_mj_m2_day') | float(0)) | round(1) %}
+
+          {% set e = 2.718281828459045 %}
+          {% set pi = 3.141592653589793 %}
+          {% set Day = ((now() - now().replace(month=1, day=1)).days + 1) | int %}
+
+          {% set avgT = (maxT + minT) / 2 %}
+          {% set PsyCon = 0.0665043028282533 %}
+          {% set MnSVP = ((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) + (0.6108 * e ** ((17.27 * minT) / (minT + 237.3)))) / 2 %}
+          {% set SSVPC = (4098 * (0.6108 * e ** ((17.27 * avgT) / (avgT + 237.3)))) / ((avgT + 237.3) ** 2) %}
+          {% set ActVP = (((0.6108 * e ** ((17.27 * maxT) / (maxT + 237.3))) * (minRH / 100)) + ((0.6108 * e ** ((17.27 * minT) / (minT + 237.3))) * (maxRH / 100))) / 2 %}
+          {% set VPD = MnSVP - ActVP %}
+
+          {% set alpha = 0.23 %}
+          {% set sigma = 0.000000004903 %}
+          {% set latitude = -35.5575 %}
+          {% set elevation = 180 %}
+
+          {% set Gsc = 0.0820 %}
+          {% set dr = 1 + 0.033 * cos((2 * pi / 365) * Day) %}
+          {% set delta = 0.409 * sin((2 * pi / 365) * Day - 1.39) %}
+          {% set omega_s = acos(-tan(latitude * pi / 180) * tan(delta)) %}
+          {% set Ra = (24 * 60 / pi) * Gsc * dr * (omega_s * sin(latitude * pi / 180) * sin(delta) + cos(latitude * pi / 180) * cos(delta) * sin(omega_s)) %}
+
+          {% set Rso = (0.75 + 2e-5 * elevation) * Ra %}
+
+          {% set TmaxK = maxT + 273.16 %}
+          {% set TminK = minT + 273.16 %}
+
+          {% set Rns = (1 - alpha) * SolRad %}
+          {% set Rnl = sigma * ((TmaxK**4 + TminK**4) / 2) * (0.34 - 0.14 * (ActVP**0.5)) * (1.35 * (SolRad / Rso) - 0.35) %}
+          {% set NetRad = Rns - Rnl %}
+
+          {{ (0.408 * NetRad * SSVPC / (SSVPC + PsyCon * (1 + 0.34 * avgWS)))
+             + ((900 / (avgT + 273)) * avgWS * VPD * PsyCon / (SSVPC + PsyCon * (1 + 0.34 * avgWS))) }}
+        unit_of_measurement: "mm"
+
+  - sensor:
+      - name: "Weather Station 4 Filtered Solar Radiation"
+        unique_id: weather_station_4_filtered_solar_radiation
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {% set input = 'sensor.' ~ prefix ~ '_solar_radiation' %}
+          {% set val = states(input) | float(0) %}
+          {{ val * 300 / 1000000 if has_value(input) and 0 < val < 2000 else 0 }}
+        unit_of_measurement: "MJ"
+
+  - trigger:
+      - platform: time
+        at: "23:59:00"
+    sensor:
+      - name: "Weather Station 4 Degree Day"
+        unique_id: weather_station_4_degree_day
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:chart-line
+        availability: >-
+          {{ is_number(states('sensor.weather_station_4_max_temperature'))
+             and is_number(states('sensor.weather_station_4_min_temperature')) }}
+        state: >-
+          {% set maxT = states('sensor.weather_station_4_max_temperature') | float(0) %}
+          {% set minT = states('sensor.weather_station_4_min_temperature') | float(0) %}
+          {{ (((maxT + minT) / 2) - 10) | round(2) }}
+        attributes:
+          max_temperature: "{{ states('sensor.weather_station_4_max_temperature') }}"
+          min_temperature: "{{ states('sensor.weather_station_4_min_temperature') }}"
+
 
 # =============================================================================
 # BOM CONFIGURATION - Bureau of Meteorology Integration
@@ -110,14 +395,18 @@ template:
         unique_id: bom_detected_prefix
         icon: mdi:weather-cloudy
         state: >-
+          {# BOM integration uses simple naming: sensor.{prefix}_temp, sensor.{prefix}_temp_min_0 #}
           {# Try standard "home" prefix first (PaddiSense default) #}
-          {% if has_value('sensor.home_observations_temp') %}
+          {% if has_value('sensor.home_temp') %}
             home
-          {# Fallback: scan for any BOM observation sensor #}
+          {# Fallback: scan for any BOM temperature sensor #}
           {% else %}
             {% set ns = namespace(prefix='unknown') %}
-            {% for state in states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
-              {% set ns.prefix = state.entity_id | replace('sensor.', '') | replace('_observations_temp', '') %}
+            {% for state in states.sensor | selectattr('entity_id', 'search', '_temp$') | list %}
+              {# Filter to only BOM-style sensors (exclude weather station sensors) #}
+              {% if not 'weather_station' in state.entity_id and not 'ecowitt' in state.entity_id %}
+                {% set ns.prefix = state.entity_id | replace('sensor.', '') | replace('_temp', '') %}
+              {% endif %}
             {% endfor %}
             {{ ns.prefix }}
           {% endif %}
@@ -130,12 +419,12 @@ template:
           {# BOM is configured if we have observation or forecast sensors #}
           {% set prefix = states('sensor.bom_detected_prefix') %}
           {% if prefix and prefix not in ['unknown', 'unavailable', 'undefined'] %}
-            {{ has_value('sensor.' ~ prefix ~ '_observations_temp')
-               or has_value('sensor.' ~ prefix ~ '_forecast_temp_min_0') }}
+            {{ has_value('sensor.' ~ prefix ~ '_temp')
+               or has_value('sensor.' ~ prefix ~ '_temp_min_0') }}
           {% else %}
             {# Fallback: scan for any BOM-style sensors #}
-            {% set obs = states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
-            {% set fcst = states.sensor | selectattr('entity_id', 'search', '_forecast_temp_min_0$') | list %}
+            {% set obs = states.sensor | selectattr('entity_id', 'search', '_temp$') | list %}
+            {% set fcst = states.sensor | selectattr('entity_id', 'search', '_temp_min_0$') | list %}
             {{ obs | length > 0 or fcst | length > 0 }}
           {% endif %}
 
@@ -151,10 +440,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_0') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_0') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_0') }}
 
       - name: "BOM Forecast Temp Max 0"
         unique_id: bom_forecast_temp_max_0
@@ -162,10 +451,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_0') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_0') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_0') }}
 
       - name: "BOM Forecast Rain 0"
         unique_id: bom_forecast_rain_0
@@ -173,12 +462,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_0') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_0') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_0') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_0') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_0') }}
 
       - name: "BOM Forecast Temp Min 1"
         unique_id: bom_forecast_temp_min_1
@@ -186,10 +475,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_1') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_1') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_1') }}
 
       - name: "BOM Forecast Temp Max 1"
         unique_id: bom_forecast_temp_max_1
@@ -197,10 +486,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_1') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_1') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_1') }}
 
       - name: "BOM Forecast Rain 1"
         unique_id: bom_forecast_rain_1
@@ -208,12 +497,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_1') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_1') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_1') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_1') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_1') }}
 
       - name: "BOM Forecast Temp Min 2"
         unique_id: bom_forecast_temp_min_2
@@ -221,10 +510,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_2') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_2') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_2') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_2') }}
 
       - name: "BOM Forecast Temp Max 2"
         unique_id: bom_forecast_temp_max_2
@@ -232,10 +521,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_2') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_2') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_2') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_2') }}
 
       - name: "BOM Forecast Rain 2"
         unique_id: bom_forecast_rain_2
@@ -243,12 +532,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_2') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_2') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_2') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_2') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_2') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_2') }}
 
       - name: "BOM Forecast Temp Min 3"
         unique_id: bom_forecast_temp_min_3
@@ -256,10 +545,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_3') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_3') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_3') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_3') }}
 
       - name: "BOM Forecast Temp Max 3"
         unique_id: bom_forecast_temp_max_3
@@ -267,10 +556,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_3') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_3') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_3') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_3') }}
 
       - name: "BOM Forecast Rain 3"
         unique_id: bom_forecast_rain_3
@@ -278,12 +567,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_3') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_3') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_3') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_3') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_3') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_3') }}
 
       - name: "BOM Forecast Temp Min 4"
         unique_id: bom_forecast_temp_min_4
@@ -291,10 +580,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_4') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_4') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_4') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_4') }}
 
       - name: "BOM Forecast Temp Max 4"
         unique_id: bom_forecast_temp_max_4
@@ -302,10 +591,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_4') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_4') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_4') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_4') }}
 
       - name: "BOM Forecast Rain 4"
         unique_id: bom_forecast_rain_4
@@ -313,12 +602,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_4') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_4') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_4') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_4') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_4') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_4') }}
 
       - name: "BOM Forecast Temp Min 5"
         unique_id: bom_forecast_temp_min_5
@@ -326,10 +615,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_5') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_5') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_5') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_5') }}
 
       - name: "BOM Forecast Temp Max 5"
         unique_id: bom_forecast_temp_max_5
@@ -337,10 +626,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_5') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_5') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_5') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_5') }}
 
       - name: "BOM Forecast Rain 5"
         unique_id: bom_forecast_rain_5
@@ -348,12 +637,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_5') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_5') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_5') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_5') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_5') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_5') }}
 
       - name: "BOM Forecast Temp Min 6"
         unique_id: bom_forecast_temp_min_6
@@ -361,10 +650,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_min_6') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_min_6') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_min_6') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_min_6') }}
 
       - name: "BOM Forecast Temp Max 6"
         unique_id: bom_forecast_temp_max_6
@@ -372,10 +661,10 @@ template:
         unit_of_measurement: "°C"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_temp_max_6') }}
+          {{ states('sensor.' ~ prefix ~ '_temp_max_6') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_temp_max_6') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_max_6') }}
 
       - name: "BOM Forecast Rain 6"
         unique_id: bom_forecast_rain_6
@@ -383,12 +672,12 @@ template:
         unit_of_measurement: "mm"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set min = states('sensor.' ~ prefix ~ '_forecast_rain_amount_min_6') | float(0) %}
-          {% set max = states('sensor.' ~ prefix ~ '_forecast_rain_amount_max_6') | float(0) %}
+          {% set min = states('sensor.' ~ prefix ~ '_rain_amount_min_6') | float(0) %}
+          {% set max = states('sensor.' ~ prefix ~ '_rain_amount_max_6') | float(0) %}
           {{ ((min + max) / 2) | round(1) }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_amount_min_6') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_amount_min_6') }}
 
       # UV Index Forecasts (0-6)
       - name: "BOM Forecast UV 0"
@@ -396,14 +685,14 @@ template:
         icon: mdi:sun-wireless
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_uv_0') }}
+          {{ states('sensor.' ~ prefix ~ '_uv_max_index_0') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_max_index_0') }}
         attributes:
           category: >-
             {% set prefix = states('sensor.bom_detected_prefix') %}
-            {% set uv = states('sensor.' ~ prefix ~ '_forecast_uv_0') | float(0) %}
+            {% set uv = states('sensor.' ~ prefix ~ '_uv_max_index_0') | float(0) %}
             {% if uv < 3 %}Low
             {% elif uv < 6 %}Moderate
             {% elif uv < 8 %}High
@@ -415,20 +704,20 @@ template:
         icon: mdi:sun-wireless
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_uv_1') }}
+          {{ states('sensor.' ~ prefix ~ '_uv_max_index_1') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_max_index_1') }}
 
       - name: "BOM Forecast UV 2"
         unique_id: bom_forecast_uv_2
         icon: mdi:sun-wireless
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_uv_2') }}
+          {{ states('sensor.' ~ prefix ~ '_uv_max_index_2') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_uv_2') }}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_max_index_2') }}
 
       # Rain Chance Forecasts (0-6)
       - name: "BOM Forecast Rain Chance 0"
@@ -437,10 +726,10 @@ template:
         unit_of_measurement: "%"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_rain_chance_0') }}
+          {{ states('sensor.' ~ prefix ~ '_rain_chance_0') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_chance_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_chance_0') }}
 
       - name: "BOM Forecast Rain Chance 1"
         unique_id: bom_forecast_rain_chance_1
@@ -448,10 +737,10 @@ template:
         unit_of_measurement: "%"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_rain_chance_1') }}
+          {{ states('sensor.' ~ prefix ~ '_rain_chance_1') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_chance_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_chance_1') }}
 
       - name: "BOM Forecast Rain Chance 2"
         unique_id: bom_forecast_rain_chance_2
@@ -459,10 +748,10 @@ template:
         unit_of_measurement: "%"
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_rain_chance_2') }}
+          {{ states('sensor.' ~ prefix ~ '_rain_chance_2') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_rain_chance_2') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_chance_2') }}
 
       # Fire Danger Forecasts (important for farm safety)
       - name: "BOM Forecast Fire Danger 0"
@@ -470,30 +759,30 @@ template:
         icon: mdi:fire-alert
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_fire_danger_0') }}
+          {{ states('sensor.' ~ prefix ~ '_fire_danger_0') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_fire_danger_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_fire_danger_0') }}
 
       - name: "BOM Forecast Fire Danger 1"
         unique_id: bom_forecast_fire_danger_1
         icon: mdi:fire-alert
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_fire_danger_1') }}
+          {{ states('sensor.' ~ prefix ~ '_fire_danger_1') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_fire_danger_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_fire_danger_1') }}
 
       - name: "BOM Forecast Fire Danger 2"
         unique_id: bom_forecast_fire_danger_2
         icon: mdi:fire-alert
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_fire_danger_2') }}
+          {{ states('sensor.' ~ prefix ~ '_fire_danger_2') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_fire_danger_2') }}
+          {{ has_value('sensor.' ~ prefix ~ '_fire_danger_2') }}
 
       # Forecast Short Text (weather description)
       - name: "BOM Forecast Short Text 0"
@@ -501,20 +790,20 @@ template:
         icon: mdi:text-short
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_short_text_0') }}
+          {{ states('sensor.' ~ prefix ~ '_short_text_0') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_short_text_0') }}
+          {{ has_value('sensor.' ~ prefix ~ '_short_text_0') }}
 
       - name: "BOM Forecast Short Text 1"
         unique_id: bom_forecast_short_text_1
         icon: mdi:text-short
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_forecast_short_text_1') }}
+          {{ states('sensor.' ~ prefix ~ '_short_text_1') }}
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_forecast_short_text_1') }}
+          {{ has_value('sensor.' ~ prefix ~ '_short_text_1') }}
 
 # =============================================================================
 # BINARY SENSORS - For dashboard conditional cards
@@ -528,13 +817,13 @@ template:
         state: >-
           {% set ns = namespace(prefix='') %}
           {# Try observations first #}
-          {% for entity in states.sensor | selectattr('entity_id', 'search', '_observations_temp$') | list %}
-            {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_observations_temp', '') %}
+          {% for entity in states.sensor | selectattr('entity_id', 'search', '_temp$') | list %}
+            {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_temp', '') %}
           {% endfor %}
           {# Fallback: try forecast entities if no observations found #}
           {% if ns.prefix == '' %}
-            {% for entity in states.sensor | selectattr('entity_id', 'search', '_forecast_temp_min_0$') | list %}
-              {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_forecast_temp_min_0', '') %}
+            {% for entity in states.sensor | selectattr('entity_id', 'search', '_temp_min_0$') | list %}
+              {% set ns.prefix = entity.entity_id | replace('sensor.', '') | replace('_temp_min_0', '') %}
             {% endfor %}
           {% endif %}
           {# Final fallback: default to "home" for backward compatibility #}
@@ -554,8 +843,8 @@ template:
         icon: mdi:weather-cloudy-check
         device_class: connectivity
         state: >-
-          {% set bom_entities = states | selectattr('entity_id', 'match', '^sensor\\..*_observations_temp$') | list %}
-          {% set bom_entities = bom_entities + (states | selectattr('entity_id', 'match', '^sensor\\..*_forecast_temp_min_0$') | list) %}
+          {% set bom_entities = states | selectattr('entity_id', 'match', '^sensor\\..*_temp$') | list %}
+          {% set bom_entities = bom_entities + (states | selectattr('entity_id', 'match', '^sensor\\..*_temp_min_0$') | list) %}
           {{ bom_entities | length > 0 }}
       # API Station Configuration Status (for Settings conditional cards)
       - name: "Weather API Station 1 Configured"
@@ -650,6 +939,109 @@ template:
           entity_prefix: >-
             {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('1', {}) %}
             {{ s.get('entity_prefix', 'ecowittgateway_1') }}
+
+      - name: "Weather Local Station 2 Enabled"
+        unique_id: weather_local_station_2_enabled
+        icon: mdi:home-thermometer
+        state: >-
+          {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('2', {}) %}
+          {{ s.get('enabled', false) }}
+        attributes:
+          name: >-
+            {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('2', {}) %}
+            {{ s.get('name', 'Local Station 2') }}
+          entity_prefix: >-
+            {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('2', {}) %}
+            {{ s.get('entity_prefix', 'ecowittgateway_2') }}
+
+      - name: "Weather Local Station 3 Enabled"
+        unique_id: weather_local_station_3_enabled
+        icon: mdi:home-thermometer
+        state: >-
+          {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('3', {}) %}
+          {{ s.get('enabled', false) }}
+        attributes:
+          name: >-
+            {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('3', {}) %}
+            {{ s.get('name', 'Local Station 3') }}
+          entity_prefix: >-
+            {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('3', {}) %}
+            {{ s.get('entity_prefix', 'ecowittgateway_3') }}
+
+      - name: "Weather Local Station 4 Enabled"
+        unique_id: weather_local_station_4_enabled
+        icon: mdi:home-thermometer
+        state: >-
+          {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('4', {}) %}
+          {{ s.get('enabled', false) }}
+        attributes:
+          name: >-
+            {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('4', {}) %}
+            {{ s.get('name', 'Local Station 4') }}
+          entity_prefix: >-
+            {% set s = (state_attr('sensor.weather_local_config', 'local_stations') or {}).get('4', {}) %}
+            {{ s.get('entity_prefix', 'ecowittgateway_4') }}
+
+  # Local Station Slot Status - Summary sensor for dashboard
+  - sensor:
+      - name: "Weather Local Slot Status"
+        unique_id: weather_local_slot_status
+        icon: mdi:format-list-numbered
+        state: >-
+          {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+          {% set count = namespace(val=0) %}
+          {% for i in range(1, 5) %}
+            {% set s = cfg.get(i | string, {}) %}
+            {% if s.get('enabled', false) and s.get('entity_prefix') %}
+              {% set count.val = count.val + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ count.val }}/4 configured
+        attributes:
+          next_slot: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set ns = namespace(slot=0) %}
+            {% for i in range(1, 5) %}
+              {% if ns.slot == 0 %}
+                {% set s = cfg.get(i | string, {}) %}
+                {% if not (s.get('enabled', false) and s.get('entity_prefix')) %}
+                  {% set ns.slot = i %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.slot if ns.slot > 0 else 0 }}
+          slot_1_name: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('1', {}) %}
+            {{ s.get('name', '') if s.get('enabled') and s.get('entity_prefix') else '' }}
+          slot_1_prefix: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('1', {}) %}
+            {{ s.get('entity_prefix', '') if s.get('enabled') else '' }}
+          slot_2_name: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('2', {}) %}
+            {{ s.get('name', '') if s.get('enabled') and s.get('entity_prefix') else '' }}
+          slot_2_prefix: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('2', {}) %}
+            {{ s.get('entity_prefix', '') if s.get('enabled') else '' }}
+          slot_3_name: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('3', {}) %}
+            {{ s.get('name', '') if s.get('enabled') and s.get('entity_prefix') else '' }}
+          slot_3_prefix: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('3', {}) %}
+            {{ s.get('entity_prefix', '') if s.get('enabled') else '' }}
+          slot_4_name: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('4', {}) %}
+            {{ s.get('name', '') if s.get('enabled') and s.get('entity_prefix') else '' }}
+          slot_4_prefix: >-
+            {% set cfg = state_attr('sensor.weather_local_config', 'local_stations') or {} %}
+            {% set s = cfg.get('4', {}) %}
+            {{ s.get('entity_prefix', '') if s.get('enabled') else '' }}
 
   # -------------------------------------------------------------------------
   # Local Station Normalized Sensors - Dynamically resolve entity prefix
@@ -804,6 +1196,462 @@ template:
             {{ states('sensor.' ~ prefix ~ '_pressure') | float(none) }}
           {% endif %}
 
+  # -------------------------------------------------------------------------
+  # Local Station 2 Normalized Sensors
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Local 2 Temperature"
+        unique_id: weather_local_2_temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_outdoor_temperature') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(none) }}
+
+      - name: "Weather Local 2 Humidity"
+        unique_id: weather_local_2_humidity
+        device_class: humidity
+        state_class: measurement
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_humidity') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_humidity') | float(none) }}
+
+      - name: "Weather Local 2 Dew Point"
+        unique_id: weather_local_2_dew_point
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:water-thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_dew_point') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_dew_point') | float(none) }}
+
+      - name: "Weather Local 2 Feels Like"
+        unique_id: weather_local_2_feels_like
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-check
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_feels_like') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_feels_like') | float(none) }}
+
+      - name: "Weather Local 2 Wind Speed"
+        unique_id: weather_local_2_wind_speed
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_speed') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_speed') | float(none) }}
+
+      - name: "Weather Local 2 Wind Gust"
+        unique_id: weather_local_2_wind_gust
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy-variant
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_gust') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_gust') | float(none) }}
+
+      - name: "Weather Local 2 Wind Direction"
+        unique_id: weather_local_2_wind_direction
+        state_class: measurement
+        unit_of_measurement: "°"
+        icon: mdi:compass
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_direction') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_direction') | float(none) }}
+
+      - name: "Weather Local 2 Daily Rain"
+        unique_id: weather_local_2_daily_rain
+        device_class: precipitation
+        state_class: measurement
+        unit_of_measurement: "mm"
+        icon: mdi:weather-rainy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_daily_rain') or has_value('sensor.' ~ prefix ~ '_24h_rain') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {% if has_value('sensor.' ~ prefix ~ '_daily_rain') %}
+            {{ states('sensor.' ~ prefix ~ '_daily_rain') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_24h_rain') | float(none) }}
+          {% endif %}
+
+      - name: "Weather Local 2 Solar Radiation"
+        unique_id: weather_local_2_solar_radiation
+        device_class: irradiance
+        state_class: measurement
+        unit_of_measurement: "W/m²"
+        icon: mdi:white-balance-sunny
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_solar_radiation') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_solar_radiation') | float(none) }}
+
+      - name: "Weather Local 2 UV Index"
+        unique_id: weather_local_2_uv_index
+        state_class: measurement
+        icon: mdi:sun-wireless
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_index') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ states('sensor.' ~ prefix ~ '_uv_index') | float(none) }}
+
+      - name: "Weather Local 2 Pressure"
+        unique_id: weather_local_2_pressure
+        device_class: pressure
+        state_class: measurement
+        unit_of_measurement: "hPa"
+        icon: mdi:gauge
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {{ has_value('sensor.' ~ prefix ~ '_relative_pressure') or has_value('sensor.' ~ prefix ~ '_pressure') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_2_enabled', 'entity_prefix') or 'ecowittgateway_2' %}
+          {% if has_value('sensor.' ~ prefix ~ '_relative_pressure') %}
+            {{ states('sensor.' ~ prefix ~ '_relative_pressure') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_pressure') | float(none) }}
+          {% endif %}
+
+  # -------------------------------------------------------------------------
+  # Local Station 3 Normalized Sensors
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Local 3 Temperature"
+        unique_id: weather_local_3_temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_outdoor_temperature') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(none) }}
+
+      - name: "Weather Local 3 Humidity"
+        unique_id: weather_local_3_humidity
+        device_class: humidity
+        state_class: measurement
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_humidity') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_humidity') | float(none) }}
+
+      - name: "Weather Local 3 Dew Point"
+        unique_id: weather_local_3_dew_point
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:water-thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_dew_point') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_dew_point') | float(none) }}
+
+      - name: "Weather Local 3 Feels Like"
+        unique_id: weather_local_3_feels_like
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-check
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_feels_like') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_feels_like') | float(none) }}
+
+      - name: "Weather Local 3 Wind Speed"
+        unique_id: weather_local_3_wind_speed
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_speed') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_speed') | float(none) }}
+
+      - name: "Weather Local 3 Wind Gust"
+        unique_id: weather_local_3_wind_gust
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy-variant
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_gust') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_gust') | float(none) }}
+
+      - name: "Weather Local 3 Wind Direction"
+        unique_id: weather_local_3_wind_direction
+        state_class: measurement
+        unit_of_measurement: "°"
+        icon: mdi:compass
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_direction') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_direction') | float(none) }}
+
+      - name: "Weather Local 3 Daily Rain"
+        unique_id: weather_local_3_daily_rain
+        device_class: precipitation
+        state_class: measurement
+        unit_of_measurement: "mm"
+        icon: mdi:weather-rainy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_daily_rain') or has_value('sensor.' ~ prefix ~ '_24h_rain') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {% if has_value('sensor.' ~ prefix ~ '_daily_rain') %}
+            {{ states('sensor.' ~ prefix ~ '_daily_rain') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_24h_rain') | float(none) }}
+          {% endif %}
+
+      - name: "Weather Local 3 Solar Radiation"
+        unique_id: weather_local_3_solar_radiation
+        device_class: irradiance
+        state_class: measurement
+        unit_of_measurement: "W/m²"
+        icon: mdi:white-balance-sunny
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_solar_radiation') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_solar_radiation') | float(none) }}
+
+      - name: "Weather Local 3 UV Index"
+        unique_id: weather_local_3_uv_index
+        state_class: measurement
+        icon: mdi:sun-wireless
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_index') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ states('sensor.' ~ prefix ~ '_uv_index') | float(none) }}
+
+      - name: "Weather Local 3 Pressure"
+        unique_id: weather_local_3_pressure
+        device_class: pressure
+        state_class: measurement
+        unit_of_measurement: "hPa"
+        icon: mdi:gauge
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {{ has_value('sensor.' ~ prefix ~ '_relative_pressure') or has_value('sensor.' ~ prefix ~ '_pressure') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_3_enabled', 'entity_prefix') or 'ecowittgateway_3' %}
+          {% if has_value('sensor.' ~ prefix ~ '_relative_pressure') %}
+            {{ states('sensor.' ~ prefix ~ '_relative_pressure') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_pressure') | float(none) }}
+          {% endif %}
+
+  # -------------------------------------------------------------------------
+  # Local Station 4 Normalized Sensors
+  # -------------------------------------------------------------------------
+  - sensor:
+      - name: "Weather Local 4 Temperature"
+        unique_id: weather_local_4_temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_outdoor_temperature') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_outdoor_temperature') | float(none) }}
+
+      - name: "Weather Local 4 Humidity"
+        unique_id: weather_local_4_humidity
+        device_class: humidity
+        state_class: measurement
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_humidity') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_humidity') | float(none) }}
+
+      - name: "Weather Local 4 Dew Point"
+        unique_id: weather_local_4_dew_point
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:water-thermometer
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_dew_point') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_dew_point') | float(none) }}
+
+      - name: "Weather Local 4 Feels Like"
+        unique_id: weather_local_4_feels_like
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-check
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_feels_like') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_feels_like') | float(none) }}
+
+      - name: "Weather Local 4 Wind Speed"
+        unique_id: weather_local_4_wind_speed
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_speed') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_speed') | float(none) }}
+
+      - name: "Weather Local 4 Wind Gust"
+        unique_id: weather_local_4_wind_gust
+        device_class: wind_speed
+        state_class: measurement
+        unit_of_measurement: "km/h"
+        icon: mdi:weather-windy-variant
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_gust') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_gust') | float(none) }}
+
+      - name: "Weather Local 4 Wind Direction"
+        unique_id: weather_local_4_wind_direction
+        state_class: measurement
+        unit_of_measurement: "°"
+        icon: mdi:compass
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_direction') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_wind_direction') | float(none) }}
+
+      - name: "Weather Local 4 Daily Rain"
+        unique_id: weather_local_4_daily_rain
+        device_class: precipitation
+        state_class: measurement
+        unit_of_measurement: "mm"
+        icon: mdi:weather-rainy
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_daily_rain') or has_value('sensor.' ~ prefix ~ '_24h_rain') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {% if has_value('sensor.' ~ prefix ~ '_daily_rain') %}
+            {{ states('sensor.' ~ prefix ~ '_daily_rain') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_24h_rain') | float(none) }}
+          {% endif %}
+
+      - name: "Weather Local 4 Solar Radiation"
+        unique_id: weather_local_4_solar_radiation
+        device_class: irradiance
+        state_class: measurement
+        unit_of_measurement: "W/m²"
+        icon: mdi:white-balance-sunny
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_solar_radiation') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_solar_radiation') | float(none) }}
+
+      - name: "Weather Local 4 UV Index"
+        unique_id: weather_local_4_uv_index
+        state_class: measurement
+        icon: mdi:sun-wireless
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_uv_index') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ states('sensor.' ~ prefix ~ '_uv_index') | float(none) }}
+
+      - name: "Weather Local 4 Pressure"
+        unique_id: weather_local_4_pressure
+        device_class: pressure
+        state_class: measurement
+        unit_of_measurement: "hPa"
+        icon: mdi:gauge
+        availability: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {{ has_value('sensor.' ~ prefix ~ '_relative_pressure') or has_value('sensor.' ~ prefix ~ '_pressure') }}
+        state: >-
+          {% set prefix = state_attr('binary_sensor.weather_local_station_4_enabled', 'entity_prefix') or 'ecowittgateway_4' %}
+          {% if has_value('sensor.' ~ prefix ~ '_relative_pressure') %}
+            {{ states('sensor.' ~ prefix ~ '_relative_pressure') | float(none) }}
+          {% else %}
+            {{ states('sensor.' ~ prefix ~ '_pressure') | float(none) }}
+          {% endif %}
+
 
 # =============================================================================
 # BOM TEMPLATE SENSORS - Bureau of Meteorology Observations
@@ -821,10 +1669,10 @@ template:
         icon: mdi:thermometer
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_temp') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_temp') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_temp') | float(none) }}
 
       - name: "BOM Observations Feels Like"
         unique_id: bom_observations_feels_like
@@ -834,10 +1682,10 @@ template:
         icon: mdi:thermometer-lines
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_temp_feels_like') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp_feels_like') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_temp_feels_like') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_temp_feels_like') | float(none) }}
 
       - name: "BOM Observations Humidity"
         unique_id: bom_observations_humidity
@@ -847,10 +1695,10 @@ template:
         icon: mdi:water-percent
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_humidity') }}
+          {{ has_value('sensor.' ~ prefix ~ '_humidity') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_humidity') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_humidity') | float(none) }}
 
       - name: "BOM Observations Dew Point"
         unique_id: bom_observations_dew_point
@@ -860,10 +1708,10 @@ template:
         icon: mdi:water-thermometer
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_dew_point') }}
+          {{ has_value('sensor.' ~ prefix ~ '_dew_point') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_dew_point') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_dew_point') | float(none) }}
 
       - name: "BOM Observations Wind Speed"
         unique_id: bom_observations_wind_speed
@@ -873,10 +1721,10 @@ template:
         icon: mdi:weather-windy
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_wind_speed_kilometre') }}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_speed_kilometre') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_wind_speed_kilometre') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_wind_speed_kilometre') | float(none) }}
 
       - name: "BOM Observations Wind Gust"
         unique_id: bom_observations_wind_gust
@@ -886,20 +1734,20 @@ template:
         icon: mdi:weather-windy-variant
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_gust_speed_kilometre') }}
+          {{ has_value('sensor.' ~ prefix ~ '_gust_speed_kilometre') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_gust_speed_kilometre') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_gust_speed_kilometre') | float(none) }}
 
       - name: "BOM Observations Wind Direction"
         unique_id: bom_observations_wind_direction
         icon: mdi:compass
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_wind_direction') }}
+          {{ has_value('sensor.' ~ prefix ~ '_wind_direction') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_wind_direction') }}
+          {{ states('sensor.' ~ prefix ~ '_wind_direction') }}
 
       - name: "BOM Observations Pressure"
         unique_id: bom_observations_pressure
@@ -909,10 +1757,10 @@ template:
         icon: mdi:gauge
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_pressure') }}
+          {{ has_value('sensor.' ~ prefix ~ '_pressure') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_pressure') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_pressure') | float(none) }}
 
       - name: "BOM Observations Rain Since 9am"
         unique_id: bom_observations_rain_since_9am
@@ -922,10 +1770,10 @@ template:
         icon: mdi:water
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_rain_since_9am') }}
+          {{ has_value('sensor.' ~ prefix ~ '_rain_since_9am') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ states('sensor.' ~ prefix ~ '_observations_rain_since_9am') | float(none) }}
+          {{ states('sensor.' ~ prefix ~ '_rain_since_9am') | float(none) }}
 
       # Calculated: Delta T from BOM observations
       - name: "BOM Observations Delta T"
@@ -935,12 +1783,12 @@ template:
         icon: mdi:delta
         availability: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {{ has_value('sensor.' ~ prefix ~ '_observations_temp') and
-             has_value('sensor.' ~ prefix ~ '_observations_humidity') }}
+          {{ has_value('sensor.' ~ prefix ~ '_temp') and
+             has_value('sensor.' ~ prefix ~ '_humidity') }}
         state: >-
           {% set prefix = states('sensor.bom_detected_prefix') %}
-          {% set t = states('sensor.' ~ prefix ~ '_observations_temp') | float(0) %}
-          {% set rh = states('sensor.' ~ prefix ~ '_observations_humidity') | float(0) %}
+          {% set t = states('sensor.' ~ prefix ~ '_temp') | float(0) %}
+          {% set rh = states('sensor.' ~ prefix ~ '_humidity') | float(0) %}
           {% if rh > 0 %}
             {% set a = t * atan(0.151977 * (rh + 8.313659) ** 0.5) %}
             {% set b = 0.00391838 * ((rh ** 3) ** 0.5) * atan(0.023101 * rh) %}
@@ -2593,9 +3441,48 @@ shell_command:
 # =============================================================================
 
 input_number:
+  # Local station slot selector (for settings form)
+  weather_local_station_slot:
+    name: Weather Local Station Slot
+    min: 1
+    max: 4
+    step: 1
+    mode: box
+    icon: mdi:numeric
+
   # Local gateway CDD
   weather_station_1_cdd:
     name: Weather Station 1 Cumulative Degree Days
+    min: -1000000
+    max: 1000000
+    initial: 0
+    step: 0.1
+    unit_of_measurement: "°C"
+    icon: mdi:chart-multiple
+    mode: box
+
+  weather_station_2_cdd:
+    name: Weather Station 2 Cumulative Degree Days
+    min: -1000000
+    max: 1000000
+    initial: 0
+    step: 0.1
+    unit_of_measurement: "°C"
+    icon: mdi:chart-multiple
+    mode: box
+
+  weather_station_3_cdd:
+    name: Weather Station 3 Cumulative Degree Days
+    min: -1000000
+    max: 1000000
+    initial: 0
+    step: 0.1
+    unit_of_measurement: "°C"
+    icon: mdi:chart-multiple
+    mode: box
+
+  weather_station_4_cdd:
+    name: Weather Station 4 Cumulative Degree Days
     min: -1000000
     max: 1000000
     initial: 0
@@ -2715,6 +3602,29 @@ input_select:
     initial: "View"
     icon: mdi:pencil
 
+  # Local Station Active Tab Selector (for dashboard tabs)
+  weather_local_active_station:
+    name: Weather Local Active Station
+    options:
+      - "Station 1"
+      - "Station 2"
+      - "Station 3"
+      - "Station 4"
+    initial: "Station 1"
+    icon: mdi:tab
+
+  weather_local_editor_mode:
+    name: Weather Local Editor Mode
+    options:
+      - "View"
+      - "Add Station"
+      - "Edit Station 1"
+      - "Edit Station 2"
+      - "Edit Station 3"
+      - "Edit Station 4"
+    initial: "View"
+    icon: mdi:pencil
+
 
 # =============================================================================
 # LOCAL STATION CONFIGURATION SENSOR
@@ -2753,6 +3663,114 @@ sensor:
   - platform: statistics
     name: Weather Station 1 Avg Wind Speed
     entity_id: sensor.weather_local_1_wind_speed
+    state_characteristic: mean
+    max_age:
+      hours: 24
+
+  # Local Station 2 statistics
+  - platform: statistics
+    name: Weather Station 2 Min Temperature
+    entity_id: sensor.weather_local_2_temperature
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 2 Max Temperature
+    entity_id: sensor.weather_local_2_temperature
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 2 Min Humidity
+    entity_id: sensor.weather_local_2_humidity
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 2 Max Humidity
+    entity_id: sensor.weather_local_2_humidity
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 2 Avg Wind Speed
+    entity_id: sensor.weather_local_2_wind_speed
+    state_characteristic: mean
+    max_age:
+      hours: 24
+
+  # Local Station 3 statistics
+  - platform: statistics
+    name: Weather Station 3 Min Temperature
+    entity_id: sensor.weather_local_3_temperature
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 3 Max Temperature
+    entity_id: sensor.weather_local_3_temperature
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 3 Min Humidity
+    entity_id: sensor.weather_local_3_humidity
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 3 Max Humidity
+    entity_id: sensor.weather_local_3_humidity
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 3 Avg Wind Speed
+    entity_id: sensor.weather_local_3_wind_speed
+    state_characteristic: mean
+    max_age:
+      hours: 24
+
+  # Local Station 4 statistics
+  - platform: statistics
+    name: Weather Station 4 Min Temperature
+    entity_id: sensor.weather_local_4_temperature
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 4 Max Temperature
+    entity_id: sensor.weather_local_4_temperature
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 4 Min Humidity
+    entity_id: sensor.weather_local_4_humidity
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 4 Max Humidity
+    entity_id: sensor.weather_local_4_humidity
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: Weather Station 4 Avg Wind Speed
+    entity_id: sensor.weather_local_4_wind_speed
     state_characteristic: mean
     max_age:
       hours: 24
@@ -2900,6 +3918,30 @@ utility_meter:
     periodically_resetting: true
     always_available: true
 
+  weather_station_2_solar_radiation_mj_m2_day:
+    name: Weather Station 2 Solar Radiation (MJ/m2/day)
+    source: sensor.weather_station_2_filtered_solar_radiation
+    cycle: daily
+    delta_values: true
+    periodically_resetting: true
+    always_available: true
+
+  weather_station_3_solar_radiation_mj_m2_day:
+    name: Weather Station 3 Solar Radiation (MJ/m2/day)
+    source: sensor.weather_station_3_filtered_solar_radiation
+    cycle: daily
+    delta_values: true
+    periodically_resetting: true
+    always_available: true
+
+  weather_station_4_solar_radiation_mj_m2_day:
+    name: Weather Station 4 Solar Radiation (MJ/m2/day)
+    source: sensor.weather_station_4_filtered_solar_radiation
+    cycle: daily
+    delta_values: true
+    periodically_resetting: true
+    always_available: true
+
   # API stations
   weather_api_station_1_solar_mj_day:
     name: Weather API Station 1 Solar Radiation (MJ/m2/day)
@@ -3013,7 +4055,9 @@ automation:
     trigger:
       - platform: time
         at: "23:59:30"
-    condition: []
+    condition:
+      - condition: template
+        value_template: "{{ is_number(states('sensor.weather_station_1_degree_day')) }}"
     action:
       - variables:
           today: "{{ states('sensor.weather_station_1_degree_day') | float(0) }}"
@@ -3021,6 +4065,66 @@ automation:
       - service: input_number.set_value
         target:
           entity_id: input_number.weather_station_1_cdd
+        data:
+          value: "{{ (total + today) | round(2) }}"
+
+  - id: "weather_station_2_cdd_automation"
+    alias: Weather Station 2 Cumulative Degree Days Automation
+    mode: single
+    description: Adds todays Degree Day value to running total
+    trigger:
+      - platform: time
+        at: "23:59:30"
+    condition:
+      - condition: template
+        value_template: "{{ is_number(states('sensor.weather_station_2_degree_day')) }}"
+    action:
+      - variables:
+          today: "{{ states('sensor.weather_station_2_degree_day') | float(0) }}"
+          total: "{{ states('input_number.weather_station_2_cdd') | float(0) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.weather_station_2_cdd
+        data:
+          value: "{{ (total + today) | round(2) }}"
+
+  - id: "weather_station_3_cdd_automation"
+    alias: Weather Station 3 Cumulative Degree Days Automation
+    mode: single
+    description: Adds todays Degree Day value to running total
+    trigger:
+      - platform: time
+        at: "23:59:30"
+    condition:
+      - condition: template
+        value_template: "{{ is_number(states('sensor.weather_station_3_degree_day')) }}"
+    action:
+      - variables:
+          today: "{{ states('sensor.weather_station_3_degree_day') | float(0) }}"
+          total: "{{ states('input_number.weather_station_3_cdd') | float(0) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.weather_station_3_cdd
+        data:
+          value: "{{ (total + today) | round(2) }}"
+
+  - id: "weather_station_4_cdd_automation"
+    alias: Weather Station 4 Cumulative Degree Days Automation
+    mode: single
+    description: Adds todays Degree Day value to running total
+    trigger:
+      - platform: time
+        at: "23:59:30"
+    condition:
+      - condition: template
+        value_template: "{{ is_number(states('sensor.weather_station_4_degree_day')) }}"
+    action:
+      - variables:
+          today: "{{ states('sensor.weather_station_4_degree_day') | float(0) }}"
+          total: "{{ states('input_number.weather_station_4_cdd') | float(0) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.weather_station_4_cdd
         data:
           value: "{{ (total + today) | round(2) }}"
 
@@ -3475,19 +4579,17 @@ script:
     sequence:
       - variables:
           slot: "{{ slot | default('1') }}"
-          name: "{{ name | default(states('input_text.weather_local_station_name')) }}"
-          entity_prefix: "{{ entity_prefix | default(states('input_text.weather_local_station_prefix')) | default('gw1100c') }}"
+          raw_name: "{{ name | default(states('input_text.weather_local_station_name')) | trim }}"
+          entity_prefix: "{{ entity_prefix | default(states('input_text.weather_local_station_prefix')) | default('gw1100c') | trim }}"
           enabled: true
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ name | trim == '' }}"
-            sequence:
-              - service: persistent_notification.create
-                data:
-                  title: "Weather Local"
-                  message: "Station name is required."
-              - stop: "No name"
+      - variables:
+          # If name is empty, derive from prefix (replace _ with space, title case)
+          name: >-
+            {% if raw_name != '' %}
+              {{ raw_name }}
+            {% else %}
+              {{ entity_prefix | replace('_', ' ') | title }}
+            {% endif %}
       - choose:
           - conditions:
               - condition: template
@@ -3552,3 +4654,103 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.weather_local_config
+
+  weather_local_remove_station:
+    alias: Weather Local Remove Station
+    mode: single
+    fields:
+      slot:
+        description: Station slot to remove
+    sequence:
+      - service: shell_command.weather_local_remove_station
+        data:
+          slot: "{{ slot }}"
+      - delay: "00:00:01"
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.weather_local_config
+      - service: persistent_notification.create
+        data:
+          title: "Weather Local"
+          message: "Station removed from slot {{ slot }}."
+
+  weather_local_load_station:
+    alias: Weather Local Load Station
+    description: Load station details into the form for editing
+    mode: single
+    fields:
+      slot:
+        description: Station slot to load (1-4)
+    sequence:
+      - variables:
+          cfg: "{{ state_attr('sensor.weather_local_config', 'local_stations') or {} }}"
+          s: "{{ cfg.get(slot | string, {}) }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ not s or not s.get('entity_prefix') }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "Weather Local"
+                  message: "No station found in slot {{ slot }}."
+              - stop: "No station"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.weather_local_station_slot
+        data:
+          value: "{{ slot }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.weather_local_station_name
+        data:
+          value: "{{ s.get('name') | default('', true) }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.weather_local_station_prefix
+        data:
+          value: "{{ s.get('entity_prefix') | default('', true) }}"
+      - service: persistent_notification.create
+        data:
+          title: "Weather Local"
+          message: "Loaded station '{{ s.get('name', 'Unknown') }}' from slot {{ slot }}."
+
+  weather_local_clear_form:
+    alias: Weather Local Clear Form
+    description: Clear the station form inputs and set to next available slot
+    mode: single
+    sequence:
+      - variables:
+          next_slot: "{{ state_attr('sensor.weather_local_slot_status', 'next_slot') | int(1) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.weather_local_station_slot
+        data:
+          value: "{{ next_slot if next_slot > 0 else 1 }}"
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.weather_local_station_name
+        data:
+          value: ""
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.weather_local_station_prefix
+        data:
+          value: ""
+
+  weather_local_reset_cdd:
+    alias: Weather Local Reset CDD
+    mode: single
+    fields:
+      slot:
+        description: Station slot to reset CDD
+    sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: "input_number.weather_station_{{ slot }}_cdd"
+        data:
+          value: 0
+      - service: persistent_notification.create
+        data:
+          title: "Weather Local"
+          message: "CDD reset for local station {{ slot }}."

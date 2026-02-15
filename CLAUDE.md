@@ -96,6 +96,11 @@ This file stays minimal. Put implementation details in repo docs, e.g.:
 ### Overview
 The Weather module integrates Bureau of Meteorology (BOM) data and local Ecowitt stations for Australian farm weather.
 
+### BOM Setup Status
+- **HACS Integration:** `bureau_of_meteorology` installed in `/config/custom_components/`
+- **Config Entry:** Auto-configured via `bom_setup.py` with "home" basename
+- **Location:** Uses HA's configured lat/lon (auto-detected)
+
 ### BOM Auto-Setup
 PaddiSense now supports automatic BOM integration configuration:
 
@@ -125,14 +130,50 @@ shell_command.weather_bom_check
 - `binary_sensor.bom_observations_available` - True when BOM observation entities exist
 - `sensor.bom_detected_prefix` - Auto-detects BOM entity prefix (usually "home")
 
-**BOM Entity Naming Convention:**
-PaddiSense uses the standard "home" basename for BOM sensors:
-- Observations: `sensor.home_observations_*` (temp, humidity, wind_speed_kilometre, etc.)
-- Forecasts: `sensor.home_forecast_*_0` through `_5` (temp_max, temp_min, rain_amount_*, etc.)
-- Warnings: `sensor.home_warnings`
+**BOM Entity Naming Convention (CRITICAL - Updated 2026-02-15):**
+The BOM HACS integration uses **simple naming without "observations_" or "forecast_" prefixes**:
+
+| Type | Entity Pattern | Examples |
+|------|----------------|----------|
+| Observations | `sensor.{prefix}_{metric}` | `sensor.home_temp`, `sensor.home_humidity`, `sensor.home_wind_speed_kilometre` |
+| Forecasts | `sensor.{prefix}_{metric}_{day}` | `sensor.home_temp_min_0`, `sensor.home_rain_chance_0`, `sensor.home_fire_danger_0` |
+| Warnings | `sensor.{prefix}_warnings` | `sensor.home_warnings` |
+
+**Common Observation Sensors:**
+- `sensor.home_temp` - Current temperature
+- `sensor.home_temp_feels_like` - Feels like temperature
+- `sensor.home_humidity` - Relative humidity
+- `sensor.home_dew_point` - Dew point
+- `sensor.home_wind_speed_kilometre` - Wind speed
+- `sensor.home_gust_speed_kilometre` - Wind gust
+- `sensor.home_wind_direction` - Wind direction
+- `sensor.home_rain_since_9am` - Rain since 9am
+
+**Common Forecast Sensors (day 0-6):**
+- `sensor.home_temp_min_0` - Minimum temperature
+- `sensor.home_temp_max_0` - Maximum temperature
+- `sensor.home_rain_amount_min_0` / `_max_0` - Rain amount range
+- `sensor.home_rain_chance_0` - Rain probability %
+- `sensor.home_uv_max_index_0` - UV index
+- `sensor.home_fire_danger_0` - Fire danger rating
+- `sensor.home_icon_descriptor_0` - Weather icon (sunny, cloudy, etc.)
+
+**Template Sensor Pattern:**
+PaddiSense template sensors use dynamic prefix detection:
+```yaml
+{% set prefix = states('sensor.bom_detected_prefix') %}
+{{ states('sensor.' ~ prefix ~ '_temp') }}
+```
 
 ### Local Weather Stations
 Support for Ecowitt gateways and API stations with automatic entity prefix detection.
+
+### Troubleshooting: Template Sensor unique_id Stability
+**IMPORTANT:** When editing template sensors in `weather/package.yaml`:
+- **Never change `unique_id` values** - HA uses these to track entities
+- If unique_id changes, HA creates a NEW entity (with `_2` suffix) instead of updating
+- Orphaned entities must be manually removed from `/config/.storage/core.entity_registry`
+- After entity registry edits, **restart HA** to apply changes
 
 ## Crop Management System (Implemented 2026-02-14)
 
