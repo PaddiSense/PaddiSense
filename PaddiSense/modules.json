@@ -1,6 +1,36 @@
 {
   "schema_version": "1.0.0",
   "version": "1.0.0-pr.1",
+  "hacs_frontend_required": [
+    {
+      "id": "button-card",
+      "name": "Button Card",
+      "hacs_repo": "custom-cards/button-card",
+      "description": "Core UI component for all PaddiSense dashboards"
+    }
+  ],
+  "hacs_frontend_recommended": [
+    {
+      "id": "auto-entities",
+      "name": "Auto Entities",
+      "hacs_repo": "thomasloven/lovelace-auto-entities"
+    },
+    {
+      "id": "card-mod",
+      "name": "Card Mod",
+      "hacs_repo": "thomasloven/lovelace-card-mod"
+    },
+    {
+      "id": "mushroom",
+      "name": "Mushroom Cards",
+      "hacs_repo": "piitaya/lovelace-mushroom"
+    },
+    {
+      "id": "apexcharts-card",
+      "name": "ApexCharts Card",
+      "hacs_repo": "RomRider/apexcharts-card"
+    }
+  ],
   "modules": {
     "registry": {
       "name": "Farm Registry",

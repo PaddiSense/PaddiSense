@@ -51,6 +51,22 @@ command_line:
         - modules
         - backup_count
 
+  - sensor:
+      name: PaddiSense HACS Status
+      unique_id: paddisense_hacs_status
+      command: "python3 /config/PaddiSense/registry/python/hacs_checker.py"
+      scan_interval: 300
+      value_template: "{{ value_json.status }}"
+      json_attributes:
+        - hacs_installed
+        - ready
+        - required_ok
+        - components
+        - missing
+        - missing_required
+        - missing_count
+        - missing_required_count
+
 # -----------------------------------------------------------------------------
 # SHELL COMMANDS
 # -----------------------------------------------------------------------------

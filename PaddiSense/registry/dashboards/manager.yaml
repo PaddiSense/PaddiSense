@@ -361,6 +361,238 @@ button_card_templates:
 
 views:
   # ===========================================================================
+  # View 0: Setup / Bootstrap (Native HA cards only - no dependencies)
+  # ===========================================================================
+  - title: Setup
+    path: setup
+    icon: mdi:cog-play
+    type: sections
+    max_columns: 1
+    sections:
+      - type: grid
+        cards:
+          # Header - always shown
+          - type: markdown
+            content: |
+              # PaddiSense Setup
+
+              This page checks for required HACS frontend components.
+
+          # Status: Ready - show continue button
+          - type: conditional
+            conditions:
+              - entity: sensor.paddisense_hacs_status
+                state: "ready"
+            card:
+              type: vertical-stack
+              cards:
+                - type: markdown
+                  content: |
+                    ## All Dependencies Installed
+
+                    PaddiSense is ready to use. Click below to continue to the Modules view
+                    where you can install your desired modules.
+                - type: button
+                  name: Continue to Modules
+                  icon: mdi:package-variant
+                  tap_action:
+                    action: navigate
+                    navigation_path: /paddisense-manager/modules
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #28a745;
+                      height: 70px;
+                    }
+
+          # Status: HACS not installed
+          - type: conditional
+            conditions:
+              - entity: sensor.paddisense_hacs_status
+                state: "hacs_missing"
+            card:
+              type: vertical-stack
+              cards:
+                - type: markdown
+                  content: |
+                    ## HACS Not Installed
+
+                    PaddiSense requires [HACS](https://hacs.xyz/) (Home Assistant Community Store)
+                    to install frontend components.
+
+                    **Install HACS:**
+                    1. Click the button below to install HACS
+                    2. Restart Home Assistant
+                    3. Go to Settings → Devices & Services → Add Integration → HACS
+                    4. Complete HACS setup, then return here
+                - type: button
+                  name: Install HACS
+                  icon: mdi:store
+                  tap_action:
+                    action: call-service
+                    service: shell_command.paddisense_install_hacs
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #0066cc;
+                      height: 70px;
+                    }
+                - type: button
+                  name: Refresh Status
+                  icon: mdi:refresh
+                  tap_action:
+                    action: call-service
+                    service: homeassistant.update_entity
+                    service_data:
+                      entity_id: sensor.paddisense_hacs_status
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #555555;
+                      height: 60px;
+                    }
+
+          # Status: Dependencies missing
+          - type: conditional
+            conditions:
+              - entity: sensor.paddisense_hacs_status
+                state: "deps_missing"
+            card:
+              type: vertical-stack
+              cards:
+                - type: markdown
+                  content: |
+                    ## Install Required Components
+
+                    PaddiSense requires the following HACS frontend components.
+                    Click each button to open HACS and install.
+
+                    **Required:**
+                    - **Button Card** - Core UI component for all dashboards
+
+                    **Recommended:**
+                    - Auto Entities - Dynamic card filtering
+                    - Card Mod - Custom card styling
+                    - Mushroom Cards - Modern UI components
+                    - ApexCharts Card - Weather charts
+
+                # Button Card (required)
+                - type: conditional
+                  conditions:
+                    - entity: sensor.paddisense_hacs_status
+                      attribute: components
+                      # This won't work directly, so we use a workaround with template
+                  card:
+                    type: markdown
+                    content: "Check HACS for button-card"
+
+                - type: button
+                  name: Install Button Card (Required)
+                  icon: mdi:card-outline
+                  tap_action:
+                    action: url
+                    url_path: /hacs/repository/custom-cards/button-card
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #dc3545;
+                      height: 70px;
+                    }
+
+                - type: button
+                  name: Install Auto Entities
+                  icon: mdi:filter-variant
+                  tap_action:
+                    action: url
+                    url_path: /hacs/repository/thomasloven/lovelace-auto-entities
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #0066cc;
+                      height: 60px;
+                    }
+
+                - type: button
+                  name: Install Card Mod
+                  icon: mdi:palette
+                  tap_action:
+                    action: url
+                    url_path: /hacs/repository/thomasloven/lovelace-card-mod
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #0066cc;
+                      height: 60px;
+                    }
+
+                - type: button
+                  name: Install Mushroom Cards
+                  icon: mdi:mushroom
+                  tap_action:
+                    action: url
+                    url_path: /hacs/repository/piitaya/lovelace-mushroom
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #0066cc;
+                      height: 60px;
+                    }
+
+                - type: button
+                  name: Install ApexCharts Card
+                  icon: mdi:chart-line
+                  tap_action:
+                    action: url
+                    url_path: /hacs/repository/RomRider/apexcharts-card
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #0066cc;
+                      height: 60px;
+                    }
+
+                - type: markdown
+                  content: |
+                    ---
+                    After installing components, **refresh the browser** (F5) and click Refresh Status.
+
+                - type: button
+                  name: Refresh Status
+                  icon: mdi:refresh
+                  tap_action:
+                    action: call-service
+                    service: homeassistant.update_entity
+                    service_data:
+                      entity_id: sensor.paddisense_hacs_status
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #555555;
+                      height: 60px;
+                    }
+
+          # Status: Sensor unavailable (first load)
+          - type: conditional
+            conditions:
+              - entity: sensor.paddisense_hacs_status
+                state: "unavailable"
+            card:
+              type: vertical-stack
+              cards:
+                - type: markdown
+                  content: |
+                    ## Initializing...
+
+                    The HACS status sensor is loading. If this persists, try:
+                    1. Check that the registry package is loaded
+                    2. Restart Home Assistant
+                    3. Check logs for errors
+                - type: button
+                  name: Refresh Status
+                  icon: mdi:refresh
+                  tap_action:
+                    action: call-service
+                    service: homeassistant.update_entity
+                    service_data:
+                      entity_id: sensor.paddisense_hacs_status
+                  style: |
+                    ha-card {
+                      --mdc-theme-primary: #555555;
+                      height: 60px;
+                    }
+
+  # ===========================================================================
   # View 1: Farm Management
   # ===========================================================================
   - title: Farms
