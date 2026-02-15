@@ -230,6 +230,42 @@ if [ ! -f "$CONFIG_DIR/configuration.yaml" ]; then
     exit 1
 fi
 
+# Check if HACS is installed (required for frontend cards)
+HACS_INSTALLED=false
+if [ -d "$CONFIG_DIR/custom_components/hacs" ]; then
+    HACS_INSTALLED=true
+fi
+
+if [ "$HACS_INSTALLED" = false ]; then
+    echo ""
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  HACS Not Detected - Required for PaddiSense${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo "PaddiSense requires HACS (Home Assistant Community Store) to install"
+    echo "the frontend cards used by dashboards (button-card, card-mod, etc.)"
+    echo ""
+    echo -e "${GREEN}How to install HACS:${NC}"
+    echo ""
+    echo "  1. Open Home Assistant in your browser"
+    echo "  2. Go to Settings → Devices & Services"
+    echo "  3. Click the blue '+ ADD INTEGRATION' button (bottom right)"
+    echo "  4. Search for 'HACS' and select it"
+    echo "  5. Accept the terms and follow the GitHub authorization flow"
+    echo "  6. Restart Home Assistant when prompted"
+    echo ""
+    echo -e "${GREEN}Alternative method (SSH/Terminal):${NC}"
+    echo ""
+    echo "  wget -O - https://get.hacs.xyz | bash -"
+    echo "  # Then restart Home Assistant and add HACS via Settings → Integrations"
+    echo ""
+    echo -e "${BLUE}More info: https://hacs.xyz/docs/use/download/download${NC}"
+    echo ""
+    echo -e "${YELLOW}After installing HACS, run this installer again.${NC}"
+    echo ""
+    exit 1
+fi
+
 if [ ! -d "$INSTALL_DIR" ]; then
     print_error "PaddiSense not found in $INSTALL_DIR"
     echo "    Clone the repository first:"
@@ -324,18 +360,26 @@ if [ "$CONFIG_NEEDS_UPDATE" = true ]; then
 fi
 
 echo ""
-echo -e "${YELLOW}Required HACS frontend cards:${NC}"
-echo "  - button-card"
-echo "  - card-mod"
+echo -e "${YELLOW}Required HACS Frontend Cards:${NC}"
+echo ""
+echo "  Install these via HACS → Frontend → Explore & Download:"
+echo "    • Button Card        (search: button-card)"
+echo "    • Card Mod           (search: card-mod)"
+echo ""
+echo "  Optional but recommended:"
+echo "    • Auto Entities      (dynamic card lists)"
+echo "    • ApexCharts Card    (weather graphs)"
+echo "    • Mushroom Cards     (additional UI elements)"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 if [ "$CONFIG_NEEDS_UPDATE" = true ]; then
     echo "  1. Update configuration.yaml (one-time setup - see above)"
-    echo "  2. Install required HACS cards"
+    echo "  2. Install required HACS cards (see list above)"
     echo "  3. Restart Home Assistant"
     echo "  4. Open each dashboard and click 'Initialize System' in Settings"
 else
-    echo "  1. Restart Home Assistant to apply changes"
-    echo "  2. Open each dashboard and click 'Initialize System' in Settings"
+    echo "  1. Install required HACS cards if not already installed"
+    echo "  2. Restart Home Assistant to apply changes"
+    echo "  3. Open each dashboard and click 'Initialize System' in Settings"
 fi
 echo ""
