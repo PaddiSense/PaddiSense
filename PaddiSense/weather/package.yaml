@@ -508,6 +508,16 @@ template:
         icon: mdi:weather-cloudy
         state: >-
           {{ states('sensor.bom_detected_prefix') | length > 0 }}
+
+      # BOM Integration Configured - checks if config entry exists (any BOM entity)
+      - name: "BOM Integration Configured"
+        unique_id: bom_integration_configured
+        icon: mdi:weather-cloudy-check
+        device_class: connectivity
+        state: >-
+          {% set bom_entities = states | selectattr('entity_id', 'match', '^sensor\\..*_observations_temp$') | list %}
+          {% set bom_entities = bom_entities + (states | selectattr('entity_id', 'match', '^sensor\\..*_forecast_temp_min_0$') | list) %}
+          {{ bom_entities | length > 0 }}
       # API Station Configuration Status (for Settings conditional cards)
       - name: "Weather API Station 1 Configured"
         unique_id: weather_api_station_1_configured
@@ -2468,6 +2478,13 @@ shell_command:
     python3 /config/PaddiSense/weather/python/weather_api_backend.py disable_station
     --slot "{{ slot }}"
 
+  # BOM Integration Setup - configures Bureau of Meteorology with standard "home" naming
+  weather_bom_setup: >-
+    python3 /config/PaddiSense/weather/python/bom_setup.py --basename home --essential-only
+
+  weather_bom_check: >-
+    python3 /config/PaddiSense/weather/python/bom_setup.py --check --json
+
 
 # =============================================================================
 # INPUT HELPERS
@@ -3022,6 +3039,70 @@ script:
         data:
           title: "Weather API"
           message: "Data refreshed."
+
+  # BOM Integration Setup - auto-installs and configures Bureau of Meteorology
+  weather_bom_configure:
+    alias: Configure BOM Integration
+    mode: single
+    description: >
+      Automatically installs (if needed) and configures the Bureau of Meteorology
+      integration with standard "home" naming pattern for PaddiSense compatibility.
+    sequence:
+      # Check if already configured
+      - choose:
+          - conditions:
+              - condition: state
+                entity: binary_sensor.bom_integration_configured
+                state: "on"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "BOM Weather"
+                  message: >
+                    BOM integration is already configured.
+                    If you need to reconfigure, delete the existing integration
+                    in Settings > Devices & Services first.
+              - stop: "BOM already configured"
+      # Install BOM via HACS if not already installed
+      - service: persistent_notification.create
+        data:
+          title: "BOM Weather"
+          message: "Installing Bureau of Meteorology integration..."
+      - service: paddisense.install_module_hacs
+        data:
+          module_id: weather
+      - delay: "00:00:05"
+      # Now configure with standard naming
+      - service: persistent_notification.create
+        data:
+          title: "BOM Weather"
+          message: "Configuring Bureau of Meteorology with PaddiSense naming..."
+      - service: shell_command.weather_bom_setup
+      - delay: "00:00:03"
+      # Check result and notify
+      - choose:
+          - conditions:
+              - condition: state
+                entity: binary_sensor.bom_integration_configured
+                state: "on"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "BOM Weather"
+                  message: >
+                    BOM Weather configured successfully!
+                    Sensors are now available with the "home" prefix.
+                    Reload the page to see weather data.
+        default:
+          - service: persistent_notification.create
+            data:
+              title: "BOM Weather"
+              message: >
+                BOM configuration may have failed. Please check:
+                1. Home Assistant has internet connectivity
+                2. Your HA location is set to Australia
+                3. Try again after restarting Home Assistant
+                3. Your location is in Australia
 
   weather_api_add_station:
     alias: Weather API Add Station

@@ -361,238 +361,6 @@ button_card_templates:
 
 views:
   # ===========================================================================
-  # View 0: Setup / Bootstrap (Native HA cards only - no dependencies)
-  # ===========================================================================
-  - title: Setup
-    path: setup
-    icon: mdi:cog-play
-    type: sections
-    max_columns: 1
-    sections:
-      - type: grid
-        cards:
-          # Header - always shown
-          - type: markdown
-            content: |
-              # PaddiSense Setup
-
-              This page checks for required HACS frontend components.
-
-          # Status: Ready - show continue button
-          - type: conditional
-            conditions:
-              - entity: sensor.paddisense_hacs_status
-                state: "ready"
-            card:
-              type: vertical-stack
-              cards:
-                - type: markdown
-                  content: |
-                    ## All Dependencies Installed
-
-                    PaddiSense is ready to use. Click below to continue to the Modules view
-                    where you can install your desired modules.
-                - type: button
-                  name: Continue to Modules
-                  icon: mdi:package-variant
-                  tap_action:
-                    action: navigate
-                    navigation_path: /paddisense-manager/modules
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #28a745;
-                      height: 70px;
-                    }
-
-          # Status: HACS not installed
-          - type: conditional
-            conditions:
-              - entity: sensor.paddisense_hacs_status
-                state: "hacs_missing"
-            card:
-              type: vertical-stack
-              cards:
-                - type: markdown
-                  content: |
-                    ## HACS Not Installed
-
-                    PaddiSense requires [HACS](https://hacs.xyz/) (Home Assistant Community Store)
-                    to install frontend components.
-
-                    **Install HACS:**
-                    1. Click the button below to install HACS
-                    2. Restart Home Assistant
-                    3. Go to Settings → Devices & Services → Add Integration → HACS
-                    4. Complete HACS setup, then return here
-                - type: button
-                  name: Install HACS
-                  icon: mdi:store
-                  tap_action:
-                    action: call-service
-                    service: shell_command.paddisense_install_hacs
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #0066cc;
-                      height: 70px;
-                    }
-                - type: button
-                  name: Refresh Status
-                  icon: mdi:refresh
-                  tap_action:
-                    action: call-service
-                    service: homeassistant.update_entity
-                    service_data:
-                      entity_id: sensor.paddisense_hacs_status
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #555555;
-                      height: 60px;
-                    }
-
-          # Status: Dependencies missing
-          - type: conditional
-            conditions:
-              - entity: sensor.paddisense_hacs_status
-                state: "deps_missing"
-            card:
-              type: vertical-stack
-              cards:
-                - type: markdown
-                  content: |
-                    ## Install Required Components
-
-                    PaddiSense requires the following HACS frontend components.
-                    Click each button to open HACS and install.
-
-                    **Required:**
-                    - **Button Card** - Core UI component for all dashboards
-
-                    **Recommended:**
-                    - Auto Entities - Dynamic card filtering
-                    - Card Mod - Custom card styling
-                    - Mushroom Cards - Modern UI components
-                    - ApexCharts Card - Weather charts
-
-                # Button Card (required)
-                - type: conditional
-                  conditions:
-                    - entity: sensor.paddisense_hacs_status
-                      attribute: components
-                      # This won't work directly, so we use a workaround with template
-                  card:
-                    type: markdown
-                    content: "Check HACS for button-card"
-
-                - type: button
-                  name: Install Button Card (Required)
-                  icon: mdi:card-outline
-                  tap_action:
-                    action: url
-                    url_path: /hacs/repository/custom-cards/button-card
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #dc3545;
-                      height: 70px;
-                    }
-
-                - type: button
-                  name: Install Auto Entities
-                  icon: mdi:filter-variant
-                  tap_action:
-                    action: url
-                    url_path: /hacs/repository/thomasloven/lovelace-auto-entities
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #0066cc;
-                      height: 60px;
-                    }
-
-                - type: button
-                  name: Install Card Mod
-                  icon: mdi:palette
-                  tap_action:
-                    action: url
-                    url_path: /hacs/repository/thomasloven/lovelace-card-mod
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #0066cc;
-                      height: 60px;
-                    }
-
-                - type: button
-                  name: Install Mushroom Cards
-                  icon: mdi:mushroom
-                  tap_action:
-                    action: url
-                    url_path: /hacs/repository/piitaya/lovelace-mushroom
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #0066cc;
-                      height: 60px;
-                    }
-
-                - type: button
-                  name: Install ApexCharts Card
-                  icon: mdi:chart-line
-                  tap_action:
-                    action: url
-                    url_path: /hacs/repository/RomRider/apexcharts-card
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #0066cc;
-                      height: 60px;
-                    }
-
-                - type: markdown
-                  content: |
-                    ---
-                    After installing components, **refresh the browser** (F5) and click Refresh Status.
-
-                - type: button
-                  name: Refresh Status
-                  icon: mdi:refresh
-                  tap_action:
-                    action: call-service
-                    service: homeassistant.update_entity
-                    service_data:
-                      entity_id: sensor.paddisense_hacs_status
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #555555;
-                      height: 60px;
-                    }
-
-          # Status: Sensor unavailable (first load)
-          - type: conditional
-            conditions:
-              - entity: sensor.paddisense_hacs_status
-                state: "unavailable"
-            card:
-              type: vertical-stack
-              cards:
-                - type: markdown
-                  content: |
-                    ## Initializing...
-
-                    The HACS status sensor is loading. If this persists, try:
-                    1. Check that the registry package is loaded
-                    2. Restart Home Assistant
-                    3. Check logs for errors
-                - type: button
-                  name: Refresh Status
-                  icon: mdi:refresh
-                  tap_action:
-                    action: call-service
-                    service: homeassistant.update_entity
-                    service_data:
-                      entity_id: sensor.paddisense_hacs_status
-                  style: |
-                    ha-card {
-                      --mdc-theme-primary: #555555;
-                      height: 60px;
-                    }
-
-  # ===========================================================================
   # View 1: Farm Management
   # ===========================================================================
   - title: Farms
@@ -3000,204 +2768,65 @@ views:
                       return `Import farms and paddocks from ${filename}?`;
                     ]]]
 
+              # Weather Module Setup (BOM)
               - type: custom:button-card
                 template: template_titleblock
                 variables:
-                  var_name: HACS DEPENDENCIES
+                  var_name: WEATHER SETUP
 
-              - type: markdown
-                content: |
-                  PaddiSense dashboards require the following HACS components.
-                  Click below to install these automatically (requires HACS).
-                card_mod:
-                  style: |
-                    ha-card {
-                      border-radius: 12px;
-                      padding: 8px;
-                      background: var(--card-background-color);
-                    }
+              # Configure BOM - shows when not configured
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: binary_sensor.bom_integration_configured
+                    state: "off"
+                card:
+                  type: custom:button-card
+                  template: template_success
+                  name: Setup BOM Weather
+                  icon: mdi:weather-cloudy-arrow-right
+                  tap_action:
+                    action: call-service
+                    service: script.weather_bom_configure
+                  hold_action:
+                    action: none
+                  confirmation:
+                    text: |
+                      Setup Bureau of Meteorology weather data?
 
-              # HACS Required Components Display
-              - type: custom:button-card
-                show_icon: false
-                show_name: false
-                show_state: false
-                tap_action:
-                  action: none
-                hold_action:
-                  action: none
-                styles:
-                  card:
-                    - background: var(--card-background-color)
-                    - border-radius: 12px
-                    - padding: 16px
-                    - box-shadow: 0 2px 6px rgba(0,0,0,0.1)
-                  grid:
-                    - display: block
-                custom_fields:
-                  hacs: |
-                    [[[
-                      try {
-                        // Core HACS components (required for all modules)
-                        const coreComponents = [
-                          { name: 'button-card', desc: 'Action buttons' },
-                          { name: 'card-mod', desc: 'Card styling' },
-                          { name: 'auto-entities', desc: 'Dynamic lists' },
-                          { name: 'mushroom', desc: 'Modern UI cards' },
-                          { name: 'apexcharts-card', desc: 'Charts & graphs' },
-                          { name: 'mini-graph-card', desc: 'Compact graphs' },
-                          { name: 'flex-table-card', desc: 'Data tables' },
-                          { name: 'restriction-card', desc: 'Access control' },
-                        ];
+                      This will automatically install and configure BOM
+                      for Australian weather forecasts.
 
-                        // PWM module components
-                        const pwmComponents = [
-                          { name: 'circular-timer-card', desc: 'Timer display' },
-                          { name: 'flipdown-timer-card', desc: 'Countdown timer' },
-                        ];
+                      Your Home Assistant location must be set to Australia.
 
-                        // Weather module components
-                        const weatherComponents = [
-                          { name: 'windrose-card', desc: 'Wind display' },
-                          { name: 'weather-radar-card', desc: 'Radar map' },
-                        ];
-
-                        // Integration requirements
-                        const integrations = [
-                          { name: 'Browser Mod', desc: 'Popups & navigation (Core)' },
-                          { name: 'Bureau of Meteorology', desc: 'BOM weather data (Weather module)' },
-                        ];
-
-                        let html = '<div>';
-
-                        // Core components
-                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Core Components (8)</div>';
-                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
-                        for (const comp of coreComponents) {
-                          html += `<div style="background:rgba(76,175,80,0.1);border:1px solid #4caf50;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-                            <ha-icon icon="mdi:check-circle" style="--mdc-icon-size:16px;color:#4caf50;"></ha-icon>
-                            <div>
-                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
-                              <div style="font-size:9px;color:var(--secondary-text-color);">${comp.desc}</div>
-                            </div>
-                          </div>`;
-                        }
-                        html += '</div>';
-
-                        // PWM components
-                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">PWM Module (2)</div>';
-                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
-                        for (const comp of pwmComponents) {
-                          html += `<div style="background:rgba(0,150,136,0.1);border:1px solid #009688;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-                            <ha-icon icon="mdi:water" style="--mdc-icon-size:16px;color:#009688;"></ha-icon>
-                            <div>
-                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
-                              <div style="font-size:9px;color:var(--secondary-text-color);">${comp.desc}</div>
-                            </div>
-                          </div>`;
-                        }
-                        html += '</div>';
-
-                        // Weather components
-                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Weather Module (2)</div>';
-                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">';
-                        for (const comp of weatherComponents) {
-                          html += `<div style="background:rgba(33,150,243,0.1);border:1px solid #2196f3;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-                            <ha-icon icon="mdi:weather-cloudy" style="--mdc-icon-size:16px;color:#2196f3;"></ha-icon>
-                            <div>
-                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${comp.name}</div>
-                              <div style="font-size:9px;color:var(--secondary-text-color);">${comp.desc}</div>
-                            </div>
-                          </div>`;
-                        }
-                        html += '</div>';
-
-                        // Integrations
-                        html += '<div style="font-size:14px;font-weight:600;color:var(--primary-text-color);margin-bottom:8px;">Integrations (2)</div>';
-                        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
-                        for (const int of integrations) {
-                          html += `<div style="background:rgba(156,39,176,0.1);border:1px solid #9c27b0;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;">
-                            <ha-icon icon="mdi:puzzle" style="--mdc-icon-size:16px;color:#9c27b0;"></ha-icon>
-                            <div>
-                              <div style="font-size:12px;font-weight:600;color:var(--primary-text-color);">${int.name}</div>
-                              <div style="font-size:9px;color:var(--secondary-text-color);">${int.desc}</div>
-                            </div>
-                          </div>`;
-                        }
-                        html += '</div>';
-
-                        html += '</div>';
-                        return html;
-                      } catch (e) {
-                        return `<div style="padding:14px;border-radius:12px;background:rgba(244,67,54,0.12);">Error: ${e}</div>`;
-                      }
-                    ]]]
-
-              # HACS Installation buttons
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: template_action
-                    name: Install HACS
-                    icon: mdi:store
-                    tap_action:
-                      action: call-service
-                      service: shell_command.paddisense_install_hacs
-                    hold_action:
-                      action: none
-                    confirmation:
-                      text: |
-                        Install HACS (Home Assistant Community Store)?
-
-                        After installation, restart Home Assistant and configure HACS in Settings > Integrations.
-
-                  - type: custom:button-card
-                    template: template_success
-                    name: Install HACS Cards
-                    icon: mdi:download-box
-                    tap_action:
-                      action: call-service
-                      service: paddisense.install_hacs_cards
-                    hold_action:
-                      action: none
-                    confirmation:
-                      text: Install all required HACS frontend cards?
-
-              - type: horizontal-stack
-                cards:
-                  - type: custom:button-card
-                    template: template_action
-                    name: Install Browser Mod
-                    icon: mdi:application-brackets
-                    tap_action:
-                      action: call-service
-                      service: paddisense.install_module_hacs
-                      service_data:
-                        module_id: core
-                    hold_action:
-                      action: none
-                    confirmation:
-                      text: |
-                        Install Browser Mod integration?
-
-                        Required for popups and navigation controls.
-
-                  - type: custom:button-card
-                    template: template_action
-                    name: Install BOM Integration
-                    icon: mdi:weather-cloudy
-                    tap_action:
-                      action: call-service
-                      service: paddisense.install_module_hacs
-                      service_data:
-                        module_id: weather
-                    hold_action:
-                      action: none
-                    confirmation:
-                      text: |
-                        Install Bureau of Meteorology integration?
-
-                        This is required for Australian weather forecasts.
+              # Status indicator when BOM is configured
+              - type: conditional
+                conditions:
+                  - condition: state
+                    entity: binary_sensor.bom_integration_configured
+                    state: "on"
+                card:
+                  type: custom:button-card
+                  show_name: true
+                  show_icon: true
+                  name: BOM Weather Configured
+                  icon: mdi:check-circle
+                  color: "#28a745"
+                  tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - height: 50px
+                      - border-radius: 12px
+                      - background: rgba(40, 167, 69, 0.1)
+                      - border: 1px solid rgba(40, 167, 69, 0.3)
+                    name:
+                      - font-size: 14px
+                      - font-weight: 600
+                      - color: "#28a745"
+                    icon:
+                      - color: "#28a745"
+                      - width: 24px
 
               - type: custom:button-card
                 template: template_titleblock

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 import voluptuous as vol
@@ -728,7 +729,11 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
         required_cards = MODULE_HACS_CARDS.get(module_id, [])
 
         if required_integrations or required_cards:
-            if hass.services.has_service("hacs", "install"):
+            # Check if HACS is available - use multiple detection methods
+            hacs_service_available = hass.services.has_service("hacs", "install")
+            hacs_component_exists = Path("/config/custom_components/hacs").exists()
+
+            if hacs_service_available:
                 await hass.services.async_call(
                     "persistent_notification", "create",
                     {
@@ -774,8 +779,11 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
                         "notification_id": "paddisense_module_install",
                     },
                 )
+            elif hacs_component_exists:
+                # HACS installed but service not ready
+                _LOGGER.warning("HACS service not ready, skipping HACS requirements for %s - try again after restart", module_id)
             else:
-                _LOGGER.warning("HACS not available, skipping HACS requirements for %s", module_id)
+                _LOGGER.warning("HACS not installed, skipping HACS requirements for %s", module_id)
 
         result = await hass.async_add_executor_job(
             module_manager.install_module,
@@ -975,16 +983,37 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
 
     async def handle_install_hacs_cards(call: ServiceCall) -> None:
         """Install required HACS frontend cards."""
-        # Check if HACS is available
-        if not hass.services.has_service("hacs", "install"):
-            _LOGGER.error("HACS is not installed or not ready")
-            await hass.services.async_call(
-                "persistent_notification", "create",
-                {
-                    "title": "PaddiSense",
-                    "message": "HACS is not installed. Please install HACS first, then run this service again.",
-                },
-            )
+        # Check if HACS is available - use multiple detection methods
+        hacs_service_available = hass.services.has_service("hacs", "install")
+        hacs_component_exists = Path("/config/custom_components/hacs").exists()
+        hacs_config_entries = hass.config_entries.async_entries("hacs")
+
+        if not hacs_service_available:
+            if hacs_component_exists or hacs_config_entries:
+                # HACS is installed but service not ready - likely needs restart
+                _LOGGER.warning("HACS is installed but service not available - may need restart")
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": "HACS is installed but not fully loaded.\n\n"
+                                   "Please try:\n"
+                                   "1. Wait 30 seconds and try again\n"
+                                   "2. Restart Home Assistant if issue persists\n\n"
+                                   "HACS services may take time to load after startup.",
+                    },
+                )
+            else:
+                _LOGGER.error("HACS is not installed")
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": "HACS is not installed.\n\n"
+                                   "Please install HACS from: https://hacs.xyz/docs/use/download/download\n\n"
+                                   "After installing, restart Home Assistant and try again.",
+                    },
+                )
             return
 
         installed = []
@@ -1026,16 +1055,32 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
         """Install required HACS integrations and cards for a module."""
         module_id = call.data["module_id"]
 
-        # Check if HACS is available
-        if not hass.services.has_service("hacs", "install"):
-            _LOGGER.error("HACS is not installed or not ready")
-            await hass.services.async_call(
-                "persistent_notification", "create",
-                {
-                    "title": "PaddiSense",
-                    "message": "HACS is not installed. Please install HACS first.",
-                },
-            )
+        # Check if HACS is available - use multiple detection methods
+        hacs_service_available = hass.services.has_service("hacs", "install")
+        hacs_component_exists = Path("/config/custom_components/hacs").exists()
+        hacs_config_entries = hass.config_entries.async_entries("hacs")
+
+        if not hacs_service_available:
+            if hacs_component_exists or hacs_config_entries:
+                # HACS is installed but service not ready
+                _LOGGER.warning("HACS is installed but service not available - may need restart")
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": "HACS is installed but not fully loaded.\n\n"
+                                   "Please wait 30 seconds and try again, or restart Home Assistant.",
+                    },
+                )
+            else:
+                _LOGGER.error("HACS is not installed")
+                await hass.services.async_call(
+                    "persistent_notification", "create",
+                    {
+                        "title": "PaddiSense",
+                        "message": "HACS is not installed. Please install HACS first.",
+                    },
+                )
             return
 
         # Get required integrations and cards for this module

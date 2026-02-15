@@ -69,6 +69,7 @@ This file stays minimal. Put implementation details in repo docs, e.g.:
 - **Local station first, BOM fallback** - always check local sensors before external APIs
 - **Capture all fields**: wind speed, gust, direction, delta T, humidity, rain chance
 - **Markdown tables for data display** - compact, readable, mobile-friendly
+- **BOM Auto-Setup** - automated configuration via PSM Settings (see Weather Module section below)
 
 ### Multi-Select Patterns
 - **Draft system for multi-user** - device-based drafts allow concurrent recording
@@ -89,6 +90,49 @@ This file stays minimal. Put implementation details in repo docs, e.g.:
 | Danger/Clear | `#dc3545` (red) |
 | Warning/Season | `#e6a700` (yellow) |
 | Secondary | `#555555` (gray) |
+
+## Weather Module & BOM Integration (Updated 2026-02-15)
+
+### Overview
+The Weather module integrates Bureau of Meteorology (BOM) data and local Ecowitt stations for Australian farm weather.
+
+### BOM Auto-Setup
+PaddiSense now supports automatic BOM integration configuration:
+
+**Setup Flow:**
+1. **Install BOM Integration** - PSM → Settings → "Install BOM Integration" button (installs via HACS)
+2. **Configure BOM** - PSM → Settings → "Configure BOM Weather" button (auto-configures with "home" naming)
+3. **Verify** - Weather dashboard shows BOM data
+
+**Key Files:**
+| File | Purpose |
+|------|---------|
+| `weather/python/bom_setup.py` | Auto-configuration script using HA config flow API |
+| `weather/package.yaml` | Shell commands, scripts, binary sensors for BOM |
+| `registry/dashboards/manager.yaml` | PSM Settings UI with setup buttons |
+
+**Shell Commands:**
+```bash
+# Auto-configure BOM with standard "home" naming
+shell_command.weather_bom_setup
+
+# Check if BOM is already configured
+shell_command.weather_bom_check
+```
+
+**Sensors:**
+- `binary_sensor.bom_integration_configured` - True when BOM config entry exists
+- `binary_sensor.bom_observations_available` - True when BOM observation entities exist
+- `sensor.bom_detected_prefix` - Auto-detects BOM entity prefix (usually "home")
+
+**BOM Entity Naming Convention:**
+PaddiSense uses the standard "home" basename for BOM sensors:
+- Observations: `sensor.home_observations_*` (temp, humidity, wind_speed_kilometre, etc.)
+- Forecasts: `sensor.home_forecast_*_0` through `_5` (temp_max, temp_min, rain_amount_*, etc.)
+- Warnings: `sensor.home_warnings`
+
+### Local Weather Stations
+Support for Ecowitt gateways and API stations with automatic entity prefix detection.
 
 ## Crop Management System (Implemented 2026-02-14)
 
