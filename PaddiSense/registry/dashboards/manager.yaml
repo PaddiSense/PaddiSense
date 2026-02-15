@@ -914,7 +914,7 @@ views:
                 entity: sensor.farm_registry_data
                 triggers_update:
                   - sensor.farm_registry_data
-                  - input_text.registry_edit_paddock_pointer
+                  - input_select.registry_paddock
                   - input_select.registry_paddock_editor_mode
                 show_name: false
                 show_icon: false
@@ -929,8 +929,9 @@ views:
                     - box-shadow: 0 4px 12px rgba(0,0,0,0.15)
                     - display: |
                         [[[
-                          const paddockId = states['input_text.registry_edit_paddock_pointer']?.state || '';
-                          return paddockId ? 'block' : 'none';
+                          const selected = states['input_select.registry_paddock']?.state || '';
+                          const isEmpty = !selected || selected === 'Select...' || selected === 'None' || selected === 'unknown' || selected === 'unavailable';
+                          return isEmpty ? 'none' : 'block';
                         ]]]
                   grid:
                     - display: block
@@ -1056,44 +1057,89 @@ views:
                     ]]]
 
               #----------------------------------------------------------------
-              # ACTION BUTTONS ROW (Edit / Add / Delete)
+              # ACTION BUTTONS ROW
+              # Add always visible; Edit/Delete hidden when no paddock selected
               #----------------------------------------------------------------
               - type: horizontal-stack
                 cards:
-                  - type: custom:button-card
-                    template: template_action
-                    name: Edit
-                    icon: mdi:pencil
-                    tap_action:
-                      action: call-service
-                      service: script.registry_paddock_start_edit
+                  # Edit button - only when paddock selected
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: input_select.registry_paddock
+                        state_not:
+                          - "Select..."
+                          - "None"
+                          - ""
+                          - "unknown"
+                          - "unavailable"
+                    card:
+                      type: custom:button-card
+                      template: template_action
+                      name: Edit
+                      icon: mdi:pencil
+                      tap_action:
+                        action: call-service
+                        service: script.registry_paddock_start_edit
 
-                  - type: custom:button-card
-                    template: template_success
-                    name: Add
-                    icon: mdi:plus
-                    tap_action:
-                      action: call-service
-                      service: script.registry_paddock_start_add
+                  # Add button - only when NO paddock selected
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: input_select.registry_paddock
+                        state:
+                          - "Select..."
+                          - "None"
+                          - ""
+                          - "unknown"
+                          - "unavailable"
+                    card:
+                      type: custom:button-card
+                      template: template_success
+                      name: Add
+                      icon: mdi:plus
+                      tap_action:
+                        action: call-service
+                        service: script.registry_paddock_start_add
 
-                  - type: custom:button-card
-                    template: template_danger
-                    name: Delete
-                    icon: mdi:delete
-                    tap_action:
-                      action: call-service
-                      service: script.registry_paddock_delete
-                    confirmation:
-                      text: "Delete this paddock and all its bays?"
+                  # Delete button - only when paddock selected
+                  - type: conditional
+                    conditions:
+                      - condition: state
+                        entity: input_select.registry_paddock
+                        state_not:
+                          - "Select..."
+                          - "None"
+                          - ""
+                          - "unknown"
+                          - "unavailable"
+                    card:
+                      type: custom:button-card
+                      template: template_danger
+                      name: Delete
+                      icon: mdi:delete
+                      tap_action:
+                        action: call-service
+                        service: script.registry_paddock_delete
+                      confirmation:
+                        text: "Delete this paddock and all its bays?"
 
               #----------------------------------------------------------------
-              # EDIT FORM (conditional - shown when mode is Edit)
+              # EDIT FORM (conditional - shown when mode is Edit AND paddock selected)
               #----------------------------------------------------------------
               - type: conditional
                 conditions:
                   - condition: state
                     entity: input_select.registry_paddock_editor_mode
                     state: "Edit"
+                  - condition: state
+                    entity: input_select.registry_paddock
+                    state_not:
+                      - "Select..."
+                      - "None"
+                      - ""
+                      - "unknown"
+                      - "unavailable"
                 card:
                   type: vertical-stack
                   cards:
