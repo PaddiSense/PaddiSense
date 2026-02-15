@@ -297,42 +297,42 @@ views:
                             </div>
                           </div>
 
-                          <!-- Dates Grid -->
-                          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--divider-color,rgba(255,255,255,0.1));">
+                          <!-- Dates Grid - 2 columns for mobile -->
+                          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--divider-color,rgba(255,255,255,0.1));">
                             <!-- Sow Date -->
-                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Sown</div>
-                              <div style="font-size:15px;font-weight:600;color:var(--primary-text-color);">${formatDate(a.sow_date)}</div>
+                            <div style="padding:10px;background:rgba(255,255,255,0.92);border-radius:8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                              <div style="font-size:10px;font-weight:600;color:#666;text-transform:uppercase;margin-bottom:6px;">Sown</div>
+                              <div style="font-size:15px;font-weight:600;color:#333;">${formatDate(a.sow_date)}</div>
                             </div>
 
                             <!-- PI Date -->
-                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">PI</div>
+                            <div style="padding:10px;background:rgba(255,255,255,0.92);border-radius:8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                              <div style="font-size:10px;font-weight:600;color:#666;text-transform:uppercase;margin-bottom:6px;">PI</div>
                               <div>${badge(a.pi_date, true)}</div>
                             </div>
 
                             <!-- Flowering -->
-                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Flowering</div>
+                            <div style="padding:10px;background:rgba(255,255,255,0.92);border-radius:8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                              <div style="font-size:10px;font-weight:600;color:#666;text-transform:uppercase;margin-bottom:6px;">Flowering</div>
                               <div>${badge(a.flowering_date, true)}</div>
                             </div>
 
                             <!-- Harvest -->
-                            <div style="padding:10px;background:rgba(0,0,0,0.03);border-radius:8px;text-align:center;">
-                              <div style="font-size:10px;font-weight:600;color:var(--secondary-text-color);text-transform:uppercase;margin-bottom:6px;">Harvest 22%</div>
+                            <div style="padding:10px;background:rgba(255,255,255,0.92);border-radius:8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                              <div style="font-size:10px;font-weight:600;color:#666;text-transform:uppercase;margin-bottom:6px;">Harvest 22%</div>
                               <div>${badge(a.harvest_date, true)}</div>
                             </div>
 
                             <!-- Predicted Moisture -->
-                            <div style="padding:10px;background:rgba(33,150,243,0.08);border-radius:8px;text-align:center;">
+                            <div style="padding:10px;background:rgba(255,255,255,0.92);border-radius:8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                               <div style="font-size:10px;font-weight:600;color:#2196f3;text-transform:uppercase;margin-bottom:6px;">Moisture</div>
                               <div style="font-size:18px;font-weight:700;color:#2196f3;">${a.moisture_predict ? a.moisture_predict + '%' : '—'}</div>
                             </div>
 
                             <!-- Moisture Date -->
-                            <div style="padding:10px;background:rgba(33,150,243,0.08);border-radius:8px;text-align:center;">
+                            <div style="padding:10px;background:rgba(255,255,255,0.92);border-radius:8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                               <div style="font-size:10px;font-weight:600;color:#2196f3;text-transform:uppercase;margin-bottom:6px;">Moisture Date</div>
-                              <div>${a.moisture_date ? badge(a.moisture_date, false) : '<span style="color:var(--secondary-text-color);">—</span>'}</div>
+                              <div>${a.moisture_date ? badge(a.moisture_date, false) : '<span style="color:#666;">—</span>'}</div>
                             </div>
                           </div>
 
