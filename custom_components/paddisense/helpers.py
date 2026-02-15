@@ -239,14 +239,61 @@ def save_local_credentials(credentials: dict[str, Any]) -> None:
 
 
 def get_saved_license_key() -> str:
-    """Get the saved license key, if any."""
+    """Get the first saved license key (for backward compatibility)."""
     creds = load_local_credentials()
+    # Check new format first
+    keys = creds.get("license_keys", [])
+    if keys:
+        return keys[0]
+    # Fall back to old format
     return creds.get("license_key", "")
 
 
-def save_license_key(license_key: str) -> None:
-    """Save a valid license key to local storage."""
+def get_saved_license_keys() -> list[str]:
+    """Get all saved license keys."""
     creds = load_local_credentials()
-    creds["license_key"] = license_key
+    keys = list(creds.get("license_keys", []))
+    # Include legacy single key if exists and not in array
+    legacy_key = creds.get("license_key", "")
+    if legacy_key and legacy_key not in keys:
+        keys.append(legacy_key)
+    return keys
+
+
+def save_license_key(license_key: str) -> None:
+    """Save a license key to local storage (adds to array, no duplicates)."""
+    creds = load_local_credentials()
+
+    # Initialize array if needed
+    if "license_keys" not in creds:
+        creds["license_keys"] = []
+        # Migrate legacy key if exists
+        if creds.get("license_key"):
+            creds["license_keys"].append(creds["license_key"])
+
+    # Add new key if not already present
+    if license_key not in creds["license_keys"]:
+        creds["license_keys"].append(license_key)
+
     creds["saved_at"] = datetime.now().isoformat(timespec="seconds")
     save_local_credentials(creds)
+
+
+def remove_license_key(license_key: str) -> bool:
+    """Remove a license key from storage. Returns True if removed."""
+    creds = load_local_credentials()
+    keys = creds.get("license_keys", [])
+
+    if license_key in keys:
+        keys.remove(license_key)
+        creds["license_keys"] = keys
+        save_local_credentials(creds)
+        return True
+
+    # Check legacy key
+    if creds.get("license_key") == license_key:
+        creds.pop("license_key", None)
+        save_local_credentials(creds)
+        return True
+
+    return False

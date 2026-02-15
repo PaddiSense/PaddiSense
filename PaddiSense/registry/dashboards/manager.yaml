@@ -290,7 +290,7 @@ button_card_templates:
 
         if (installed) return 'Remove';
         if (licensed && available) return 'Install';
-        if (!licensed) return 'Locked';
+        if (!licensed) return 'Add License';
         return 'N/A';
       ]]]
     tap_action:
@@ -305,6 +305,7 @@ button_card_templates:
 
           if (installed) return 'paddisense.remove_module';
           if (licensed && available) return 'paddisense.install_module';
+          if (!licensed) return 'script.paddisense_open_license_popup';
           return 'script.turn_on';
         ]]]
       service_data: |
@@ -317,6 +318,9 @@ button_card_templates:
           const modId = variables.module_id;
           const attrs = entity?.attributes || {};
           const installed = (attrs.installed_modules || []).some(m => m.id === modId);
+          const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
+          // No confirmation for license entry - popup handles it
+          if (!licensed) return null;
           return installed
             ? `Remove module: ${variables.title || modId}?`
             : `Install module: ${variables.title || modId}?`;
@@ -339,17 +343,10 @@ button_card_templates:
 
               if (installed) return '#dc3545';
               if (licensed && available) return '#28a745';
-              return 'var(--card-background-color)';
+              // Locked modules get orange "Add License" button
+              return '#fd7e14';
             ]]]
-        - opacity: |
-            [[[
-              const modId = variables.module_id;
-              const attrs = entity?.attributes || {};
-              const installed = (attrs.installed_modules || []).some(m => m.id === modId);
-              const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
-              const available = (attrs.available_modules || []).some(m => m.id === modId);
-              return (installed || (licensed && available)) ? '1' : '0.75';
-            ]]]
+        - opacity: '1'
         - display: |
             [[[
               return (entity && entity.state && entity.state !== 'unavailable' && entity.state !== 'unknown') ? 'grid' : 'none';
@@ -357,30 +354,10 @@ button_card_templates:
       name:
         - font-size: 13px
         - font-weight: 700
-        - color: |
-            [[[
-              const modId = variables.module_id;
-              const attrs = entity?.attributes || {};
-              const installed = (attrs.installed_modules || []).some(m => m.id === modId);
-              const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
-              const available = (attrs.available_modules || []).some(m => m.id === modId);
-
-              if (installed || (licensed && available)) return 'white';
-              return 'var(--secondary-text-color)';
-            ]]]
+        - color: white
       icon:
         - width: 22px
-        - color: |
-            [[[
-              const modId = variables.module_id;
-              const attrs = entity?.attributes || {};
-              const installed = (attrs.installed_modules || []).some(m => m.id === modId);
-              const licensed = (attrs.licensed_modules || attrs.license_modules || []).includes(modId);
-              const available = (attrs.available_modules || []).some(m => m.id === modId);
-
-              if (installed || (licensed && available)) return 'white';
-              return 'var(--secondary-text-color)';
-            ]]]
+        - color: white
 
 views:
   # ===========================================================================

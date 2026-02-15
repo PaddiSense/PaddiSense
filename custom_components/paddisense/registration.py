@@ -111,13 +111,13 @@ def get_allowed_modules() -> list[str]:
         if module_id in agreements:
             allowed.append(module_id)
 
-    # Check for valid license with additional modules (PWM, WSS)
+    # Check for valid licenses with additional modules (PWM, WSS)
+    # Supports multiple licenses - each can grant different modules
     try:
-        from .helpers import get_saved_license_key
+        from .helpers import get_saved_license_keys
         from .license import validate_license, LicenseError
 
-        license_key = get_saved_license_key()
-        if license_key:
+        for license_key in get_saved_license_keys():
             try:
                 license_info = validate_license(license_key)
                 # Add license-granted modules that aren't already in allowed list
@@ -125,7 +125,7 @@ def get_allowed_modules() -> list[str]:
                     if mod not in allowed:
                         allowed.append(mod)
             except LicenseError:
-                # License invalid/expired - don't add any extra modules
+                # License invalid/expired - skip it but continue checking others
                 pass
     except ImportError:
         # License module not available - skip

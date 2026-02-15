@@ -451,6 +451,18 @@ input_select:
 # INPUT TEXT (for add/edit forms)
 # -----------------------------------------------------------------------------
 input_text:
+  # License entry
+  paddisense_license_key:
+    name: "License Key"
+    icon: mdi:key
+    max: 500
+    mode: text
+
+  paddisense_license_module:
+    name: "License Module Target"
+    icon: mdi:puzzle
+    max: 20
+
   registry_new_paddock_name:
     name: "New Paddock Name"
     icon: mdi:view-grid
@@ -776,6 +788,87 @@ script:
       - service: homeassistant.update_entity
         target:
           entity_id: sensor.farm_registry_data
+
+  # Submit license key (called from popup)
+  paddisense_submit_license:
+    alias: "PaddiSense - Submit License"
+    icon: mdi:key-plus
+    sequence:
+      - variables:
+          license_key: "{{ states('input_text.paddisense_license_key') | trim }}"
+          target_module: "{{ states('input_text.paddisense_license_module') | trim }}"
+      # Validate we have a key
+      - condition: template
+        value_template: "{{ license_key | length > 10 }}"
+      # Call the add_license service
+      - service: paddisense.add_license
+        data:
+          license_key: "{{ license_key }}"
+      # Clear the input
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.paddisense_license_key
+        data:
+          value: ""
+      # Close the popup (browser_mod)
+      - service: browser_mod.close_popup
+
+  # Open license entry popup for a module
+  paddisense_open_license_popup:
+    alias: "PaddiSense - Open License Popup"
+    icon: mdi:key
+    fields:
+      module_id:
+        description: "Module ID to license"
+        selector:
+          text:
+    sequence:
+      # Store which module we're licensing
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.paddisense_license_module
+        data:
+          value: "{{ module_id }}"
+      # Clear any previous key
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.paddisense_license_key
+        data:
+          value: ""
+      # Open browser_mod popup
+      - service: browser_mod.popup
+        data:
+          title: "Enter License Key"
+          content:
+            type: vertical-stack
+            cards:
+              - type: markdown
+                content: |
+                  Enter your **{{ module_id | upper }}** license key below.
+
+                  License keys are provided by PaddiSense administrators.
+              - type: entities
+                entities:
+                  - entity: input_text.paddisense_license_key
+                    name: License Key
+              - type: custom:button-card
+                name: Submit License
+                icon: mdi:check
+                color_type: card
+                color: "#28a745"
+                styles:
+                  card:
+                    - height: 60px
+                    - border-radius: 12px
+                  name:
+                    - font-size: 16px
+                    - font-weight: 700
+                    - color: white
+                  icon:
+                    - color: white
+                tap_action:
+                  action: call-service
+                  service: script.paddisense_submit_license
 
   # Export backup
   registry_export_data:

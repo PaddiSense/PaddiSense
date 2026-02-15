@@ -379,6 +379,18 @@ remove_module:
       selector:
         boolean:
 
+add_license:
+  name: Add License
+  description: Add a license key to unlock PWM or WSS modules. Multiple licenses can be added.
+  fields:
+    license_key:
+      name: License Key
+      description: The license key provided by PaddiSense administrator
+      required: true
+      example: "PADDISENSE.xxx.yyy"
+      selector:
+        text:
+
 create_backup:
   name: Create Backup
   description: Create a backup of PaddiSense configuration

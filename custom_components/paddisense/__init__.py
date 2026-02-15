@@ -45,6 +45,7 @@ from .const import (
     SERVICE_SET_ACTIVE_SEASON,
     SERVICE_SET_CURRENT_SEASON,
     # Installer services
+    SERVICE_ADD_LICENSE,
     SERVICE_CHECK_UPDATES,
     SERVICE_CREATE_BACKUP,
     SERVICE_INSTALL_HACS_CARDS,
@@ -173,6 +174,10 @@ UPDATE_PADDISENSE_SCHEMA = vol.Schema({
 
 RESTORE_BACKUP_SCHEMA = vol.Schema({
     vol.Required("backup_id"): cv.string,
+})
+
+ADD_LICENSE_SCHEMA = vol.Schema({
+    vol.Required("license_key"): cv.string,
 })
 
 # RTR schemas
@@ -906,6 +911,68 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
         if result.get("success") and result.get("restart_required"):
             await hass.services.async_call("homeassistant", "restart")
 
+    async def handle_add_license(call: ServiceCall) -> None:
+        """Add a license key to unlock modules (PWM, WSS)."""
+        from .helpers import save_license_key
+        from .license import validate_license, LicenseError
+
+        license_key = call.data["license_key"].strip()
+
+        try:
+            # Validate the license first
+            license_info = await hass.async_add_executor_job(validate_license, license_key)
+
+            # Save it (adds to array, doesn't replace)
+            await hass.async_add_executor_job(save_license_key, license_key)
+
+            _LOGGER.info(
+                "License added for %s - modules: %s (expires: %s)",
+                license_info.email,
+                ", ".join(license_info.modules),
+                license_info.expiry,
+            )
+
+            # Notify user of success
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense - License Added",
+                    "message": (
+                        f"License validated successfully!\n\n"
+                        f"**Modules unlocked:** {', '.join(license_info.modules)}\n"
+                        f"**Expires:** {license_info.expiry}\n\n"
+                        f"You can now install the licensed modules."
+                    ),
+                    "notification_id": "paddisense_license",
+                },
+            )
+
+            # Fire event so UI can update
+            hass.bus.async_fire(f"{DOMAIN}_license_updated", {
+                "modules": license_info.modules,
+                "expiry": license_info.expiry.isoformat(),
+            })
+
+        except LicenseError as err:
+            error_msg = str(err)
+            if error_msg == "expired":
+                user_msg = "This license has expired. Please contact PaddiSense for a renewal."
+            elif error_msg == "invalid_format":
+                user_msg = "Invalid license format. License should start with 'PADDISENSE.'"
+            else:
+                user_msg = f"Invalid license: {error_msg}"
+
+            _LOGGER.warning("License validation failed: %s", error_msg)
+
+            await hass.services.async_call(
+                "persistent_notification", "create",
+                {
+                    "title": "PaddiSense - License Error",
+                    "message": user_msg,
+                    "notification_id": "paddisense_license",
+                },
+            )
+
     async def handle_install_hacs_cards(call: ServiceCall) -> None:
         """Install required HACS frontend cards."""
         # Check if HACS is available
@@ -1087,6 +1154,7 @@ async def _async_register_installer_services(hass: HomeAssistant) -> None:
     hass.services.async_register(DOMAIN, SERVICE_CREATE_BACKUP, handle_create_backup)
     hass.services.async_register(DOMAIN, SERVICE_RESTORE_BACKUP, handle_restore_backup, RESTORE_BACKUP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_ROLLBACK, handle_rollback)
+    hass.services.async_register(DOMAIN, SERVICE_ADD_LICENSE, handle_add_license, ADD_LICENSE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_INSTALL_HACS_CARDS, handle_install_hacs_cards)
     hass.services.async_register(DOMAIN, SERVICE_INSTALL_MODULE_HACS, handle_install_module_hacs, INSTALL_MODULE_SCHEMA)
 
